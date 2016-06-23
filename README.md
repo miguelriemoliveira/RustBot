@@ -23,7 +23,8 @@ After that, the ros vimba wrapper at [http://wiki.ros.org/avt_vimba_camera](http
 Install the ros wrapper
 
 ```bash
-sudo apt-get install ros-indigo-avt-vimba-camera
+git clone https://github.com/srv/avt_vimba_camera.git
+catkin_make
 ```
 
 Find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
