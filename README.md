@@ -34,9 +34,13 @@ cd $(Vimba_2_0)
 /Tools/Viewer/Bin/x86_64bit/VimbaViewer
 ```
 
-You shoud see a gui that shows the id and ip address of all connected cameras.
+You shoud see the VimbaViewer gui with all connected cameras with their id (guid). 
 
 ![vimba_viewer](https://github.com/miguelriemoliveira/RustBot/blob/master/docs/vimba_viewer.png)
+
+Select a camera and then, on the right side pane, select All propperties and search for "IP Address" to find out the the ip address.
+
+![get_ipaddress](https://github.com/miguelriemoliveira/RustBot/blob/master/docs/get_ipaddress.png)
 
 
 
