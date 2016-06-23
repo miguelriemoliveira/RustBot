@@ -18,11 +18,19 @@ First, the Vimba sdk must be installed and compiled.
 
 You may download this sdk from [https://www.alliedvision.com/en/products/software.html](https://www.alliedvision.com/en/products/software.html). Then follow the installation instructions in Vimba_2_0/Documentation/ReleaseNotes.txt to install the sdk.
 
-After that, the ros vimba wrapper at [http://wiki.ros.org/avt_vimba_camera](http://wiki.ros.org/avt_vimba_camera) should work. You may edit the file 
+After that, the ros vimba wrapper at [http://wiki.ros.org/avt_vimba_camera](http://wiki.ros.org/avt_vimba_camera) should work. Follow these steps.
 
-```file
- launch/mono_camera.launch
- ```
+Find out the ip address and the id of your cameras. From the /AVT GigE SDK/examples/ListCamera folder, run
+
+```bash
+./ListCameras
+```
+
+
+
+
+You may edit the file launch/mono_camera.launch 
+ 
 
 By setting the correct guid and ip of your camera.
 
