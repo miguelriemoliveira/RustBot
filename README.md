@@ -36,7 +36,7 @@ cd $(Vimba_2_0)
 
 You shoud see a gui that shows the id and ip address of all connected cameras.
 
-![Image of tangerinebot](https://github.com/miguelriemoliveira/tangerinebot/blob/master/docs/tangerinebot.jpg)
+![vimba_viewer](https://github.com/miguelriemoliveira/RustBot/blob/master/docs/vimba_viewer.png)
 
 
 
