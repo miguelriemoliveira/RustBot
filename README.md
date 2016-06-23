@@ -1,5 +1,5 @@
 # RustBot
-Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer to the hardware platform as RustBot because the cameras look kind of rusty (sorry for the lack of creativity).
+Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer to the hardware platform as RustBot because the AVT Mako cameras look kind of rusty (sorry for the lack of creativity).
 
 ## Table of Contents
 
