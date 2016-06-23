@@ -11,7 +11,7 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 
 ## <a name="therobot"></a>The Robot
 
-
+![robot](https://github.com/miguelriemoliveira/RustBot/blob/master/docs/robot.jpg)
 
 ## <a name="installation"></a>Installation
 
