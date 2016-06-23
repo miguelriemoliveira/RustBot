@@ -6,6 +6,7 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [The Robot](#therobot)
 * [Installation](#installation)
 * [Usage](#usage)
+* [Finding IP Address of Cameras](#findingcameraip)
 * [Calibration](#calibration)
 * [Calibration Setup](#calibrationsetup)
 
@@ -27,6 +28,8 @@ Install the ros wrapper
 git clone https://github.com/srv/avt_vimba_camera.git
 catkin_make
 ```
+
+## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
 Find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
 
