@@ -14,9 +14,9 @@ Software tools for the Sistemas Embarcados de Vistoria (SEV) project
 
 ## <a name="installation"></a>Installation
 
-ou must first install the Vimba sdk
+First, the Vimba sdk must be installed and compiled.
 
-https://www.alliedvision.com/en/products/software.html
+You may download this sdk from [https://www.alliedvision.com/en/products/software.html](https://www.alliedvision.com/en/products/software.html)
 
 then in
 
