@@ -1,5 +1,5 @@
-# ProjectSEV
-Software tools for the Sistemas Embarcados de Vistoria (SEV) project
+# RustBot
+Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer to the hardware platform as RustBot because the cameras look kind of rusty (sorry for the lack of creativity).
 
 ## Table of Contents
 
@@ -10,6 +10,7 @@ Software tools for the Sistemas Embarcados de Vistoria (SEV) project
 * [Calibration Setup](#calibrationsetup)
 
 ## <a name="therobot"></a>The Robot
+
 
 
 ## <a name="installation"></a>Installation
