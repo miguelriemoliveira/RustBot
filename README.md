@@ -26,8 +26,18 @@ Find out the ip address and the id of your cameras. From the **$(VimbaPath)/exam
 ./ListCameras
 ```
 
+You shoud see something like
 
+```bash
+***********************************
+No camera detected ...
+***********************************
+50-0536881129 - Mako G-192C - Unique ID =  6009961 IP@ =    192.168.1.85 [available]
+50-0536881130 - Mako G-192C - Unique ID =  6009962 IP@ =    192.168.1.89 [available]
+***********************************
+```
 
+In this case we have two cameras connected.
 
 You may edit the file launch/mono_camera.launch 
  
