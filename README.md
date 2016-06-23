@@ -20,6 +20,12 @@ You may download this sdk from [https://www.alliedvision.com/en/products/softwar
 
 After that, the ros vimba wrapper at [http://wiki.ros.org/avt_vimba_camera](http://wiki.ros.org/avt_vimba_camera) should work. Follow these steps.
 
+Install the ros wrapper
+
+```bash
+sudo apt-get install ros-indigo-avt-vimba-camera
+```
+
 Find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
 
 ```bash
@@ -39,7 +45,7 @@ No camera detected ...
 
 In this case we have two cameras connected.
 
-You may edit the file launch/mono_camera.launch 
+You may edit the file **launch/mono_camera.launch** and 
  
 
 By setting the correct guid and ip of your camera.
