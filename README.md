@@ -12,6 +12,8 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 
 ## <a name="therobot"></a>The Robot
 
+The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a plate. The baseline is around 0.1 meters, and the cameras are horizontally aligned. Here's a picture of the system
+
 ![robot](https://github.com/miguelriemoliveira/RustBot/blob/master/docs/robot.jpg)
 
 ## <a name="installation"></a>Installation
