@@ -29,6 +29,14 @@ git clone https://github.com/srv/avt_vimba_camera.git
 catkin_make
 ```
 
+## <a name="usage"></a>Usage
+
+To launch a single camera use
+
+```bash
+roslaunch rustbot_bringup left_camera.launch
+```
+
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
 To find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
