@@ -16,13 +16,11 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 
 ## <a name="installation"></a>Installation
 
-First, the Vimba sdk must be installed and compiled. We will refer to the folder where the sdk is installed as **$(Vimba_2_0)**
+First, the Vimba sdk must be installed and compiled. We will refer to the folder where the sdk is installed as **$(Vimba_2_0)**.
 
 You may download this sdk from [https://www.alliedvision.com/en/products/software.html](https://www.alliedvision.com/en/products/software.html). Then follow the installation instructions in **$(Vimba_2_0)/Documentation/ReleaseNotes.txt** to install the sdk.
 
-After that, the ros vimba wrapper at [http://wiki.ros.org/avt_vimba_camera](http://wiki.ros.org/avt_vimba_camera) should work. Follow these steps.
-
-Install the ros wrapper
+After that, the ros vimba wrapper at [http://wiki.ros.org/avt_vimba_camera](http://wiki.ros.org/avt_vimba_camera) should work. So install the ros wrapper
 
 ```bash
 git clone https://github.com/srv/avt_vimba_camera.git
@@ -31,7 +29,7 @@ catkin_make
 
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
-Find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
+To find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
 
 ```bash
 cd $(Vimba_2_0)
