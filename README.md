@@ -18,7 +18,7 @@ The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a pl
 
 ## <a name="installation"></a>Installation
 
-First, the Vimba sdk must be installed and compiled. We will refer to the folder where the sdk is installed as **$(Vimba_2_0)**.
+First, the Vimba sdk must be downloaded and compiled. We will refer to the folder where the sdk is installed as **$(Vimba_2_0)**.
 
 You may download this sdk from [https://www.alliedvision.com/en/products/software.html](https://www.alliedvision.com/en/products/software.html). Then follow the installation instructions in **$(Vimba_2_0)/Documentation/ReleaseNotes.txt** to install the sdk.
 
