@@ -16,19 +16,13 @@ Software tools for the Sistemas Embarcados de Vistoria (SEV) project
 
 First, the Vimba sdk must be installed and compiled.
 
-You may download this sdk from [https://www.alliedvision.com/en/products/software.html](https://www.alliedvision.com/en/products/software.html)
+You may download this sdk from [https://www.alliedvision.com/en/products/software.html](https://www.alliedvision.com/en/products/software.html). Then follow the installation instructions in Vimba_2_0/Documentation/ReleaseNotes.txt to install the sdk.
 
-then in
+After that, the ros vimba wrapper at [http://wiki.ros.org/avt_vimba_camera](http://wiki.ros.org/avt_vimba_camera) should work. You may edit the file 
 
-Vimba_2_0/Documentation/ReleaseNotes.txt
-
-Follow the installation instructions
-
-After that, the ros vimba wrapper should work
-
-http://wiki.ros.org/avt_vimba_camera
-
-It does not have instructions on how to use (like the prosilica had), but you just have to edit the launch/mono_camera.launch
+```file
+ launch/mono_camera.launch
+ ```
 
 By setting the correct guid and ip of your camera.
 
