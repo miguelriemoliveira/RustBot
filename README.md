@@ -6,9 +6,8 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [The Robot](#therobot)
 * [Installation](#installation)
 * [Usage](#usage)
-* [Finding IP Address of Cameras](#findingcameraip)
 * [Calibration](#calibration)
-* [Calibration Setup](#calibrationsetup)
+* [Finding IP Address of Cameras](#findingcameraip)
 
 ## <a name="therobot"></a>The Robot
 
