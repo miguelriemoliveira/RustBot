@@ -37,6 +37,21 @@ To launch a single camera use
 roslaunch rustbot_bringup left_camera.launch
 ```
 
+## <a name="calibration"></a>Calibration
+
+Start the system
+
+```bash
+roslaunch rustbot_bringup all.launch
+```
+
+then startup de calibration
+
+```bash
+rosrun camera_calibration cameracalibrator.py --size 7x5 --square 0.03 right:=/stereo/right/image_raw
+left:=/stereo/left/image_raw right_camera:=/stereo/right left_camera:=/stereo/left --approximate=0.05
+```
+
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
 To find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
