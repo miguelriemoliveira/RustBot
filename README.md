@@ -6,29 +6,40 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [The Robot](#therobot)
 * [Installation](#installation)
 * [Usage](#usage)
+* [Finding IP Address of Cameras](#findingcameraip)
 * [Calibration](#calibration)
 * [Calibration Setup](#calibrationsetup)
 
 ## <a name="therobot"></a>The Robot
 
+The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a plate. The baseline is around 0.1 meters, and the cameras are horizontally aligned. Here's a picture of the system
 
+![robot](https://github.com/miguelriemoliveira/RustBot/blob/master/docs/robot.jpg)
 
 ## <a name="installation"></a>Installation
 
-First, the Vimba sdk must be installed and compiled. We will refer to the folder where the sdk is installed as **$(Vimba_2_0)**
+First, the Vimba sdk must be downloaded and compiled. We will refer to the folder where the sdk is installed as **$(Vimba_2_0)**.
 
 You may download this sdk from [https://www.alliedvision.com/en/products/software.html](https://www.alliedvision.com/en/products/software.html). Then follow the installation instructions in **$(Vimba_2_0)/Documentation/ReleaseNotes.txt** to install the sdk.
 
-After that, the ros vimba wrapper at [http://wiki.ros.org/avt_vimba_camera](http://wiki.ros.org/avt_vimba_camera) should work. Follow these steps.
-
-Install the ros wrapper
+After that, the ros vimba wrapper at [http://wiki.ros.org/avt_vimba_camera](http://wiki.ros.org/avt_vimba_camera) should work. So install the ros wrapper
 
 ```bash
 git clone https://github.com/srv/avt_vimba_camera.git
 catkin_make
 ```
 
-Find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
+## <a name="usage"></a>Usage
+
+To launch a single camera use
+
+```bash
+roslaunch rustbot_bringup left_camera.launch
+```
+
+## <a name="findingcameraip"></a>Finding IP Address of Cameras
+
+To find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
 
 ```bash
 cd $(Vimba_2_0)
