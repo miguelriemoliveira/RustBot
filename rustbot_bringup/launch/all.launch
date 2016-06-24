@@ -1,4 +1,15 @@
 <?xml version="1.0"?>
 <launch>
+<group ns="stereo">
 
+      <node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" output="screen">
+      
+        <param name="approximate_sync" value="true"/>
+      
+      </node>
+
+      <include file="$(find rustbot_bringup)/launch/left_camera.launch"/>
+      <include file="$(find rustbot_bringup)/launch/right_camera.launch"/>
+
+  </group>
 </launch>
