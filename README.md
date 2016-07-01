@@ -30,6 +30,13 @@ catkin_make
 
 ## <a name="usage"></a>Usage
 
+To start the complete stereo system, just run 
+
+```bash
+roslaunch rustbot_bringup all.launch
+```
+
+
 To launch a single camera use
 
 ```bash
