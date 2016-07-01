@@ -1,0 +1,73 @@
+acquisition_mode: Continuous
+acquisition_rate: 20.0
+balance_ratio_abs: 1.0
+balance_ratio_selector: Red
+binning_x: 1
+binning_y: 1
+decimation_x: 2
+decimation_y: 2
+exposure: 1000.0
+exposure_auto: Continuous
+exposure_auto_alg: Mean
+exposure_auto_max: 50000
+exposure_auto_min: 41
+exposure_auto_outliers: 0
+exposure_auto_rate: 100
+exposure_auto_target: 50
+exposure_auto_tol: 5
+gain: 32.0
+gain_auto: Continuous
+gain_auto_max: 32.0
+gain_auto_min: 0.0
+gain_auto_outliers: 0
+gain_auto_rate: 100
+gain_auto_target: 50
+gain_auto_tol: 5
+height: 1200
+image_color:
+  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+  theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+image_mono:
+  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+  theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+image_proc_debayer: {debayer: 0}
+image_proc_rectify_color: {interpolation: 1}
+image_proc_rectify_mono: {interpolation: 1}
+image_raw:
+  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+  theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+image_rect:
+  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+  theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+image_rect_color:
+  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+  theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+pixel_format: BayerRG8
+ptp_mode: 'Off'
+roi_height: 0
+roi_offset_x: 0
+roi_offset_y: 0
+roi_width: 0
+show_debug_prints: true
+stream_bytes_per_second: 45000000
+sync_in_selector: SyncIn1
+sync_out_polarity: Normal
+sync_out_selector: SyncOut1
+sync_out_source: GPO
+trig_timestamp_topic: ''
+trigger_activation: RisingEdge
+trigger_delay: 0.0
+trigger_mode: 'On'
+trigger_selector: FrameStart
+trigger_source: FixedRate
+whitebalance_auto: Continuous
+whitebalance_auto_rate: 100
+whitebalance_auto_tol: 5
+width: 1600
+x_offset: 8
+y_offset: 9
