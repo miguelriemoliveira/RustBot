@@ -1,15 +1,22 @@
 <?xml version="1.0"?>
 <launch>
+<arg name="do_stereo" default="true"/>
+<arg name="config_stereo" default="false"/>
+
 <group ns="stereo">
-
-      <node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" output="screen">
-      
+    <group if="$(arg do_stereo)">
+        <node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" output="screen">
         <param name="approximate_sync" value="true"/>
-      
-      </node>
+        </node>
+    </group>
 
-      <include file="$(find rustbot_bringup)/launch/left_camera.launch"/>
-      <include file="$(find rustbot_bringup)/launch/right_camera.launch"/>
+    <include file="$(find rustbot_bringup)/launch/left_camera.launch"/>
+    <include file="$(find rustbot_bringup)/launch/right_camera.launch"/>
+</group>
 
-  </group>
+<group if="$(arg config_stereo)">
+    <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen">
+    </node>
+</group>
+
 </launch>

@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <launch>
   <node name="rviz" pkg="rviz" type="rviz" args="--display-config $(find rustbot_bringup)/config/visualize.rviz" required="true"/>
-
-    <node name="stereo_view" pkg="image_view" type="stereo_view">
-        <remap from="stereo" to="stereo" />
-        <remap from="image" to="image_color" />
-        <param name="approximate_sync" value="true"/>
-    </node>
-
+  <!--<node name="stereo_view" pkg="image_view" type="stereo_view">-->
+    <!--<remap from="stereo" to="stereo"/>-->
+    <!--<remap from="image" to="image_color"/>-->
+    <!--<param name="approximate_sync" value="true"/>-->
+  <!--</node>-->
+  <node name="disparity_view" pkg="image_view" type="disparity_view">
+    <remap from="image" to="/stereo/disparity"/>
+  </node>
 
 </launch>
-
