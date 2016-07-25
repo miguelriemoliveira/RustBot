@@ -45,10 +45,10 @@ roslaunch rustbot_bringup left_camera.launch
 
 ## <a name="calibration"></a>Calibration
 
-Start the system
+Start the system without the stero processing
 
 ```bash
-roslaunch rustbot_bringup all.launch
+roslaunch rustbot_bringup all.launch do_stereo:=false
 ```
 
 then startup de calibration
