@@ -63,7 +63,7 @@ rosrun camera_calibration cameracalibrator.py --size 7x5 --square 0.03 right:=/s
 To tune the parameters of the stereo algorithm, run
 
 ```bash
-roslaunch rustbot_bringup all.launch fps:=3 config_stere:=true
+roslaunch rustbot_bringup all.launch fps:=3 config_stereo:=true
 ```
 
 and then
