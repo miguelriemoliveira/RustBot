@@ -73,6 +73,12 @@ roslaunch rustbot_bringup visualize.launch
 ```
 
 Then you can change the parameters an see the effect they have in the disparity map / point cloud in real time.
+If you reached a set of parameters you would like to save, do the following:
+
+```bash
+roscd rustbot_calibration/calibration/ && rosparam dump stereo_image_proc.yaml /stereo/stereo_image_proc
+```
+
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
 To find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
