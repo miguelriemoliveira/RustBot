@@ -7,6 +7,7 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [Installation](#installation)
 * [Usage](#usage)
 * [Calibration](#calibration)
+* [Tunning Stereo Parameters](#tunningparameters)
 * [Finding IP Address of Cameras](#findingcameraip)
 
 ## <a name="therobot"></a>The Robot
@@ -57,6 +58,21 @@ then startup de calibration
 rosrun camera_calibration cameracalibrator.py --size 7x5 --square 0.03 right:=/stereo/right/image_raw left:=/stereo/left/image_raw right_camera:=/stereo/right left_camera:=/stereo/left --approximate=0.05
 ```
 
+## <a name="tunningparameters"></a>Tunning Stereo Parameters
+
+To tune the parameters of the stereo algorithm, run
+
+```bash
+roslaunch rustbot_bringup all.launch fps:=3 config_stere:=true
+```
+
+and then
+
+```bash
+roslaunch rustbot_bringup visualize.launch 
+```
+
+Then you can change the parameters an see the effect they have in the disparity map / point cloud in real time.
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
 To find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
