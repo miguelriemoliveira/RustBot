@@ -1,22 +1,24 @@
 <?xml version="1.0"?>
 <launch>
-<arg name="do_stereo" default="true"/>
-<arg name="config_stereo" default="false"/>
-
-<group ns="stereo">
+  <arg name="do_stereo" default="true"/>
+  <arg name="config_stereo" default="false"/>
+  <arg name="fps" default="20"/>
+  <group ns="stereo">
     <group if="$(arg do_stereo)">
-        <node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" output="screen">
+      <node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" output="screen">
         <param name="approximate_sync" value="true"/>
-        </node>
+        <rosparam command="load" file="$(find rustbot_calibration)/calibration/stereo_image_proc.yaml"/>
+      </node>
     </group>
-
-    <include file="$(find rustbot_bringup)/launch/left_camera.launch"/>
-    <include file="$(find rustbot_bringup)/launch/right_camera.launch"/>
-</group>
-
-<group if="$(arg config_stereo)">
+    <include file="$(find rustbot_bringup)/launch/left_camera.launch">
+      <arg name="fps" value="$(arg fps)"/>
+    </include>
+    <include file="$(find rustbot_bringup)/launch/right_camera.launch">
+      <arg name="fps" value="$(arg fps)"/>
+    </include>
+  </group>
+  <group if="$(arg config_stereo)">
     <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen">
     </node>
-</group>
-
+  </group>
 </launch>
