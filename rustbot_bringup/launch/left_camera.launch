@@ -3,7 +3,7 @@
   <arg name="camera" default="left"/>
   <arg name="guid" default="50-0536881130"/>
   <!--<arg name="guid" default="50-0536881129"/>-->
-  <arg name="ip_address" default="192.168.1.89"/>
+  <arg name="ip_address" default=""/>
   <arg name="fps" default="20"/>
   <arg name="camera_info_url" default="file://$(find rustbot_calibration)/calibration/calibration_$(arg guid).yaml"/>
   <!--Image processing node-->
