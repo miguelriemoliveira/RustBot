@@ -44,6 +44,12 @@ To launch a single camera use
 roslaunch rustbot_bringup left_camera.launch
 ```
 
+Note that to run stereo on high resolution images the processing takes a long time. Typically, for 1600x1200 images, our SGBM stereo outputs disparity images at 0.2 Hz. If you want a point cloud to be generated for each disparity image, then, because the point_cloud2 nodelet uses a message filter to get approximately synced image, camera_info and disparity messages, you must run the stereo_processing with a low frame rate and a large queue size. That way the point_cloud2 nodelet can get synced messages and produce the point clouds, e.g.:
+
+```bash
+roslaunch rustbot_bringup all.launch fps:=1 queue_size:=50
+```
+
 ## <a name="calibration"></a>Calibration
 
 Start the system without the stero processing
