@@ -2,12 +2,14 @@
 <launch>
   <arg name="do_stereo" default="true"/>
   <arg name="config_stereo" default="false"/>
-  <arg name="fps" default="20"/>
+  <arg name="fps" default="1"/>
+  <arg name="queue_size" default="50"/>
   <group ns="stereo">
     <group if="$(arg do_stereo)">
       <node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" output="screen">
-        <param name="approximate_sync" value="true"/>
-        <rosparam command="load" file="$(find rustbot_calibration)/calibration/stereo_image_proc.yaml"/>
+          <param name="approximate_sync" value="true"/>
+          <param name="queue_size" value="$(arg queue_size)"/>
+      <rosparam command="load" file="$(find rustbot_calibration)/calibration/stereo_image_proc.yaml"/>
       </node>
     </group>
     <include file="$(find rustbot_bringup)/launch/left_camera.launch">
