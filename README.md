@@ -8,6 +8,7 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [Usage](#usage)
 * [Calibration](#calibration)
 * [Tunning Stereo Parameters](#tunningparameters)
+* [Recording Raw Data](#recordingrawdata)
 * [Finding IP Address of Cameras](#findingcameraip)
 
 ## <a name="therobot"></a>The Robot
@@ -84,6 +85,22 @@ If you reached a set of parameters you would like to save, do the following:
 ```bash
 roscd rustbot_calibration/calibration/ && rosparam dump stereo_image_proc.yaml /stereo/stereo_image_proc
 ```
+
+## <a name="recordingrawdata"></a>Recording Raw Data
+
+To record raw data we must first launch the camera drivers (no need to run stereo processing, since this will be done offline)
+
+```bash
+roslaunch rustbot_bringup all.launch fps:=10 do_stereo:=false
+```
+
+Then, to record messages, run
+
+```bash
+roslaunch rustbot_bringup record.launch
+```
+
+After breaking the recorder node, the bag file can be found on the desktop.
 
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
