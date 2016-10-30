@@ -97,7 +97,7 @@ roslaunch rustbot_bringup all.launch fps:=10 do_stereo:=false
 Then, to record messages, run
 
 ```bash
-roslaunch rustbot_bringup record.launch
+roslaunch rustbot_bringup record_raw.launch
 ```
 
 After breaking the recorder node, the bag file can be found on the desktop.
