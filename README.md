@@ -102,6 +102,27 @@ roslaunch rustbot_bringup record_raw.launch
 
 After breaking the recorder node, the bag file can be found on the desktop.
 
+## <a name="playingbackstereo"></a>Stereo from Recorded Data
+
+To playback recorded data run
+
+```bash
+rosrun rqt_bag rqt_bag ~/Destop/sev_2016-10-30-21-59-02.bag
+```
+or if you want the terminal player
+
+```bashd
+rosrun rosrun rosbag play ~/Destop/sev_2016-10-30-21-59-02.bag
+```
+
+and to run the stereo
+
+``bash
+roslaunch rustbot_bringup all.launch do_stereo:=true online_stereo:=false 
+```
+
+
+
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
 To find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
