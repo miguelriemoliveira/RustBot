@@ -109,19 +109,21 @@ To playback recorded data run
 ```bash
 rosrun rqt_bag rqt_bag ~/Destop/sev_2016-10-30-21-59-02.bag
 ```
-or if you want the terminal player
+
+After loading press right mouse button on the messages and select "publish all messages".
+If instead you want the terminal player
 
 ```bashd
 rosrun rosrun rosbag play ~/Destop/sev_2016-10-30-21-59-02.bag
 ```
 
-and to run the stereo
+To run the stereo
 
-``bash
+```bash
 roslaunch rustbot_bringup all.launch do_stereo:=true online_stereo:=false 
 ```
 
-
+Now you should receive both disparity images /stereo/disparity as well as point clouds /stereo/points2
 
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
