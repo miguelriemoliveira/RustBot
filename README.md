@@ -137,6 +137,13 @@ cd $(Vimba_2_0)
 ```
 
 You shoud see the VimbaViewer gui with all connected cameras with their id (guid). 
+If no cameras appear then you may be in a foreign subnet, i.e. have an ipaddress in a different segment. In this case run 
+
+```bash
+cd $(Vimba_2_0)
+sudo -E /Tools/Viewer/Bin/x86_64bit/VimbaViewer
+```
+and you should see the cameras
 
 ![vimba_viewer](https://github.com/miguelriemoliveira/RustBot/blob/master/docs/vimba_viewer.png)
 
