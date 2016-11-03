@@ -8,6 +8,8 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [Usage](#usage)
 * [Calibration](#calibration)
 * [Tunning Stereo Parameters](#tunningparameters)
+* [Recording Raw Data](#recordingrawdata)
+* [Stereo from a Bagfile](#stereobagfile)
 * [Finding IP Address of Cameras](#findingcameraip)
 
 ## <a name="therobot"></a>The Robot
@@ -84,6 +86,46 @@ If you reached a set of parameters you would like to save, do the following:
 ```bash
 roscd rustbot_calibration/calibration/ && rosparam dump stereo_image_proc.yaml /stereo/stereo_image_proc
 ```
+## <a name="recordingrawdata"></a>Recording Raw Data
+
+To record raw data we must first launch the camera drivers (no need to run stereo processing, since this will be done offline)
+
+```bash
+roslaunch rustbot_bringup all.launch fps:=10 do_stereo:=false
+```
+
+Then, to record messages, run
+
+```bash
+roslaunch rustbot_bringup record_raw.launch
+```
+
+After breaking the recorder node, the bag file can be found on the desktop.
+
+
+
+## <a name="stereobagfile"></a>Stereo from a Bagfile
+
+To playback recorded data run
+
+```bash
+rosrun rqt_bag rqt_bag ~/Destop/sev_2016-10-30-21-59-02.bag
+```
+
+After loading press right mouse button on the messages and select "publish all messages".
+If instead you want the terminal player
+
+```bashd
+rosrun rosrun rosbag play ~/Destop/sev_2016-10-30-21-59-02.bag
+```
+
+To run the stereo
+
+```bash
+roslaunch rustbot_bringup all.launch do_stereo:=true online_stereo:=false 
+```
+
+Now you should receive both disparity images /stereo/disparity as well as point clouds /stereo/points2
 
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
