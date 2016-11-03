@@ -140,7 +140,7 @@ If the network has no dhcp service, the cameras fall back to a default ip addres
 
 169.254.133.197 Left Camera
 169.254.4.55 Right Camera
-169.254.4.54 NUC computer, select "SEV local network" in the network manager
+169.254.4.50 NUC computer, select "SEV local network" in the network manager
 
 To find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
 
