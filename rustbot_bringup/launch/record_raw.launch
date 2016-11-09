@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
 <launch>
-    <node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/stereo/left/image_raw /stereo/left/camera_info /stereo/right/image_raw /stereo/right/camera_info /tf -o /home/$(env USER)/Desktop/sev">
+<!--To record uncompressed images-->
+  <!--<node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/stereo/left/image_raw /stereo/left/camera_info /stereo/right/image_raw /stereo/right/camera_info /tf -o /home/$(env USER)/Desktop/sev">-->
+
+<!--To record compressed images-->
+  <node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/stereo/left/image_raw/compressed /stereo/left/camera_info /stereo/right/image_raw/compressed /stereo/right/camera_info /tf -o /home/$(env USER)/Desktop/sev">
     </node>
 </launch>

@@ -13,15 +13,14 @@
         <rosparam command="load" file="$(find rustbot_calibration)/calibration/stereo_image_proc.yaml"/>
       </node>
     </group>
-
     <group if="$(arg online_stereo)">
-        <include file="$(find rustbot_bringup)/launch/left_camera.launch">
-          <arg name="fps" value="$(arg fps)"/>
-        </include>
-        <include file="$(find rustbot_bringup)/launch/right_camera.launch">
-          <arg name="fps" value="$(arg fps)"/>
-        </include>
-        </group>
+      <include file="$(find rustbot_bringup)/launch/left_camera.launch">
+        <arg name="fps" value="$(arg fps)"/>
+      </include>
+      <include file="$(find rustbot_bringup)/launch/right_camera.launch">
+        <arg name="fps" value="$(arg fps)"/>
+      </include>
+    </group>
   </group>
 
   <group if="$(arg config_stereo)">

@@ -4,10 +4,10 @@ balance_ratio_abs: 1.0
 balance_ratio_selector: 'Red'
 binning_x: 1
 binning_y: 1
-#decimation_x: 2
-#decimation_y: 2
-decimation_x: 1
-decimation_y: 1
+decimation_x: 2
+decimation_y: 2
+#decimation_x: 1
+#decimation_y: 1
 exposure: 100000.0
 exposure_auto: 'Off'
 #exposure_auto: Continuous
@@ -28,27 +28,28 @@ gain_auto_rate: 100
 gain_auto_target: 50
 gain_auto_tol: 5
 height: 1200
+#height: 600
 image_color:
-  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressed: {format: png, png_quality: 80, png_level: 9}
   compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
   theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
 image_mono:
-  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressed: {format: png, png_quality: 80, png_level: 9}
   compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
   theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
 image_proc_debayer: {debayer: 0}
 image_proc_rectify_color: {interpolation: 1}
 image_proc_rectify_mono: {interpolation: 1}
 image_raw:
-  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressed: {format: png, png_quality: 80, png_level: 9}
   compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
   theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
 image_rect:
-  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressed: {format: png, png_quality: 80, png_level: 9}
   compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
   theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
 image_rect_color:
-  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressed: {format: png, png_quality: 80, png_level: 9}
   compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
   theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
 pixel_format: BayerRG8
@@ -73,5 +74,6 @@ whitebalance_auto: Continuous
 whitebalance_auto_rate: 100
 whitebalance_auto_tol: 5
 width: 1600
+#width: 800
 x_offset: 8
 y_offset: 9
