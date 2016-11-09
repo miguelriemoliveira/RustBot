@@ -9,6 +9,7 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [Calibration](#calibration)
 * [Tunning Stereo Parameters](#tunningparameters)
 * [Recording Raw Data](#recordingrawdata)
+* [Playing Back Data](#playingbackdata)
 * [Stereo from a Bagfile](#stereobagfile)
 * [Finding IP Address of Cameras](#findingcameraip)
 
@@ -102,7 +103,13 @@ roslaunch rustbot_bringup record_raw.launch
 
 After breaking the recorder node, the bag file can be found on the desktop.
 
+## <a name="playingbackdata"></a>Playing Back Data
 
+```bash
+roslaunch rustbot_bringup playback.launch bag:=/home/sev/Desktop/sev_2016-11-03-12-27-31.bag
+```
+
+Important: you must press the right mouse button over all topics in the bag file and select play. Otherwise, the topics are not published.
 
 ## <a name="stereobagfile"></a>Stereo from a Bagfile
 
@@ -133,7 +140,7 @@ If the network has no dhcp service, the cameras fall back to a default ip addres
 
 169.254.133.197 Left Camera
 169.254.4.55 Right Camera
-169.254.4.54 NUC computer, select "SEV local network" in the network manager
+169.254.4.50 NUC computer, select "SEV local network" in the network manager
 
 To find out the ip address and the id of your cameras. From the **$(VimbaPath)/examples/ListCamera** folder, run
 
