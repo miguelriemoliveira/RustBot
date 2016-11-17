@@ -12,6 +12,7 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [Playing Back Data](#playingbackdata)
 * [Stereo from a Bagfile](#stereobagfile)
 * [Finding IP Address of Cameras](#findingcameraip)
+* [Install ZMQ python](#installingzmq)
 
 ## <a name="therobot"></a>The Robot
 
@@ -31,6 +32,20 @@ After that, the ros vimba wrapper at [http://wiki.ros.org/avt_vimba_camera](http
 git clone https://github.com/srv/avt_vimba_camera.git
 catkin_make
 ```
+
+Install ZMQ Python
+
+```bash
+sudo apt-get install python-zmq
+```
+
+and google protocol buffers 
+
+```bash
+sudo apt-get install python-protobuf
+```
+
+
 
 ## <a name="usage"></a>Usage
 
@@ -174,3 +189,4 @@ By setting the correct guid and ip of your camera.
 You can get the guid and ip of your camera by using the ListCamera or VimbaViewer binaries in
 
 Vimba_2_0/VimbaCPP/Examples/Bin/x86_64bit
+
