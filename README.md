@@ -13,6 +13,7 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [Stereo from a Bagfile](#stereobagfile)
 * [Finding IP Address of Cameras](#findingcameraip)
 * [Install ZMQ python](#installingzmq)
+* [ZeroMQ + Google Protocol Buffers Tutorial](#zeromqtutorial)
 
 ## <a name="therobot"></a>The Robot
 
@@ -189,4 +190,18 @@ By setting the correct guid and ip of your camera.
 You can get the guid and ip of your camera by using the ListCamera or VimbaViewer binaries in
 
 Vimba_2_0/VimbaCPP/Examples/Bin/x86_64bit
+
+## <a name="zeromqtutorial"></a>ZeroMQ + Google Protocol Buffers Tutorial
+
+To launch the publisher
+
+```bash
+rosrun rustbot_translation example_publisher.py
+```
+
+and to receive the subscriber
+
+```bash
+rosrun rustbot_translation example_listener.py
+```
 
