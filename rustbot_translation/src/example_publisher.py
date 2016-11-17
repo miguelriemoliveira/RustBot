@@ -1,42 +1,59 @@
 #!/usr/bin/env python
 #
-#Example SEV project
+# Example python publisher using zeromq and google protocol buffers
+#Messages received will be of type example_msg, defined in 
+# msgs/example_msg.proto
+#
+#To compile the message into python, use
+# roscd rustbot_translation/msgs
+# protoc example_msg.proto --python_out=../src/
+#
+# The file created, example_msg_pb2.py should be in the same folder as the python scripts. For C# you must check how to compile for that language, and how to import the compiled message
 
+#imports
 import zmq
-from random import randrange
-import addressbook_pb2
+import time
+
+#Use the example message defined in the folder msgs
+import example_msg_pb2
+
+#--------------------------
+#Start of code
+#--------------------------
+
+#create a example_msg message and fill in the fields
+#to publish
+m = example_msg_pb2.Person()
+m.id = 1234
+m.name = "John Doe"
+m.email = "jdoe@example.com"
+phone = m.phone.add()
+phone.number = "575-4321"
+phone.type = example_msg_pb2.Person.HOME
+
+#configure the zmq publisher
+ip = "*" #* indicates clients with any ip address may listen
+port = "5556" #port
+topic = 777 #topic name on which to publish
 
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
-socket.bind("tcp://*:5556")
+socket.bind("tcp://" + ip + ":" + port)
+print("Started publisher on tcp://" + ip + ":" + port + " , topic " + str(topic))
 
-
-person = addressbook_pb2.Person()
-person.id = 1234
-person.name = "John Doe"
-person.email = "jdoe@example.com"
-phone = person.phone.add()
-phone.number = "555-4321"
-phone.type = addressbook_pb2.Person.HOME
-
-
+#Iterate and publish periodically
 while True:
 
-    zipcode = randrange(1, 5)
-    #zipcode = 10001
-    temperature = randrange(-80, 135)
-    relhumidity = randrange(10, 60)
+    print("Sending message:\n" + str(m) )
 
-    #socket.send_string("%i %i %i" % (zipcode, temperature, relhumidity))
-    my_string = person.SerializeToString()
-    #socket.send_string(my_string )
-    #socket.send_string("%s" % my_string )
-    #socket.send_data( my_string )
-    print("publishing message")
-    #socket.send( my_string, copy=True )
+    #Serialization or marshalling
+    msg_as_string= m.SerializeToString()
+    print("Message serialized")
 
-    topic = 777
-    socket.send("%d %s" % (topic, my_string))
-    print("finished publishing")
+    #Publication
+    socket.send("%d %s" % (topic, msg_as_string))
+    print("Message published")
+
+    time.sleep(1)
 
     

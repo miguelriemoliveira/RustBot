@@ -1,50 +1,51 @@
 #!/usr/bin/env python
 #
-#   Weather update client
-#   Connects SUB socket to tcp://localhost:5556
-#   Collects weather updates and finds avg temp in zipcode
+# Example python listener using zeromq and google protocol buffers
+#Messages received will be of type example_msg, defined in 
+# msgs/example_msg.proto
 #
+#To compile the message into python, use
+# roscd rustbot_translation/msgs
+# protoc example_msg.proto --python_out=../src/
+#
+# The file created, example_msg_pb2.py should be in the same folder as the python scripts. For C# you must check how to compile for that language, and how to import the compiled message
 
 import sys
 import zmq
 
-import addressbook_pb2
+#Use the example message defined in the folder msgs
+import example_msg_pb2
 
-#  Socket to talk to server
+#--------------------------
+#Start of code
+#--------------------------
+
+#configure the zmq publisher
+ip = "localhost" #* indicates clients with any ip address may listen
+port = "5556" #port
+topic = "777" #topic name on which to publish
+if isinstance(topic, bytes): # Python 2 - ascii bytes to unicode str
+    topic = topic.decode('ascii')
+
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
+socket.connect("tcp://" + ip + ":" + port)
+socket.setsockopt_string(zmq.SUBSCRIBE, topic )
 
-print("Collecting updates from weather server")
-socket.connect("tcp://localhost:5556")
+print("Started subscriber on tcp://" + ip + ":" + port + " , topic " + str(topic))
 
-# Subscribe to zipcode, default is NYC, 10001
-zip_filter = sys.argv[1] if len(sys.argv) > 1 else "777"
+#Create a new instance of Person to unmarshall the data to
+m = example_msg_pb2.Person()
 
-# Python 2 - ascii bytes to unicode str
-if isinstance(zip_filter, bytes):
-    zip_filter = zip_filter.decode('ascii')
-socket.setsockopt_string(zmq.SUBSCRIBE, zip_filter )
+while True:
 
-while 1:
-    #string = socket.recv_string()
-    #print("starting to receive")
-    string = socket.recv()
-    print("string is")
-    print(string)
-    print("finished printing string")
+    #Receive message
+    message = socket.recv()
+    print("Message received")
 
-    person2 = addressbook_pb2.Person()
-    person2.ParseFromString(string[4:])
+    #Deserialization or unmarshalling
+    #We use message[4:] because we know the first four bytes are
+    #"777 " and we only want to give the data to the parser (not the topic name
+    m.ParseFromString(message[4:])
+    print("Received message:\n" + str(m) )
 
-    #print("person:\n" + str(person))
-    print("person2:\n" + str(person2))
-
-# Process 5 updates
-#total_temp = 0
-#for update_nbr in range(5):
-
-    #zipcode, temperature, relhumidity = string.split()
-    #total_temp += int(temperature)
-
-#print("Average temperature for zipcode '%s' was %dF" % (
-      #zip_filter, total_temp / (update_nbr+1)))
