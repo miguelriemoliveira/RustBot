@@ -1,16 +1,10 @@
 #!/usr/bin/env python
 #
-#   Weather update server
-#   Binds PUB socket to tcp://*:5556
-#   Publishes random weather updates
-#
+#Example SEV project
 
 import zmq
 from random import randrange
 import addressbook_pb2
-import sys 
-reload(sys)  
-sys.setdefaultencoding('utf8')
 
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
@@ -27,18 +21,22 @@ phone.type = addressbook_pb2.Person.HOME
 
 
 while True:
-    zipcode = randrange(1, 100000)
+
+    zipcode = randrange(1, 5)
+    #zipcode = 10001
     temperature = randrange(-80, 135)
     relhumidity = randrange(10, 60)
 
     #socket.send_string("%i %i %i" % (zipcode, temperature, relhumidity))
     my_string = person.SerializeToString()
-    socket.send_string(my_string )
+    #socket.send_string(my_string )
+    #socket.send_string("%s" % my_string )
+    #socket.send_data( my_string )
+    print("publishing message")
+    #socket.send( my_string, copy=True )
 
+    topic = 777
+    socket.send("%d %s" % (topic, my_string))
+    print("finished publishing")
 
-    person2 = addressbook_pb2.Person()
-    person2.ParseFromString(my_string)
-
-
-    print("person:\n" + str(person))
-    print("person2:\n" + str(person))
+    
