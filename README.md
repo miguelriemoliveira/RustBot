@@ -14,6 +14,7 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [Finding IP Address of Cameras](#findingcameraip)
 * [Install ZMQ python](#installingzmq)
 * [ZeroMQ + Google Protocol Buffers Tutorial](#zeromqtutorial)
+* [Compile Google Protocol Buffers Messages](#compilemessages)
 
 ## <a name="therobot"></a>The Robot
 
@@ -180,8 +181,6 @@ Select a camera and then, on the right side pane, select All propperties and sea
 
 ![get_ipaddress](https://github.com/miguelriemoliveira/RustBot/blob/master/docs/get_ipaddress.png)
 
-
-
 You may edit the file **launch/mono_camera.launch** and 
  
 
@@ -205,3 +204,12 @@ and to receive the subscriber
 rosrun rustbot_translation example_listener.py
 ```
 
+## <a name="compilemessages"></a>Compile Google Protocol Buffers Messages
+
+To compile google protocol messages messages for python use:
+
+```bash
+protoc -I=$SRC_DIR --python_out=$DST_DIR $SRC_DIR/addressbook.proto
+```
+
+as described [here](https://developers.google.com/protocol-buffers/docs/pythontutorial)
