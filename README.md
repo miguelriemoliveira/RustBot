@@ -209,7 +209,16 @@ rosrun rustbot_translation example_listener.py
 To compile google protocol messages messages for python use:
 
 ```bash
-protoc -I=$SRC_DIR --python_out=$DST_DIR $SRC_DIR/addressbook.proto
+roscd rustbot_translation
 ```
+
+```bash
+protoc -I=./msgs -I=/home/mike/workingcopy/protoc-3.1.0-linux-x86_64/include/google/protobuf/ --python_out=src/ msgs/SEVData.proto
+```
+
+This assumes you have the protoc version 3 binaries in /home/mike/workingcopy/protoc-3.1.0-linux-x86_64/
+
+Download [here](https://github.com/google/protobuf/releases/tag/v3.1.0)
+
 
 as described [here](https://developers.google.com/protocol-buffers/docs/pythontutorial)
