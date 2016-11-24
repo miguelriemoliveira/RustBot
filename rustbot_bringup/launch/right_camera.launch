@@ -9,9 +9,8 @@
   <!--This is already executed in the driver I think-->
   <!--Image processing node-->
   <!--<group ns="$(arg camera)">-->
-    <!--<node name="image_proc" pkg="image_proc" type="image_proc" output="screen"/>-->
+  <!--<node name="image_proc" pkg="image_proc" type="image_proc" output="screen"/>-->
   <!--</group>-->
-
   <!--Driver node-->
   <node name="$(arg camera)" pkg="avt_vimba_camera" type="mono_camera_node" output="screen" required="true">
     <param name="guid" value="$(arg guid)"/>
@@ -20,6 +19,6 @@
     <param name="frame_id" value="$(arg camera)_optical"/>
     <!--<param name="frame_id" value="$(arg camera)"/>-->
     <param name="acquisition_rate" value="$(arg fps)"/>
-    <rosparam command="load" file="$(find rustbot_bringup)/params/camera_parameters.yaml"/>
+    <rosparam command="load" file="$(find rustbot_bringup)/params/right_camera_parameters.yaml"/>
   </node>
 </launch>

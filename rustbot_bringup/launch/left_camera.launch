@@ -19,6 +19,6 @@
     <param name="frame_id" value="$(arg camera)_optical"/>
     <!--<param name="frame_id" value="$(arg camera)"/>-->
     <param name="acquisition_rate" value="$(arg fps)"/>
-    <rosparam command="load" file="$(find rustbot_bringup)/params/camera_parameters.yaml"/>
+    <rosparam command="load" file="$(find rustbot_bringup)/params/left_camera_parameters.yaml"/>
   </node>
 </launch>
