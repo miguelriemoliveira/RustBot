@@ -5,10 +5,11 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 
 * [The Robot](#therobot)
 * [Installation](#installation)
+* [Connecting via ssh](#connectingssh)
 * [Usage](#usage)
 * [Calibration](#calibration)
 * [Tunning Stereo Parameters](#tunningparameters)
-* [Recording Raw Data](#recordingrawdata)
+* [Saving a Bag File](#savingabagfile)
 * [Playing Back Data](#playingbackdata)
 * [Stereo from a Bagfile](#stereobagfile)
 * [Finding IP Address of Cameras](#findingcameraip)
@@ -70,6 +71,15 @@ Note that to run stereo on high resolution images the processing takes a long ti
 roslaunch rustbot_bringup all.launch fps:=1 queue_size:=50
 ```
 
+## <a name="connectingssh"></a>Connecting via ssh
+
+To connect to the remote NUC computer
+
+1. Connect an Ethernet cable from your laptop to the switch inside the sensor's box
+2. Set a static IP address (the NUC computer has ip 169.254.4.50, so use 169.254.4.51 for example)
+3. Ping the NUC Computer to see if everything is ok, i.e. ```ping 169.254.4.50```
+4. Launc the ssh connection ```ssh sev@169.254.4.50``` (the password is written in a sticker on the NUC computer)
+
 ## <a name="calibration"></a>Calibration
 
 Start the system without the stero processing
@@ -104,7 +114,7 @@ If you reached a set of parameters you would like to save, do the following:
 ```bash
 roscd rustbot_calibration/calibration/ && rosparam dump stereo_image_proc.yaml /stereo/stereo_image_proc
 ```
-## <a name="recordingrawdata"></a>Recording Raw Data
+## <a name="savingabagfile"></a>Saving a Bag File
 
 To record raw data we must first launch the camera drivers (no need to run stereo processing, since this will be done offline)
 
@@ -118,7 +128,8 @@ Then, to record messages, run
 roslaunch rustbot_bringup record_raw.launch
 ```
 
-After breaking the recorder node, the bag file can be found on the desktop.
+After stopping (using <Ctrl>X) the recorder node, the bag file can be found on the desktop, with the date and hour, e.g., 
+_sev_2016-11-24-14-48-30.bag_.
 
 ## <a name="playingbackdata"></a>Playing Back Data
 
