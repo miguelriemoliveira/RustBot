@@ -46,8 +46,11 @@ and google protocol buffers
 ```bash
 sudo apt-get install python-protobuf
 ```
+Also you should run 
 
-
+```bash
+sudo pip install --upgrade protobuf
+```
 
 ## <a name="usage"></a>Usage
 
