@@ -116,6 +116,8 @@ roscd rustbot_calibration/calibration/ && rosparam dump stereo_image_proc.yaml /
 ```
 ## <a name="savingabagfile"></a>Saving a Bag File
 
+This should be done in the NUC, if you are running from a laptop use an ssh connection (see [Connecting via ssh](#connectingssh)).
+
 To record raw data we must first launch the camera drivers (no need to run stereo processing, since this will be done offline)
 
 ```bash
