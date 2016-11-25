@@ -229,17 +229,10 @@ mkdir ~/bin && ln -s ~/workingcopy/protoc-3.1.0-linux-x86_64/bin/protoc protoc
 ```
 
 Make sure the ~/bin folder is the first in your path, otherwise you may be using another version of protoc.
-
 You may confirm this with
 
 ```bash
 protoc --version
 ```
 
-```
-
-
-Then, make sure you are using the correct version of protoc.
-
-
-as described [here](https://developers.google.com/protocol-buffers/docs/pythontutorial)
+See [this](https://developers.google.com/protocol-buffers/docs/pythontutorial) for additional info.
