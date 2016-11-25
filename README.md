@@ -143,18 +143,7 @@ Important: you must press the right mouse button over all topics in the bag file
 
 ## <a name="stereobagfile"></a>Stereo from a Bagfile
 
-To playback recorded data run
-
-```bash
-rosrun rqt_bag rqt_bag ~/Destop/sev_2016-10-30-21-59-02.bag
-```
-
-After loading press right mouse button on the messages and select "publish all messages".
-If instead you want the terminal player
-
-```bashd
-rosrun rosrun rosbag play ~/Destop/sev_2016-10-30-21-59-02.bag
-```
+First, you must be playing back recorded data. See section (Playing Back Data)[#playingbackdata"]
 
 To run the stereo
 
@@ -203,7 +192,7 @@ You can get the guid and ip of your camera by using the ListCamera or VimbaViewe
 
 Vimba_2_0/VimbaCPP/Examples/Bin/x86_64bit
 
-## <a name="zeromqtutorial"></a>ZeroMQ + Google Protocol Buffers Tutorial
+## <a name="zeromqtutorial"></a> ZeroMQ + Google Protocol Buffers Tutorial
 
 To launch the publisher
 
