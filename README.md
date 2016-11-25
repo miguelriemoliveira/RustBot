@@ -13,7 +13,6 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [Playing Back Data](#playingbackdata)
 * [Stereo from a Bagfile](#stereobagfile)
 * [Finding IP Address of Cameras](#findingcameraip)
-* [Install ZMQ python](#installingzmq)
 * [ZeroMQ + Google Protocol Buffers Tutorial](#zeromqtutorial)
 * [Compile Google Protocol Buffers Messages](#compilemessages)
 
