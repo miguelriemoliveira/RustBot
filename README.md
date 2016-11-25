@@ -143,7 +143,7 @@ Important: you must press the right mouse button over all topics in the bag file
 
 ## <a name="stereobagfile"></a>Stereo from a Bagfile
 
-First, you must be playing back recorded data. See section (Playing Back Data)[#playingbackdata"]
+First, you must be playing back recorded data. See section [Playing Back Data](#playingbackdata)
 
 To run the stereo
 
