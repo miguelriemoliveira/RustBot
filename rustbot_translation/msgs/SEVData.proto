@@ -1,10 +1,13 @@
 syntax = "proto3";
 
 import "PointCloud2.proto"; 
+import "Image.proto"; 
 
 /*This message creates a super structure containing the several data to be sent by the SEV sensor*/
 
 message SEVData {
-    PointCloud2 point_cloud = 1 ;
+    Image left_image = 1;
+    Image right_image = 2;
+    PointCloud2 point_cloud = 3;
 }
 

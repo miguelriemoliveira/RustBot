@@ -1,0 +1,44 @@
+
+ç
+timestamp.protogoogle.protobuf";
+	Timestamp
+seconds (Rseconds
+nanos (RnanosB~
+com.google.protobufBTimestampProtoPZ+github.com/golang/protobuf/ptypes/timestampø¢GPBªGoogle.Protobuf.WellKnownTypesbproto3
+~
+Header.prototimestamp.proto"U
+Header
+frame_id (	RframeId0
+stamp (2.google.protobuf.TimestampRstampbproto3
+f
+PointXYZRGB.proto"I
+PointXYZRGB
+x (Rx
+y (Ry
+z (Rz
+rgb (Rrgbbproto3
+’
+PointCloud2.protoHeader.protoPointXYZRGB.proto"T
+PointCloud2
+header (2.HeaderRheader$
+points (2.PointXYZRGBRpointsbproto3
+H
+Pixel.proto"1
+Pixel
+r (Rr
+g (Rg
+b (Rbbproto3
+z
+Image.protoHeader.protoPixel.proto"H
+Image
+header (2.HeaderRheader
+pixels (2.PixelRpixelsbproto3
+Â
+SEVData.protoPointCloud2.protoImage.proto"ˆ
+SEVData%
+
+left_image (2.ImageR	leftImage'
+right_image (2.ImageR
+rightImage-
+point_cloud (2.PointCloud2R
+pointCloudbproto3
