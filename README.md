@@ -220,7 +220,26 @@ protoc -I=./msgs -I=/home/mike/workingcopy/protoc-3.1.0-linux-x86_64/include/goo
 
 This assumes you have the protoc version 3 binaries in /home/mike/workingcopy/protoc-3.1.0-linux-x86_64/
 
-Download [here](https://github.com/google/protobuf/releases/tag/v3.1.0)
+You may download [here](https://github.com/google/protobuf/releases/tag/v3.1.0). 
+
+Add a link to this version of protoc.
+
+```bash
+mkdir ~/bin && ln -s ~/workingcopy/protoc-3.1.0-linux-x86_64/bin/protoc protoc
+```
+
+Make sure the ~/bin folder is the first in your path, otherwise you may be using another version of protoc.
+
+You may confirm this with
+
+```bash
+protoc --version
+```
+
+```
+
+
+Then, make sure you are using the correct version of protoc.
 
 
 as described [here](https://developers.google.com/protocol-buffers/docs/pythontutorial)
