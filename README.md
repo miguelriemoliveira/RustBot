@@ -81,7 +81,11 @@ To connect to the remote NUC computer
 1. Connect an Ethernet cable from your laptop to the switch inside the sensor's box
 2. Set a static IP address (the NUC computer has ip 169.254.4.50, so use 169.254.4.51 for example)
 3. Ping the NUC Computer to see if everything is ok, i.e. ```ping 169.254.4.50```
-4. Launc the ssh connection ```ssh sev@169.254.4.50``` (the password is written in a sticker on the NUC computer)
+4. Launch the ssh connection ```ssh sev@169.254.4.50``` (the password is written in a sticker on the NUC computer)
+
+Note that whenever your ssh tunnel will execute some visual interface application you should start the ssh connection with the _-X_ option, as seen bellow:
+
+4. Launch the ssh connection ```ssh sev@169.254.4.50 -X``` (the password is written in a sticker on the NUC computer)
 
 ## <a name="calibration"></a>Calibration
 
