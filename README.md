@@ -12,6 +12,7 @@ Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer t
 * [Saving a Bag File](#savingabagfile)
 * [Playing Back Data](#playingbackdata)
 * [Stereo from a Bagfile](#stereobagfile)
+* [Publishing Data Using ZMQ](#publishingdatazmq)
 * [Finding IP Address of Cameras](#findingcameraip)
 * [ZeroMQ + Google Protocol Buffers Tutorial](#zeromqtutorial)
 * [Compile Google Protocol Buffers Messages](#compilemessages)
@@ -154,6 +155,21 @@ roslaunch rustbot_bringup all.launch do_stereo:=true online_stereo:=false
 ```
 
 Now you should receive both disparity images /stereo/disparity as well as point clouds /stereo/points2
+
+## <a name="publishingdatazmq"></a>Publishing Data Using ZMQ
+
+Note that in order for this node to work, there must be some node publishing images and point clouds.
+This can be done online (not yet funcional) or offline.
+
+To _publish images offline_ follow sections [Playing Back Data](playingbackdata) to publish the recorded images, and also section [Stereo from a Bagfile](#stereobagfile) to publish the disparity maps and the point clouds.
+
+
+To launch the ZMQ publisher, do:
+
+```bash
+rosrun rustbot_translation sev_publisher.py
+```
+
 
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
