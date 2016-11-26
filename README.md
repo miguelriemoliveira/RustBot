@@ -174,6 +174,13 @@ To launch the ZMQ publisher, do:
 rosrun rustbot_translation sev_publisher.py
 ```
 
+Now launch the ZMQ test subscriber (in Ubuntu python) to see if any images are received:
+
+```bash
+rosrun rustbot_translation sev_listener.py
+```
+
+If the listener receives images, so should the C# application called [RustBoxCSharp](https://github.com/carlosmccosta/RustBotCSharp) as long as its propperly configured.
 
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
