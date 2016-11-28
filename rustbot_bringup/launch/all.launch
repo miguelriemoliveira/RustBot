@@ -20,6 +20,8 @@
       <include file="$(find rustbot_bringup)/launch/right_camera.launch">
         <arg name="fps" value="$(arg fps)"/>
       </include>
+       <include file="$(find rustbot_bringup)/launch/gps.launch">
+      </include>
     </group>
   </group>
 
