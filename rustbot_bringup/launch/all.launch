@@ -5,6 +5,9 @@
   <arg name="config_stereo" default="false"/>
   <arg name="fps" default="1"/>
   <arg name="queue_size" default="50"/>
+  <include file="$(find rustbot_bringup)/launch/gps.launch">
+   </include>
+
   <group ns="stereo">
     <group if="$(arg do_stereo)">
       <node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" output="screen">
@@ -20,8 +23,7 @@
       <include file="$(find rustbot_bringup)/launch/right_camera.launch">
         <arg name="fps" value="$(arg fps)"/>
       </include>
-       <include file="$(find rustbot_bringup)/launch/gps.launch">
-      </include>
+   
     </group>
   </group>
 
