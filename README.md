@@ -237,7 +237,13 @@ rosrun rustbot_translation example_listener.py
 
 ## <a name="compilemessages"></a>Compile Google Protocol Buffers Messages
 
-To compile google protocol messages messages for python use:
+To compile all the required messages use the script:
+
+```bash
+roscd rustbot_translation && ./compile_proto.sh
+```
+
+If you want the compile individual mesages for python use something like:
 
 ```bash
 roscd rustbot_translation

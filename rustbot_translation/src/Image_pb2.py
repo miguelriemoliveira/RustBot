@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='Image.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x0bImage.proto\x1a\x0cHeader.proto\x1a\x0bPixel.proto\"W\n\x05Image\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0e\n\x06height\x18\x02 \x01(\x05\x12\r\n\x05width\x18\x03 \x01(\x05\x12\x16\n\x06pixels\x18\x04 \x03(\x0b\x32\x06.Pixelb\x06proto3')
+  serialized_pb=_b('\n\x0bImage.proto\x1a\x0cHeader.proto\x1a\x0bPixel.proto\"M\n\x05Image\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0e\n\x06height\x18\x02 \x01(\x05\x12\r\n\x05width\x18\x03 \x01(\x05\x12\x0c\n\x04\x64\x61ta\x18\x04 \x01(\x0c\x62\x06proto3')
   ,
   dependencies=[Header__pb2.DESCRIPTOR,Pixel__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -58,9 +58,9 @@ _IMAGE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='pixels', full_name='Image.pixels', index=3,
-      number=4, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
+      name='data', full_name='Image.data', index=3,
+      number=4, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -77,11 +77,10 @@ _IMAGE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=42,
-  serialized_end=129,
+  serialized_end=119,
 )
 
 _IMAGE.fields_by_name['header'].message_type = Header__pb2._HEADER
-_IMAGE.fields_by_name['pixels'].message_type = Pixel__pb2._PIXEL
 DESCRIPTOR.message_types_by_name['Image'] = _IMAGE
 
 Image = _reflection.GeneratedProtocolMessageType('Image', (_message.Message,), dict(

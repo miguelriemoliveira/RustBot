@@ -87,33 +87,44 @@ def timerCallback(event):
     print("Sending message")
     sd = SEVData_pb2.SEVData()
 
+
+    print("Starting to parse message")
+    start_time = time.time()
     # Copying left image
     (height,width,channels) = cv_left_image.shape
-    b_channel, g_channel, r_channel = cv2.split(cv_left_image)
+    #b_channel, g_channel, r_channel = cv2.split(cv_left_image)
 
     sd.left_image.height = height
     sd.left_image.width = width
+    #sd.left_image.data = str(cv_left_image.data)
+    sd.left_image.data = bytes(cv_left_image.data)
 
-    for l in range(0, height):
-        for c in range(0, width):
-            pixel = sd.left_image.pixels.add()
-            pixel.r = int(r_channel[l,c])
-            pixel.g = int(g_channel[l,c])
-            pixel.b = int(b_channel[l,c])
+
+    #for l in range(0, height):
+        #for c in range(0, width):
+            #pixel = sd.left_image.pixels.add()
+            #pixel.r = int(r_channel[l,c])
+            #pixel.g = int(g_channel[l,c])
+            #pixel.b = int(b_channel[l,c])
 
     # Copying right image
     (height,width,channels) = cv_right_image.shape
-    b_channel, g_channel, r_channel = cv2.split(cv_right_image)
+    #b_channel, g_channel, r_channel = cv2.split(cv_right_image)
 
-    sd.right_image.height = height
-    sd.right_image.width = width
+    #sd.right_image.height = height
+    #sd.right_image.width = width
+    #sd.right_image.data = str(cv_right_image.data)
 
-    for l in range(0, height):
-        for c in range(0, width):
-            pixel = sd.right_image.pixels.add()
-            pixel.r = int(r_channel[l,c])
-            pixel.g = int(g_channel[l,c])
-            pixel.b = int(b_channel[l,c])
+
+    #for l in range(0, height):
+        #for c in range(0, width):
+            #pixel = sd.right_image.pixels.add()
+            #pixel.r = int(r_channel[l,c])
+            #pixel.g = int(g_channel[l,c])
+            #pixel.b = int(b_channel[l,c])
+
+    elapsed_time = time.time() - start_time
+    print("Finished parsing message in " + str(elapsed_time))
 
     #Serialization or marshalling
     msg_as_string= sd.SerializeToString()

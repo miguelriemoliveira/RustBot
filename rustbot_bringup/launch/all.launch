@@ -22,7 +22,6 @@
       </include>
     </group>
   </group>
-
   <group if="$(arg config_stereo)">
     <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen">
     </node>
