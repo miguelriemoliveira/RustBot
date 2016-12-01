@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "timestamp.proto"; 
+import "timestamp.proto";
 
 /*Adaptation from*/
 /*http://docs.ros.org/jade/api/std_msgs/html/msg/Header.html*/
