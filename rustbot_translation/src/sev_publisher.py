@@ -14,17 +14,15 @@ import roslib
 import sys
 import rospy
 import cv2
-from std_msgs.msg import String
-from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
+from sensor_msgs.msg import PointCloud2, PointField
+from sensor_msgs.msg import Image
+from std_msgs.msg import String
 
 import google.protobuf
-#print google.protobuf.__version__
-#Use the example message defined in the folder msgs
-#from google import protobuf
 import SEVData_pb2
-import Image_pb2
+import PointField_pb2
 
 #--------------------------
 # Global Vars
@@ -41,6 +39,7 @@ socket = context.socket(zmq.PUB)
 bridge = CvBridge()
 cv_left_image = []
 cv_right_image = []
+point_cloud2_msg = []
 
 
 #--------------------------
@@ -70,6 +69,12 @@ def rightImageReceivedCallback(data):
     #cv2.imshow("Right Camera", cv_image)
     #cv2.waitKey(50)
 
+def pointcloudReceivedCallback(data):
+    #print("Received point cloud")
+    global point_cloud2_msg 
+    point_cloud2_msg = data
+    #point_cloud2_msg = copy.deepcopy(data)
+
 def timerCallback(event):
 
     #Start preparing message to send
@@ -83,6 +88,23 @@ def timerCallback(event):
     # Copying right image
     (sd.right_image.height,sd.right_image.width ,_) = cv_right_image.shape
     sd.right_image.data = bytes(cv_right_image.data)
+
+    # Copying the point cloud
+    sd.point_cloud.height = point_cloud2_msg.height
+    sd.point_cloud.width = point_cloud2_msg.width
+
+    for field in point_cloud2_msg.fields:
+        point_field = sd.point_cloud.fields.add()
+        point_field.name = field.name
+        point_field.offset = field.offset
+        point_field.datatype = field.datatype
+        point_field.count = field.count
+
+    sd.point_cloud.is_bigendian = point_cloud2_msg.is_bigendian
+    sd.point_cloud.point_step = point_cloud2_msg.point_step
+    sd.point_cloud.row_step = point_cloud2_msg.row_step
+    sd.point_cloud.data = point_cloud2_msg.data
+
 
     elapsed_time = time.time() - start_time
     print("Finished copying messages to SEVData message in " + str(elapsed_time))
@@ -119,10 +141,13 @@ def main(args):
     left_image_sub = rospy.Subscriber("/stereo/left/image_raw", Image, leftImageReceivedCallback)
     right_image_sub = rospy.Subscriber("/stereo/right/image_raw", Image, rightImageReceivedCallback)
 
+    rospy.Subscriber("/stereo/points2", PointCloud2, pointcloudReceivedCallback)
+
     #cv2.namedWindow("Left Camera")
     #cv2.namedWindow("Right Camera")
 
-    rospy.Timer(rospy.Duration(1), timerCallback)
+    #TODO This wait is to try to get at least one message of each time before publishing the message. Its a blind wait so sometimes it does not work. In the future, the condition above should be checked before sending
+    rospy.Timer(rospy.Duration(1.5), timerCallback)
 
     #Spin infinetely
     rospy.spin()

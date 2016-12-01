@@ -1,6 +1,6 @@
 syntax = "proto3";
 import "Header.proto"; 
-import "PointXYZRGB.proto"; 
+import "PointField.proto"; 
 
 /*Adaptation from */
 /*http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html*/
@@ -36,6 +36,13 @@ import "PointXYZRGB.proto";
 message PointCloud2 {
 
     Header header = 1;
-    repeated PointXYZRGB points = 2;
+    int32 height = 2;
+    int32 width = 3;
+    repeated PointField fields = 4;
+    bool is_bigendian = 5;
+    int32 point_step = 6;
+    int32 row_step = 7;
+    bytes data = 8;
+    /*repeated PointXYZRGB points = 2;*/
 }
 

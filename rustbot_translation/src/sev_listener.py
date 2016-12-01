@@ -12,10 +12,11 @@ import cv2
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import PointCloud2, PointField
+import sensor_msgs.point_cloud2 as pc2
 import copy
 
 import SEVData_pb2
-import Image_pb2
 
 #--------------------------
 #Start of code
@@ -32,34 +33,7 @@ context = zmq.Context()
 socket = context.socket(zmq.SUB)
 
 print("Started subscriber on tcp://" + ip + ":" + port + " , topic " + str(topic))
-
 sd = SEVData_pb2.SEVData()
-
-def ImageToCVImage(image):
-    height = image.height
-    width = image.width
-
-    #print("height = " + str(height) + " width=" + str(width))
-    #b_channel = np.zeros((height,width,1), np.uint8)
-    #r_channel = np.zeros((height,width,1), np.uint8)
-    #g_channel = np.zeros((height,width,1), np.uint8)
-
-    #for l in range(0, height):
-        #for c in range(0, width):
-            #idx = c + l * width
-            #pixel = image.pixels[idx]
-
-            #r_channel[l,c] = pixel.r
-            #g_channel[l,c] = pixel.g
-            #b_channel[l,c] = pixel.b
-
-
-    cv_image = np.zeros((height,width,3), np.uint8)
-
-    #cv_image.data = copy.deepcopy(image.data)
-    cv_image.data = image.data
-    #cv_image = cv2.merge((b_channel, g_channel, r_channel)) 
-    return cv_image
 
 
 def main(args):
@@ -93,12 +67,39 @@ def main(args):
         cv_right_image = np.zeros((sd.right_image.height, sd.right_image.width, 3), np.uint8)
         cv_right_image.data = sd.right_image.data
 
+        #Getting the point cloud
+        point_cloud_msg = PointCloud2()
+        point_cloud_msg.height = sd.point_cloud.height
+        point_cloud_msg.width = sd.point_cloud.width
+
+        for field in sd.point_cloud.fields:
+            point_field = PointField()
+            point_field.name = field.name
+            point_field.offset = field.offset
+            point_field.datatype = field.datatype
+            point_field.count = field.count
+
+            point_cloud_msg.fields.append(point_field)
+
+        point_cloud_msg.is_bigendian = sd.point_cloud.is_bigendian
+        point_cloud_msg.is_bigendian = sd.point_cloud.is_bigendian
+        point_cloud_msg.point_step = sd.point_cloud.point_step
+        point_cloud_msg.row_step = sd.point_cloud.row_step
+        point_cloud_msg.data = sd.point_cloud.data
+
         #Visualizing the received data
         cv2.imshow("Listener Left Camera", cv_left_image)
         cv2.imshow("Listener Right Camera", cv_right_image)
         cv2.waitKey(30)
 
-        
+        print("First 10 points x,y,z and rgb (packed in float32) values (just for debug)")
+        count = 0
+        for p in pc2.read_points(point_cloud_msg, field_names = ("x", "y", "z", "rgb"), skip_nans=True):
+            print " x : %f  y: %f  z: %f rgb: %f" %(p[0],p[1],p[2],p[3])
+            count = count + 1
+            if count > 10:
+                break
+
 if __name__ == '__main__':
     main(sys.argv)
 

@@ -14,16 +14,16 @@ _sym_db = _symbol_database.Default()
 
 
 import Header_pb2 as Header__pb2
-import PointXYZRGB_pb2 as PointXYZRGB__pb2
+import PointField_pb2 as PointField__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='PointCloud2.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x11PointCloud2.proto\x1a\x0cHeader.proto\x1a\x11PointXYZRGB.proto\"D\n\x0bPointCloud2\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x1c\n\x06points\x18\x02 \x03(\x0b\x32\x0c.PointXYZRGBb\x06proto3')
+  serialized_pb=_b('\n\x11PointCloud2.proto\x1a\x0cHeader.proto\x1a\x10PointField.proto\"\xac\x01\n\x0bPointCloud2\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0e\n\x06height\x18\x02 \x01(\x05\x12\r\n\x05width\x18\x03 \x01(\x05\x12\x1b\n\x06\x66ields\x18\x04 \x03(\x0b\x32\x0b.PointField\x12\x14\n\x0cis_bigendian\x18\x05 \x01(\x08\x12\x12\n\npoint_step\x18\x06 \x01(\x05\x12\x10\n\x08row_step\x18\x07 \x01(\x05\x12\x0c\n\x04\x64\x61ta\x18\x08 \x01(\x0c\x62\x06proto3')
   ,
-  dependencies=[Header__pb2.DESCRIPTOR,PointXYZRGB__pb2.DESCRIPTOR,])
+  dependencies=[Header__pb2.DESCRIPTOR,PointField__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
@@ -44,9 +44,51 @@ _POINTCLOUD2 = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='points', full_name='PointCloud2.points', index=1,
-      number=2, type=11, cpp_type=10, label=3,
+      name='height', full_name='PointCloud2.height', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='width', full_name='PointCloud2.width', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='fields', full_name='PointCloud2.fields', index=3,
+      number=4, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='is_bigendian', full_name='PointCloud2.is_bigendian', index=4,
+      number=5, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='point_step', full_name='PointCloud2.point_step', index=5,
+      number=6, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='row_step', full_name='PointCloud2.row_step', index=6,
+      number=7, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='data', full_name='PointCloud2.data', index=7,
+      number=8, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -63,11 +105,11 @@ _POINTCLOUD2 = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=54,
-  serialized_end=122,
+  serialized_end=226,
 )
 
 _POINTCLOUD2.fields_by_name['header'].message_type = Header__pb2._HEADER
-_POINTCLOUD2.fields_by_name['points'].message_type = PointXYZRGB__pb2._POINTXYZRGB
+_POINTCLOUD2.fields_by_name['fields'].message_type = PointField__pb2._POINTFIELD
 DESCRIPTOR.message_types_by_name['PointCloud2'] = _POINTCLOUD2
 
 PointCloud2 = _reflection.GeneratedProtocolMessageType('PointCloud2', (_message.Message,), dict(
