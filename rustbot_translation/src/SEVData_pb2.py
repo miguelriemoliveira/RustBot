@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='SEVData.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\rSEVData.proto\x1a\x11PointCloud2.proto\x1a\x0bImage.proto\"%\n\x07SEVData\x12\x1a\n\nleft_image\x18\x01 \x01(\x0b\x32\x06.Imageb\x06proto3')
+  serialized_pb=_b('\n\rSEVData.proto\x1a\x11PointCloud2.proto\x1a\x0bImage.proto\"e\n\x07SEVData\x12\x1a\n\nleft_image\x18\x01 \x01(\x0b\x32\x06.Image\x12\x1b\n\x0bright_image\x18\x02 \x01(\x0b\x32\x06.Image\x12!\n\x0bpoint_cloud\x18\x03 \x01(\x0b\x32\x0c.PointCloud2b\x06proto3')
   ,
   dependencies=[PointCloud2__pb2.DESCRIPTOR,Image__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -43,6 +43,20 @@ _SEVDATA = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='right_image', full_name='SEVData.right_image', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='point_cloud', full_name='SEVData.point_cloud', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -56,10 +70,12 @@ _SEVDATA = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=49,
-  serialized_end=86,
+  serialized_end=150,
 )
 
 _SEVDATA.fields_by_name['left_image'].message_type = Image__pb2._IMAGE
+_SEVDATA.fields_by_name['right_image'].message_type = Image__pb2._IMAGE
+_SEVDATA.fields_by_name['point_cloud'].message_type = PointCloud2__pb2._POINTCLOUD2
 DESCRIPTOR.message_types_by_name['SEVData'] = _SEVDATA
 
 SEVData = _reflection.GeneratedProtocolMessageType('SEVData', (_message.Message,), dict(

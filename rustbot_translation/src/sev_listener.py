@@ -63,68 +63,42 @@ def ImageToCVImage(image):
 
 
 def main(args):
+    #prepare the listener
     global socket
     socket.connect("tcp://" + ip + ":" + port)
     socket.setsockopt_string(zmq.SUBSCRIBE, topic )
 
+    #setup some opencv windows
     cv2.namedWindow("Listener Left Camera")
     cv2.namedWindow("Listener Right Camera")
-    count = 0
-    height = width = 0
-    cv_left_image = [] 
 
 
-
+    #Start the main loop
     while True:
 
-        #maxpkglen = 1024 * 1024 # original maxpkglen = 1024
-        #s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        #s.sendto(req, (server, port))
-        #rsp, server = s.recvfrom(maxpkglen)
-        #s.close()
-        #Receive message
-        #n = 1024
-        #buf = ''
-        #while n > 0:
-            #data = socket.recv(n)
-            #if data == '':
-                #raise RuntimeError('unexpected connection close')
-            #buf += data
-            #n -= len(data)
-            
-        #message = buf
-        message = socket.recv(10*1024)
+        message_in = socket.recv(10*1024)
+        #For some reason I have to make a deep copy of the message. Otherwise, when, the second time I received the message I got a truncated message error. This solves it so I dod not worry about it anymore.
+        message = copy.deepcopy(message_in)
         
-
-        print("Message received with " + str(len(message)))
-
         #Deserialization or unmarshalling
         #We use message[4:] because we know the first four bytes are
         #"777 " and we only want to give the data to the parser (not the topic name
         sd.ParseFromString(message[4:])
-        #sd.ParseFromString(message.data)
-        #print("Received message:\n" + str(m) )
-
-        if height == 0:
-            height = sd.left_image.height
-            width = sd.left_image.width
-            cv_left_image = np.zeros((height,width,3), np.uint8)
-            print("Initialized images with " + str(height) + "x" + str(width))
-
-
-        #cv_left_image = ImageToCVImage(sd.left_image)
+        
+        #Getting the left image
+        cv_left_image = np.zeros((sd.left_image.height, sd.left_image.width, 3), np.uint8)
         cv_left_image.data = sd.left_image.data
-        #cv_right_image = ImageToCVImage(sd.right_image)
+        
+        #Getting the right image
+        cv_right_image = np.zeros((sd.right_image.height, sd.right_image.width, 3), np.uint8)
+        cv_right_image.data = sd.right_image.data
+
+        #Visualizing the received data
         cv2.imshow("Listener Left Camera", cv_left_image)
-        #cv2.imshow("Listener Right Camera", cv_right_image)
+        cv2.imshow("Listener Right Camera", cv_right_image)
         cv2.waitKey(30)
 
-        print("Count = " + str(count))
-        count = count + 1
-        print("Got cv_image")
-        #del cv_left_image
-        #time.sleep(5.0)
-
+        
 if __name__ == '__main__':
     main(sys.argv)
 

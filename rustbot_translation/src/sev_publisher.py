@@ -8,6 +8,8 @@
 import zmq
 import time
 
+import numpy as np
+
 import roslib
 import sys
 import rospy
@@ -16,6 +18,9 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
+
+import google.protobuf
+#print google.protobuf.__version__
 #Use the example message defined in the folder msgs
 #from google import protobuf
 import SEVData_pb2
@@ -65,66 +70,22 @@ def rightImageReceivedCallback(data):
     #cv2.imshow("Right Camera", cv_image)
     #cv2.waitKey(50)
 
-
-def cvImageToImage(cv_image):
-    (height,width,channels) = cv_image.shape
-    b_channel, g_channel, r_channel = cv2.split(cv_image)
-    image = Image_pb2.Image()
-    image.height = height
-    image.width = width
-
-    for l in range(0, height):
-        for c in range(0, width):
-            pixel = image.pixels.add()
-            pixel.r = int(r_channel[l,c])
-            pixel.g = int(g_channel[l,c])
-            pixel.b = int(b_channel[l,c])
-
-    return image
-
 def timerCallback(event):
 
-    print("Sending message")
+    #Start preparing message to send
+    start_time = time.time()
     sd = SEVData_pb2.SEVData()
 
-
-    print("Starting to parse message")
-    start_time = time.time()
     # Copying left image
-    (height,width,channels) = cv_left_image.shape
-    #b_channel, g_channel, r_channel = cv2.split(cv_left_image)
-
-    sd.left_image.height = height
-    sd.left_image.width = width
-    #sd.left_image.data = str(cv_left_image.data)
+    (sd.left_image.height,sd.left_image.width ,_) = cv_left_image.shape
     sd.left_image.data = bytes(cv_left_image.data)
 
-
-    #for l in range(0, height):
-        #for c in range(0, width):
-            #pixel = sd.left_image.pixels.add()
-            #pixel.r = int(r_channel[l,c])
-            #pixel.g = int(g_channel[l,c])
-            #pixel.b = int(b_channel[l,c])
-
     # Copying right image
-    (height,width,channels) = cv_right_image.shape
-    #b_channel, g_channel, r_channel = cv2.split(cv_right_image)
-
-    #sd.right_image.height = height
-    #sd.right_image.width = width
-    #sd.right_image.data = str(cv_right_image.data)
-
-
-    #for l in range(0, height):
-        #for c in range(0, width):
-            #pixel = sd.right_image.pixels.add()
-            #pixel.r = int(r_channel[l,c])
-            #pixel.g = int(g_channel[l,c])
-            #pixel.b = int(b_channel[l,c])
+    (sd.right_image.height,sd.right_image.width ,_) = cv_right_image.shape
+    sd.right_image.data = bytes(cv_right_image.data)
 
     elapsed_time = time.time() - start_time
-    print("Finished parsing message in " + str(elapsed_time))
+    print("Finished copying messages to SEVData message in " + str(elapsed_time))
 
     #Serialization or marshalling
     msg_as_string= sd.SerializeToString()
@@ -132,7 +93,7 @@ def timerCallback(event):
 
     #Publication
     socket.send("%d %s" % (topic, msg_as_string))
-    print("Message published")
+    print("Sending message")
 
 
 #--------------------------

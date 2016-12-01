@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "timestamp.proto"; 
+/*import "timestamp.proto"; */
 
 /*Adaptation from*/
 /*http://docs.ros.org/jade/api/std_msgs/html/msg/Header.html*/
@@ -23,6 +23,6 @@ import "timestamp.proto";
 
 message Header{
     string frame_id = 1;
-    google.protobuf.Timestamp stamp = 2;
+    /*google.protobuf.Timestamp stamp = 2;*/
 }
 

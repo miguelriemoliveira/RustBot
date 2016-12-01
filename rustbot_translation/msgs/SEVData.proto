@@ -7,7 +7,7 @@ import "Image.proto";
 
 message SEVData {
     Image left_image = 1;
-    /*Image right_image = 2;*/
-    /*optional PointCloud2 point_cloud = 3;*/
+    Image right_image = 2;
+    PointCloud2 point_cloud = 3;
 }
 

@@ -13,16 +13,14 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
-import timestamp_pb2 as timestamp__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Header.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x0cHeader.proto\x1a\x0ftimestamp.proto\"E\n\x06Header\x12\x10\n\x08\x66rame_id\x18\x01 \x01(\t\x12)\n\x05stamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestampb\x06proto3')
-  ,
-  dependencies=[timestamp__pb2.DESCRIPTOR,])
+  serialized_pb=_b('\n\x0cHeader.proto\"\x1a\n\x06Header\x12\x10\n\x08\x66rame_id\x18\x01 \x01(\tb\x06proto3')
+)
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
@@ -42,13 +40,6 @@ _HEADER = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
-    _descriptor.FieldDescriptor(
-      name='stamp', full_name='Header.stamp', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
   ],
   extensions=[
   ],
@@ -61,11 +52,10 @@ _HEADER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=33,
-  serialized_end=102,
+  serialized_start=16,
+  serialized_end=42,
 )
 
-_HEADER.fields_by_name['stamp'].message_type = timestamp__pb2._TIMESTAMP
 DESCRIPTOR.message_types_by_name['Header'] = _HEADER
 
 Header = _reflection.GeneratedProtocolMessageType('Header', (_message.Message,), dict(
