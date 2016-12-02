@@ -9,6 +9,10 @@ protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/Quaternion.proto
 protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/Pose.proto
 protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/PoseWithCovariance.proto
 
+protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/Vector3.proto
+protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/Twist.proto
+protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/TwistWithCovariance.proto
+
 protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/NavSatFix.proto
 protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/Odometry.proto
 protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/Image.proto

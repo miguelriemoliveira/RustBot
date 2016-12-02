@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "Vector3.proto"; 
+
+/*# This expresses velocity in free space broken into its linear and angular parts.*/
+/*Vector3  linear*/
+/*Vector3  angular*/
+
+message Twist{
+    Vector3 linear = 1;
+    Vector3 angular = 2;
+}

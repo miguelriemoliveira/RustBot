@@ -14,15 +14,17 @@ _sym_db = _symbol_database.Default()
 
 
 import Header_pb2 as Header__pb2
+import PoseWithCovariance_pb2 as PoseWithCovariance__pb2
+import TwistWithCovariance_pb2 as TwistWithCovariance__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Odometry.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x0eOdometry.proto\x1a\x0cHeader.proto\"#\n\x08Odometry\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Headerb\x06proto3')
+  serialized_pb=_b('\n\x0eOdometry.proto\x1a\x0cHeader.proto\x1a\x18PoseWithCovariance.proto\x1a\x19TwistWithCovariance.proto\"\x83\x01\n\x08Odometry\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x16\n\x0e\x63hild_frame_id\x18\x02 \x01(\t\x12!\n\x04pose\x18\x03 \x01(\x0b\x32\x13.PoseWithCovariance\x12#\n\x05twist\x18\x04 \x01(\x0b\x32\x14.TwistWithCovarianceb\x06proto3')
   ,
-  dependencies=[Header__pb2.DESCRIPTOR,])
+  dependencies=[Header__pb2.DESCRIPTOR,PoseWithCovariance__pb2.DESCRIPTOR,TwistWithCovariance__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
@@ -42,6 +44,27 @@ _ODOMETRY = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='child_frame_id', full_name='Odometry.child_frame_id', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='pose', full_name='Odometry.pose', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='twist', full_name='Odometry.twist', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -54,11 +77,13 @@ _ODOMETRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=32,
-  serialized_end=67,
+  serialized_start=86,
+  serialized_end=217,
 )
 
 _ODOMETRY.fields_by_name['header'].message_type = Header__pb2._HEADER
+_ODOMETRY.fields_by_name['pose'].message_type = PoseWithCovariance__pb2._POSEWITHCOVARIANCE
+_ODOMETRY.fields_by_name['twist'].message_type = TwistWithCovariance__pb2._TWISTWITHCOVARIANCE
 DESCRIPTOR.message_types_by_name['Odometry'] = _ODOMETRY
 
 Odometry = _reflection.GeneratedProtocolMessageType('Odometry', (_message.Message,), dict(
