@@ -13,8 +13,9 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
-import PointCloud2_pb2 as PointCloud2__pb2
+import Header_pb2 as Header__pb2
 import Image_pb2 as Image__pb2
+import PointCloud2_pb2 as PointCloud2__pb2
 import NavSatFix_pb2 as NavSatFix__pb2
 import Odometry_pb2 as Odometry__pb2
 
@@ -23,9 +24,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='SEVData.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\rSEVData.proto\x1a\x11PointCloud2.proto\x1a\x0bImage.proto\x1a\x0fNavSatFix.proto\x1a\x0eOdometry.proto\"\xa3\x01\n\x07SEVData\x12\x1a\n\nleft_image\x18\x01 \x01(\x0b\x32\x06.Image\x12\x1b\n\x0bright_image\x18\x02 \x01(\x0b\x32\x06.Image\x12!\n\x0bpoint_cloud\x18\x03 \x01(\x0b\x32\x0c.PointCloud2\x12\x1f\n\x0bnav_sat_fix\x18\x04 \x01(\x0b\x32\n.NavSatFix\x12\x1b\n\x08odometry\x18\x05 \x01(\x0b\x32\t.Odometryb\x06proto3')
+  serialized_pb=_b('\n\rSEVData.proto\x1a\x0cHeader.proto\x1a\x0bImage.proto\x1a\x11PointCloud2.proto\x1a\x0fNavSatFix.proto\x1a\x0eOdometry.proto\"\xbc\x01\n\x07SEVData\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x1a\n\nleft_image\x18\x02 \x01(\x0b\x32\x06.Image\x12\x1b\n\x0bright_image\x18\x03 \x01(\x0b\x32\x06.Image\x12!\n\x0bpoint_cloud\x18\x04 \x01(\x0b\x32\x0c.PointCloud2\x12\x1f\n\x0bnav_sat_fix\x18\x05 \x01(\x0b\x32\n.NavSatFix\x12\x1b\n\x08odometry\x18\x06 \x01(\x0b\x32\t.Odometryb\x06proto3')
   ,
-  dependencies=[PointCloud2__pb2.DESCRIPTOR,Image__pb2.DESCRIPTOR,NavSatFix__pb2.DESCRIPTOR,Odometry__pb2.DESCRIPTOR,])
+  dependencies=[Header__pb2.DESCRIPTOR,Image__pb2.DESCRIPTOR,PointCloud2__pb2.DESCRIPTOR,NavSatFix__pb2.DESCRIPTOR,Odometry__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
@@ -39,36 +40,43 @@ _SEVDATA = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='left_image', full_name='SEVData.left_image', index=0,
+      name='header', full_name='SEVData.header', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='right_image', full_name='SEVData.right_image', index=1,
+      name='left_image', full_name='SEVData.left_image', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='point_cloud', full_name='SEVData.point_cloud', index=2,
+      name='right_image', full_name='SEVData.right_image', index=2,
       number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='nav_sat_fix', full_name='SEVData.nav_sat_fix', index=3,
+      name='point_cloud', full_name='SEVData.point_cloud', index=3,
       number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='odometry', full_name='SEVData.odometry', index=4,
+      name='nav_sat_fix', full_name='SEVData.nav_sat_fix', index=4,
       number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='odometry', full_name='SEVData.odometry', index=5,
+      number=6, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -85,10 +93,11 @@ _SEVDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=83,
-  serialized_end=246,
+  serialized_start=97,
+  serialized_end=285,
 )
 
+_SEVDATA.fields_by_name['header'].message_type = Header__pb2._HEADER
 _SEVDATA.fields_by_name['left_image'].message_type = Image__pb2._IMAGE
 _SEVDATA.fields_by_name['right_image'].message_type = Image__pb2._IMAGE
 _SEVDATA.fields_by_name['point_cloud'].message_type = PointCloud2__pb2._POINTCLOUD2

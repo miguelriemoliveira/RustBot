@@ -1,17 +1,19 @@
 syntax = "proto3";
 
-import "PointCloud2.proto"; 
+import "Header.proto"; 
 import "Image.proto"; 
+import "PointCloud2.proto"; 
 import "NavSatFix.proto"; 
 import "Odometry.proto"; 
 
 /*This message creates a super structure containing the several data to be sent by the SEV sensor*/
 
 message SEVData {
-    Image left_image = 1;
-    Image right_image = 2;
-    PointCloud2 point_cloud = 3;
-    NavSatFix nav_sat_fix = 4;
-    Odometry odometry = 5;
+    Header header = 1;
+    Image left_image = 2;
+    Image right_image = 3;
+    PointCloud2 point_cloud = 4;
+    NavSatFix nav_sat_fix = 5;
+    Odometry odometry = 6;
 }
 

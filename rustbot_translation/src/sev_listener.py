@@ -102,10 +102,8 @@ def main(args):
         #Visualizing the received data
         #---------------------------------
 
-        cv2.imshow("Listener Left Camera", cv_left_image)
-        cv2.imshow("Listener Right Camera", cv_right_image)
-        cv2.waitKey(30)
-
+        print("Received new message with stamp:\n" + str(sd.header.stamp))
+    
         print("First 10 points x,y,z and rgb (packed in float32) values (just for debug)")
         count = 0
         for p in pc2.read_points(point_cloud_msg, field_names = ("x", "y", "z", "rgb"), skip_nans=True):
@@ -123,6 +121,11 @@ def main(args):
         print("odom.pose.pose.position.x =" + str(sd.odometry.pose.pose.position.x))
         print("odom.pose.pose.position.y =" + str(sd.odometry.pose.pose.position.y))
         print("odom.pose.pose.position.z =" + str(sd.odometry.pose.pose.position.z))
+
+        cv2.imshow("Listener Left Camera", cv_left_image)
+        cv2.imshow("Listener Right Camera", cv_right_image)
+        cv2.waitKey(30)
+
 
 
 if __name__ == '__main__':

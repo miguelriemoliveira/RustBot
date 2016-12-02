@@ -37,7 +37,9 @@ socket = context.socket(zmq.PUB)
 
 bridge = CvBridge()
 cv_left_image = []
+left_image_header = []
 cv_right_image = []
+right_image_header = []
 point_cloud2_msg = []
 nav_sat_fix_msg = []
 odometry_msg = []
@@ -49,8 +51,10 @@ odometry_msg = []
 def leftImageReceivedCallback(data):
     #print("Received left image")
     global cv_left_image
+    global left_image_header
     try:
         cv_left_image = bridge.imgmsg_to_cv2(data, "bgr8")
+        left_image_header = data.header
     except CvBridgeError as e:
         print(e)
 
@@ -60,9 +64,10 @@ def leftImageReceivedCallback(data):
 def rightImageReceivedCallback(data):
     #print("Received right image")
     global cv_right_image
-
+    global right_image_header
     try:
         cv_right_image = bridge.imgmsg_to_cv2(data, "bgr8")
+        right_image_header = data.header
     except CvBridgeError as e:
         print(e)
 
@@ -70,7 +75,6 @@ def rightImageReceivedCallback(data):
     #cv2.waitKey(50)
 
 def pointcloudReceivedCallback(data):
-    #print("Received point cloud")
     global point_cloud2_msg 
     point_cloud2_msg = data
 
@@ -82,11 +86,18 @@ def odometryReceivedCallback(data):
     global odometry_msg
     odometry_msg = data
 
-def cvImage2Proto(image, proto):
-    (proto.height,proto.width ,_) = image.shape
+def headerMsg2Proto(msg, proto):
+    proto.frame_id = msg.frame_id
+    proto.stamp.seconds = msg.stamp.secs
+    proto.stamp.nanos = msg.stamp.nsecs
+
+def cvImage2Proto(image, header, proto):
+    headerMsg2Proto(header, proto.header)
+    (proto.height, proto.width, _) = image.shape
     proto.data = bytes(image.data)
 
 def pointCloudMsg2Proto(msg, proto):
+    headerMsg2Proto(msg.header, proto.header)
     proto.height = msg.height
     proto.width = msg.width
 
@@ -102,15 +113,14 @@ def pointCloudMsg2Proto(msg, proto):
     proto.row_step = msg.row_step
     proto.data = msg.data
 
-
 def navSatFixMsg2Proto(msg, proto):
-    proto.header.frame_id = msg.header.frame_id
+    headerMsg2Proto(msg.header, proto.header)
     proto.latitude = msg.latitude
     proto.longitude = msg.longitude
     proto.altitude = msg.altitude
 
 def odometryMsg2Proto(msg, proto):
-    proto.header.frame_id = msg.header.frame_id
+    headerMsg2Proto(msg.header, proto.header)
     proto.child_frame_id = msg.child_frame_id
     proto.pose.pose.position.x = msg.pose.pose.position.x
     proto.pose.pose.position.y = msg.pose.pose.position.y
@@ -134,13 +144,14 @@ def timerCallback(event):
 
     #Start preparing message to send
     start_time = time.time()
+
     sd = SEVData_pb2.SEVData()
 
     # Copying left image
-    cvImage2Proto(cv_left_image, sd.left_image)
+    cvImage2Proto(cv_left_image, left_image_header, sd.left_image)
 
     # Copying right image
-    cvImage2Proto(cv_right_image, sd.right_image)
+    cvImage2Proto(cv_right_image, right_image_header, sd.right_image)
 
     # Copying the point cloud
     pointCloudMsg2Proto(point_cloud2_msg, sd.point_cloud)
@@ -150,6 +161,12 @@ def timerCallback(event):
 
     #Copying Odometry
     odometryMsg2Proto(odometry_msg, sd.odometry)
+
+    #Copying the header
+    sd.header.frame_id = ""
+    t = rospy.Time.now()
+    sd.header.stamp.seconds = t.secs
+    sd.header.stamp.nanos = t.nsecs
 
     elapsed_time = time.time() - start_time
     print("Finished copying messages to SEVData message in " + str(elapsed_time))
@@ -197,7 +214,7 @@ def main(args):
     #cv2.namedWindow("Right Camera")
 
     #TODO This wait is to try to get at least one message of each time before publishing the message. Its a blind wait so sometimes it does not work. In the future, the condition above should be checked before sending
-    rospy.Timer(rospy.Duration(1.5), timerCallback)
+    rospy.Timer(rospy.Duration(1.0), timerCallback)
 
     #Spin infinetely
     rospy.spin()
