@@ -53,6 +53,13 @@ Also you should run
 sudo pip install --upgrade protobuf
 ```
 
+To use windows based control, you must install the scripts that windows will use through a non-interactive ssh tunnel. To do that, run:
+
+```bash
+roscd rustbot_bringug && cd ../scripts
+bash ./install_scripts.bash
+```
+
 ## <a name="usage"></a>Usage
 
 To start the complete stereo system, just run 
