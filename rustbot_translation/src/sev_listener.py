@@ -10,9 +10,9 @@ import sys
 import rospy
 import cv2
 from std_msgs.msg import String
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, PointCloud2, PointField, NavSatFix
+from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge, CvBridgeError
-from sensor_msgs.msg import PointCloud2, PointField
 import sensor_msgs.point_cloud2 as pc2
 import copy
 
@@ -51,7 +51,7 @@ def main(args):
     while True:
 
         message_in = socket.recv(10*1024)
-        #For some reason I have to make a deep copy of the message. Otherwise, when, the second time I received the message I got a truncated message error. This solves it so I dod not worry about it anymore.
+        #For some reason I have to make a deep copy of the message. Otherwise, when, the second time I received the message I got a truncated message error. This solves it so I did not worry about it anymore.
         message = copy.deepcopy(message_in)
         
         #Deserialization or unmarshalling
@@ -87,7 +87,21 @@ def main(args):
         point_cloud_msg.row_step = sd.point_cloud.row_step
         point_cloud_msg.data = sd.point_cloud.data
 
+        #Getting the NavSatFix
+        nav_sat_fix = NavSatFix()
+        nav_sat_fix.latitude = sd.nav_sat_fix.latitude
+        nav_sat_fix.longitude = sd.nav_sat_fix.longitude
+        nav_sat_fix.altitude = sd.nav_sat_fix.altitude
+
+        #Getting the Odometry
+        odometry = Odometry()
+        #and then we can copy every field ... no need in this example
+
+
+        #---------------------------------
         #Visualizing the received data
+        #---------------------------------
+
         cv2.imshow("Listener Left Camera", cv_left_image)
         cv2.imshow("Listener Right Camera", cv_right_image)
         cv2.waitKey(30)
@@ -99,6 +113,17 @@ def main(args):
             count = count + 1
             if count > 10:
                 break
+
+        print("GPS data:")
+        print("Latitude =" + str(nav_sat_fix.latitude))
+        print("Longitude =" + str(nav_sat_fix.longitude))
+        print("Altitude =" + str(nav_sat_fix.altitude))
+
+        print("Odometry data (only position for example):")
+        print("odom.pose.pose.position.x =" + str(sd.odometry.pose.pose.position.x))
+        print("odom.pose.pose.position.y =" + str(sd.odometry.pose.pose.position.y))
+        print("odom.pose.pose.position.z =" + str(sd.odometry.pose.pose.position.z))
+
 
 if __name__ == '__main__':
     main(sys.argv)
