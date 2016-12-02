@@ -59,6 +59,7 @@ To use windows based control, you must install the scripts that windows will use
 roscd rustbot_bringug && cd ../scripts
 bash ./install_scripts.bash
 ```
+If asked to replace say yes.
 
 ## <a name="usage"></a>Usage
 
