@@ -146,7 +146,40 @@ _sev_2016-11-24-14-48-30.bag_.
 roslaunch rustbot_bringup playback.launch bag:=/home/sev/Desktop/sev_2016-11-03-12-27-31.bag
 ```
 
-Important: you must press the right mouse button over all topics in the bag file and select play. Otherwise, the topics are not published.
+Note: if your bagfile does not contain odometry you can download a dummy odometry from [here](http://criis-projects.inesctec.pt/attachments/download/4003/GPS_IMU_2016-06-14-17-01-59.bag). Then just publish it in addition to the other bags:
+
+```bash
+rosbag play GPS_IMU_2016-06-14-17-01-59.bag -l
+```
+Note2: if your bagfile does not contain odometry info, you can publish dummy /odom messages by running:
+
+```bash
+rostopic pub /odom nav_msgs/Odometry "header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+child_frame_id: ''
+pose:
+  pose:
+    position: {x: 0.0, y: 0.0, z: 5.0}
+    orientation: {x: 0.0, y: 0.0, z: 0.0, w: 0.0}
+  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+twist:
+  twist:
+    linear: {x: 0.0, y: 1.0, z: 0.0}
+    angular: {x: 0.0, y: 0.0, z: 0.0}
+  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0]" -r 10
+```
+
+Important: If running the rqt_bag, you must press the right mouse button over all topics in the bag file and select play. Otherwise, the topics are not published.
+
+
 
 ## <a name="stereobagfile"></a>Stereo from a Bagfile
 
