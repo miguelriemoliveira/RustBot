@@ -4,10 +4,36 @@ project(rustbot_bringup)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+OPTION(ENABLE_CXX11 "Enable C++11 support" ON)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+add_definitions(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+)
+
+
+
+set(${PROJECT_NAME}_CATKIN_COMPONENTS
+  message_generation
+  roscpp
+  rospy
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  cv_bridge
+  image_transport
+  pcl_ros
+  pcl_conversions
+  message_filters
+  dynamic_reconfigure
+  stereo_msgs
+  tf
+)
+
+find_package(catkin REQUIRED COMPONENTS
+             ${${PROJECT_NAME}_CATKIN_COMPONENTS}
 )
 
 ## System dependencies are found with CMake's conventions
@@ -116,6 +142,7 @@ catkin_package(
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
+include_directories(${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ library
 # add_library(rustbot_bringup
@@ -138,7 +165,13 @@ include_directories(
 # target_link_libraries(rustbot_bringup_node
 #   ${catkin_LIBRARIES}
 # )
+add_executable(crob_underwater_railinspect_node src/crob_underwater_railinspect_node.cpp)
+add_dependencies(crob_underwater_railinspect_node ${catkin_EXPORTED_TARGETS})
 
+target_link_libraries(crob_underwater_railinspect_node
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+)
 #############
 ## Install ##
 #############
