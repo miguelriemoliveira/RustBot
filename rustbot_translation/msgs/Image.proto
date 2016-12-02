@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 import "Header.proto"; 
-import "Pixel.proto"; 
 
 /*# This message contains an uncompressed image*/
 /*# (0, 0) is at top-left corner of image*/
@@ -36,7 +35,6 @@ message Image {
     Header header = 1;
     int32 height = 2;
     int32 width = 3;
-    /*repeated Pixel pixels = 4;*/
     bytes data = 4;
 }
 

@@ -43,6 +43,5 @@ message PointCloud2 {
     int32 point_step = 6;
     int32 row_step = 7;
     bytes data = 8;
-    /*repeated PointXYZRGB points = 2;*/
 }
 

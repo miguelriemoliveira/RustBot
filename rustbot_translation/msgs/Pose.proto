@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "Point.proto"; 
+import "Quaternion.proto"; 
+
+/*# A representation of pose in free space, composed of position and orientation. */
+/*Point position*/
+/*Quaternion orientation*/
+
+message Pose{
+    Point position = 1;
+    Quaternion orientation = 2;
+}
