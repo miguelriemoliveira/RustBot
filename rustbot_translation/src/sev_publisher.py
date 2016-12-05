@@ -44,6 +44,12 @@ point_cloud2_msg = []
 nav_sat_fix_msg = []
 odometry_msg = []
 
+rcv_left_image = False
+rcv_right_image = False
+rcv_point_cloud = False
+rcv_nav_sat_fix = False
+rcv_odometry = False
+
 #--------------------------
 # Functions
 #--------------------------
@@ -52,9 +58,11 @@ def leftImageReceivedCallback(data):
     #print("Received left image")
     global cv_left_image
     global left_image_header
+    global rcv_left_image
     try:
         cv_left_image = bridge.imgmsg_to_cv2(data, "bgr8")
         left_image_header = data.header
+        rcv_left_image = True
     except CvBridgeError as e:
         print(e)
 
@@ -65,6 +73,8 @@ def rightImageReceivedCallback(data):
     #print("Received right image")
     global cv_right_image
     global right_image_header
+    global rcv_right_image
+    rcv_right_image = True
     try:
         cv_right_image = bridge.imgmsg_to_cv2(data, "bgr8")
         right_image_header = data.header
@@ -77,14 +87,20 @@ def rightImageReceivedCallback(data):
 def pointcloudReceivedCallback(data):
     global point_cloud2_msg 
     point_cloud2_msg = data
+    global rcv_point_cloud
+    rcv_point_cloud = True
 
 def navSatFixReceivedCallback(data):
     global nav_sat_fix_msg
     nav_sat_fix_msg = data
+    global rcv_nav_sat_fix
+    rcv_nav_sat_fix = True
 
 def odometryReceivedCallback(data):
     global odometry_msg
     odometry_msg = data
+    global rcv_odometry
+    rcv_odometry = True
 
 def headerMsg2Proto(msg, proto):
     proto.frame_id = msg.frame_id
@@ -143,6 +159,11 @@ def odometryMsg2Proto(msg, proto):
 
 
 def timerCallback(event):
+
+    #Check if all msgs were received
+    if rcv_left_image == False or rcv_right_image == False or rcv_nav_sat_fix == False or rcv_odometry == False or rcv_point_cloud == False:
+        print("Did not receive all required ros messages. Cannot publish the zmq message. Make sure messages are being published at least at 1Hz on topics:\n/odom " + str(rcv_odometry) + "\n/stereo/left/image_raw " + str(rcv_left_image) + "\n/mavros/global_position/raw/fix " + str(rcv_nav_sat_fix)+ "\n/stereo/points2 " + str(rcv_point_cloud) + "\n/stereo/right/image_raw " + str(rcv_right_image))
+        return None
 
     #Start preparing message to send
     start_time = time.time()
@@ -216,7 +237,7 @@ def main(args):
     #cv2.namedWindow("Right Camera")
 
     #TODO This wait is to try to get at least one message of each time before publishing the message. Its a blind wait so sometimes it does not work. In the future, the condition above should be checked before sending
-    rospy.Timer(rospy.Duration(1.0), timerCallback)
+    rospy.Timer(rospy.Duration(0.1), timerCallback)
 
     #Spin infinetely
     rospy.spin()
