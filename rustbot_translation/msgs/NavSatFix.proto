@@ -1,5 +1,6 @@
 syntax = "proto3";
 import "Header.proto"; 
+import "NavSatStatus.proto"; 
 
 /*# Navigation Satellite fix for any Global Navigation Satellite System*/
 /*#*/
@@ -54,4 +55,5 @@ message NavSatFix{
     double latitude = 2;
     double longitude = 3;
     double altitude = 4;
+    NavSatStatus status = 5;
 }

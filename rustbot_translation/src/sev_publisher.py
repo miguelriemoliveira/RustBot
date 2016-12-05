@@ -118,6 +118,8 @@ def navSatFixMsg2Proto(msg, proto):
     proto.latitude = msg.latitude
     proto.longitude = msg.longitude
     proto.altitude = msg.altitude
+    proto.status.status = msg.status.status
+    proto.status.service = msg.status.service
 
 def odometryMsg2Proto(msg, proto):
     headerMsg2Proto(msg.header, proto.header)

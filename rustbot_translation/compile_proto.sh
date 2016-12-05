@@ -13,6 +13,7 @@ protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/Vector3.proto
 protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/Twist.proto
 protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/TwistWithCovariance.proto
 
+protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/NavSatStatus.proto
 protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/NavSatFix.proto
 protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/Odometry.proto
 protoc -I=./msgs -I=$HOME$PROTOBUF_PATH --python_out=src/ msgs/Image.proto
