@@ -92,6 +92,8 @@ def main(args):
         nav_sat_fix.latitude = sd.nav_sat_fix.latitude
         nav_sat_fix.longitude = sd.nav_sat_fix.longitude
         nav_sat_fix.altitude = sd.nav_sat_fix.altitude
+        nav_sat_fix.status.status = sd.nav_sat_fix.status.status
+        nav_sat_fix.status.service = sd.nav_sat_fix.status.service
 
         #Getting the Odometry
         odometry = Odometry()
@@ -116,6 +118,8 @@ def main(args):
         print("Latitude =" + str(nav_sat_fix.latitude))
         print("Longitude =" + str(nav_sat_fix.longitude))
         print("Altitude =" + str(nav_sat_fix.altitude))
+        print("Status =" + str(nav_sat_fix.status.status))
+        print("Service =" + str(nav_sat_fix.status.service))
 
         print("Odometry data (only position for example):")
         print("odom.pose.pose.position.x =" + str(sd.odometry.pose.pose.position.x))
