@@ -34,6 +34,7 @@ topic = 777 #topic name on which to publish
 
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
+socket.set_hwm(10)
 
 bridge = CvBridge()
 cv_left_image = []
@@ -60,6 +61,7 @@ def leftImageReceivedCallback(data):
     global left_image_header
     global rcv_left_image
     try:
+        rcv_left_image = False
         cv_left_image = bridge.imgmsg_to_cv2(data, "bgr8")
         left_image_header = data.header
         rcv_left_image = True
@@ -74,10 +76,11 @@ def rightImageReceivedCallback(data):
     global cv_right_image
     global right_image_header
     global rcv_right_image
-    rcv_right_image = True
     try:
+        rcv_right_image = False
         cv_right_image = bridge.imgmsg_to_cv2(data, "bgr8")
         right_image_header = data.header
+        rcv_right_image = True
     except CvBridgeError as e:
         print(e)
 
@@ -86,20 +89,23 @@ def rightImageReceivedCallback(data):
 
 def pointcloudReceivedCallback(data):
     global point_cloud2_msg 
-    point_cloud2_msg = data
     global rcv_point_cloud
+    rcv_point_cloud = False
+    point_cloud2_msg = data
     rcv_point_cloud = True
 
 def navSatFixReceivedCallback(data):
     global nav_sat_fix_msg
-    nav_sat_fix_msg = data
     global rcv_nav_sat_fix
+    rcv_nav_sat_fix = False
+    nav_sat_fix_msg = data
     rcv_nav_sat_fix = True
 
 def odometryReceivedCallback(data):
     global odometry_msg
-    odometry_msg = data
     global rcv_odometry
+    rcv_odometry = False
+    odometry_msg = data
     rcv_odometry = True
 
 def headerMsg2Proto(msg, proto):
@@ -191,16 +197,19 @@ def timerCallback(event):
     sd.header.stamp.seconds = t.secs
     sd.header.stamp.nanos = t.nsecs
 
-    elapsed_time = time.time() - start_time
-    print("Finished copying messages to SEVData message in " + str(elapsed_time))
+    print("Finished copying messages to SEVData message in " + str(time.time() - start_time))
 
     #Serialization or marshalling
+    start_time = time.time()
     msg_as_string= sd.SerializeToString()
-    print("Message serialized")
+    print("Message serialized in " + str(time.time() - start_time) + " sec")
 
     #Publication
-    socket.send("%d %s" % (topic, msg_as_string))
+    start_time = time.time()
     print("Sending message")
+    socket.send("%d %s" % (topic, msg_as_string))
+    print("Message sent in " + str(time.time() - start_time) + " sec")
+
 
 
 #--------------------------
