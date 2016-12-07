@@ -16,28 +16,29 @@
 <rosparam command="load" file="$(find rustbot_calibration)/calibration/stereo_image_proc.yaml"/>
 </node>
 </group>
-
 <group if="$(arg online_stereo)">
-    <include file="$(find rustbot_bringup)/launch/left_camera.launch">
-    <arg name="fps" value="$(arg fps)"/>
-    </include>
-    <include file="$(find rustbot_bringup)/launch/right_camera.launch">
-    <arg name="fps" value="$(arg fps)"/>
-    </include>
+<include file="$(find rustbot_bringup)/launch/left_camera.launch">
+<arg name="fps" value="$(arg fps)"/>
+</include>
+<include file="$(find rustbot_bringup)/launch/right_camera.launch">
+<arg name="fps" value="$(arg fps)"/>
+</include>
 </group>
-
 </group>
 <group if="$(arg config_stereo)">
 <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen">
 </node>
 </group>
-
 <!--SLAM launch files-->
 <group if="$(arg do_slam)">
 <include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_play_aux.launch">
 </include>
 <include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_slam_rtabmapOdometryMapping.launch">
 </include>
-
 </group>
+
+<!--Launch the sev zmq+protobuf publisher-->
+<node name="sev_publisher" pkg="rustbot_translation" type="sev_publisher" output="screen">
+</node>
+
 </launch>
