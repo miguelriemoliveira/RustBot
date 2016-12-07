@@ -33,6 +33,11 @@ Install the openssh server
 sudo apt-get install openssh-server
 ```
 
+Install the ros_imresize ros pakcage
+```bash
+cd ~/catkin_src/src
+git clone https://github.com/miguelriemoliveira/ros_imresize
+```
 First, the Vimba sdk must be downloaded and compiled. We will refer to the folder where the sdk is installed as **$(Vimba_2_0)**.
 
 You may download this sdk from [https://www.alliedvision.com/en/products/software.html](https://www.alliedvision.com/en/products/software.html). Then follow the installation instructions in **$(Vimba_2_0)/Documentation/ReleaseNotes.txt** to install the sdk.
