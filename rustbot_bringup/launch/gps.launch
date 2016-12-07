@@ -7,7 +7,7 @@
 		<param name="fcu_url" value="$(arg fcu_url)" />
         </node>
 
-        <node pkg="rosservice" type="rosservice" name="switch_onGPS" args="call --wait /mavros/set_stream_rate 0 10 1" respawn="true" respawn_delay="20"/>
+        <node pkg="rosservice" type="rosservice" name="switch_onGPS" args="call --wait /mavros/set_stream_rate 0 10 1" respawn="false" />
 
 
 
