@@ -1,6 +1,8 @@
 # RustBot
 Software tools for the project Sistemas Embarcados de Vistoria (SEV). We refer to the hardware platform as RustBot because the AVT Mako cameras look kind of rusty (sorry for the lack of creativity).
 
+If you want to use windows for connecting to the sensor check out this [repository](https://github.com/carlosmccosta/RustBotCSharp)
+
 ## Table of Contents
 
 * [The Robot](#therobot)
@@ -227,7 +229,7 @@ Now launch the ZMQ test subscriber (in Ubuntu python) to see if any images are r
 rosrun rustbot_translation sev_listener.py
 ```
 
-If the listener receives images, so should the C# application called [RustBoxCSharp](https://github.com/carlosmccosta/RustBotCSharp) as long as its propperly configured.
+If the listener receives images, so should the C# application called [RustBotCSharp](https://github.com/carlosmccosta/RustBotCSharp) as long as its propperly configured.
 
 ## <a name="findingcameraip"></a>Finding IP Address of Cameras
 
