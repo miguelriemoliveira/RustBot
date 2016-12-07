@@ -211,6 +211,11 @@ def timerCallback(event):
     socket.send("%d %s" % (topic, msg_as_string))
     print("Message sent in " + str(time.time() - start_time) + " sec")
 
+    rcv_left_image = False
+    rcv_right_image = False
+    rcv_point_cloud = False
+    rcv_nav_sat_fix = False
+    rcv_odometry = False
 
 
 #--------------------------
