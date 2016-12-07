@@ -36,7 +36,7 @@ The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a pl
     * Connect your PC to the WiFi Hot-spot with SEVsys name
     * The  processing unit box (NUC pc) has the IP 192.168.0.150 on the SEVsys
  * Option 2, connection with ethernet cable
-   * Connect an Ethernet cable from your laptop to the switch inside the sensor's box
+   * Connect an Ethernet cable from your laptop to the processing unit box (Pay attentio there are two POE ethernet and only one normal ethernet)
     * Set a static IP address (the NUC computer has ip 169.254.4.50, so use 169.254.4.51 for example)
     * Ping the NUC Computer to see if everything is ok, i.e. ```ping 169.254.4.50```
     * Launch the ssh connection ```ssh sev@169.254.4.50``` (the password is written in a sticker on the NUC computer)
