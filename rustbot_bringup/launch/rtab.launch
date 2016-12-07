@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="rtabmapviz" default="false"/>
+  <arg name="frameid_robot" default="/base_link"/>
+  <!-- base_footprint -->
+  <arg name="frameid_camera" default="left_optical"/>
+  <!-- base_footprint -->
+  <param name="approx_sync" type="bool" value="true"/>
+  <param name="stereo_approx_sync" type="bool" value="true"/>
+
+  <arg name="pi/2" value="1.5707963267948966"/>
+  <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0 -$(arg pi/2)"/>
+  <node pkg="tf" type="static_transform_publisher" name="camera_base_link" args="$(arg optical_rotate) $(arg frameid_robot) $(arg frameid_camera) 30"/>
+  <!--<arg name="vehicle_rotate" value="0 0 0 0 0.13179938779906864 0"/>-->
+  <!--<node pkg="tf" type="static_transform_publisher" name="camera_odom_link_vehicle" args="$(arg vehicle_rotate) odom_vehicle odom 30"/>-->
+
+
+  <group ns="rtabmap">
+    <!-- RTABMAP Stereo Odometry -->
+    <node pkg="rtabmap_ros" type="stereo_odometry" name="stereo_odometry" output="screen">
+      <!-- Config. [Input Topics] -->
+      <remap from="left/image_rect" to="/stereo/left/image_rect"/>
+      <remap from="right/image_rect" to="/stereo/right/image_rect"/>
+      <remap from="left/camera_info" to="/stereo/left/camera_info"/>
+      <remap from="right/camera_info" to="/stereo/right/camera_info"/>
+      <!-- Config. [Output Topics] -->
+      <remap from="odom" to="/stereo_odometry"/>
+      <param name="frame_id" type="string" value="$(arg frameid_robot)"/>
+      <param name="odom_frame_id" type="string" value="odom"/>
+      <!-- Config. [General stuffs] -->
+      <param name="approx_sync" type="bool" value="true"/>
+      <param name="queue_size" type="int" value="10"/>
+      <!-- Config. [Stereo]  -->
+      <param name="Stereo/OpticalFlow" type="string" value="false"/>
+      <param name="Stereo/Eps" type="string" value="0.01"/>
+      <param name="Stereo/Iterations" type="string" value="30"/>
+      <param name="Stereo/MaxDisparity" type="string" value="128"/>
+      <param name="Stereo/MaxLevel" type="string" value="3"/>
+      <param name="Stereo/SSD" type="string" value="true"/>
+      <param name="Stereo/WinHeight" type="string" value="3"/>
+      <param name="Stereo/WinWidth" type="string" value="15"/>
+      <!-- Config. [Correspondence]  -->
+      <param name="Vis/CorFlowEps" type="string" value="0.01"/>
+      <param name="Vis/CorFlowIterations" type="string" value="30"/>
+      <param name="Vis/CorFlowMaxLevel" type="string" value="3"/>
+      <param name="Vis/CorFlowWinSize" type="string" value="16"/>
+      <param name="Vis/CorGuessWinSize" type="string" value="50"/>
+      <!-- [Vis/CorrespondenceType=0] -->
+      <param name="Vis/CorNNDR" type="string" value="1.2"/>
+      <!-- [Vis/CorrespondenceType=0] -->
+      <param name="Vis/CorNNType" type="string" value="1"/>
+      <!-- [Vis/CorrespondenceType=0] - kNNFlannNaive=0, kNNFlannKdTree=1, kNNFlannLSH=2, kNNBruteForce=3, kNNBruteForceGPU=4 -->
+      <param name="Vis/CorType" type="string" value="1"/>
+      <!-- 0=Features Matching, 1=Optical Flow -->
+      <param name="Vis/EstimationType" type="string" value="1"/>
+      <!-- 0:3D->3D, 1:3D->2D (PnP), 2:2D->2D (Epipolar Geometry) -->
+      <param name="Vis/EpipolarGeometryVar" type="string" value="0.05"/>
+      <!-- [Vis/EstimationType = 2] Epipolar geometry maximum variance to accept the transformation.-->
+      <param name="Vis/FeatureType" type="string" value="6"/>
+      <!-- 0=SURF 1=SIFT 2=ORB 3=FAST/FREAK 4=FAST/BRIEF 5=GFTT/FREAK 6=GFTT/BRIEF 7=BRISK 8=GFTT/ORB -->
+      <param name="Vis/ForwardEstOnly" type="string" value="true"/>
+      <param name="Vis/InlierDistance" type="string" value="0.1"/>
+      <!-- [Vis/EstimationType = 0] Maximum distance for feature correspondences. Used by 3D->3D estimation approach. -->
+      <param name="Vis/Iterations" type="string" value="100"/>
+      <!-- Maximum iterations to compute the transform. -->
+      <param name="Vis/MaxDepth" type="string" value="16"/>
+      <param name="Vis/MaxFeatures" type="string" value="2000"/>
+      <param name="Vis/MinDepth" type="string" value="0"/>
+      <param name="Vis/MinInliers" type="string" value="10"/>
+      <!-- Minimum feature correspondences to compute/accept the transformation. -->
+      <param name="Vis/PnPFlags" type="string" value="1"/>
+      <!-- [Vis/EstimationType = 1] PnP flags: 0=Iterative, 1=EPNP, 2=P3P -->
+      <param name="Vis/PnPRefineIterations" type="string" value="5"/>
+      <!-- [Vis/EstimationType = 1] Refine iterations -->
+      <param name="Vis/RoiRatios" type="string" value="0.0 0.0 0.0 0.0"/>
+      <!-- Region of interest ratios [left, right, top, bottom]. -->
+      <param name="Vis/SubPixIterations" type="string" value="0"/>
+      <!-- 0 disables sub pixel refining.-->
+      <param name="GFTT/BlockSize" type="string" value="5"/>
+      <param name="GFTT/K" type="string" value="0.04"/>
+      <param name="GFTT/MinDistance" type="string" value="10"/>
+      <param name="GFTT/QualityLevel" type="string" value="0.0001"/>
+      <param name="GFTT/UseHarrisDetector" type="string" value="false"/>
+      <!-- Config. [Registration]  -->
+      <param name="Reg/Strategy" type="string" value="0"/>
+      <!-- 0=Vis, 1=Icp, 2=VisIcp -->
+      <param name="Reg/Force3DoF" type="string" value="true"/>
+      <!-- Config. [Odometry]  -->
+      <param name="Odom/Strategy" type="string" value="1"/>
+      <!-- 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) -->
+      <param name="Odom/ScanKeyFrameThr" type="string" value="0.7"/>
+      <!-- Create a new keyframe when the number of ICP inliers drops under this ratio of points in last frame's scan. -->
+      <param name="Odom/ResetCountdown" type="string" value="10"/>
+      <!-- Automatically reset odometry after X consecutive images on which odometry cannot be computed (value=0 disables auto-reset) -->
+      <param name="Odom/KeyFrameThr" type="string" value="0.3"/>
+      <!-- Create a new keyframe when the number of inliers drops under this ratio of features in last frame. -->
+      <param name="Odom/ImageBufferSize" type="string" value="10"/>
+      <!-- Data buffer size (0 min inf). -->
+      <param name="Odom/Holonomic" type="string" value="true"/>
+      <!-- If not, y value will be estimated from x and yaw values (y=x*tan(yaw)) -->
+      <param name="Odom/GuessMotion" type="string" value="false"/>
+      <!-- Guess next transformation from the last motion computed. -->
+      <param name="Odom/FilteringStrategy" type="string" value="0"/>
+      <!-- 0=No filtering 1=Kalman filtering 2=Particle filtering -->
+      <param name="Odom/FillInfoData" type="string" value="false"/>
+      <param name="Odom/AlignWithGround" type="string" value="false"/>
+      <!-- Align odometry with the ground on initialization. -->
+    </node>
+    <!-- Visual SLAM: args: "delete_db_on_start" and "udebug" -->
+    <!-- <node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen" args="-delete_db_on_start"> -->
+    <node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen">
+      <!-- Config. [Input Topics] -->
+      <remap from="left/image_rect" to="/stereo_camera/left/image_rect"/>
+      <remap from="right/image_rect" to="/stereo_camera/right/image_rect"/>
+      <remap from="left/camera_info" to="/stereo_camera/left/camera_info"/>
+      <remap from="right/camera_info" to="/stereo_camera/right/camera_info"/>
+      <remap from="odom" to="/stereo_odometry"/>
+      <param name="queue_size" type="int" value="30"/>
+      <!-- Config. [Output Topics] -->
+      <param name="frame_id" type="string" value="$(arg frameid_robot)"/>
+      <param name="subscribe_stereo" type="bool" value="true"/>
+      <param name="subscribe_depth" type="bool" value="false"/>
+      <!-- Config. [Optimizer] -->
+      <param name="Optimizer/Slam2D" type="string" value="true"/>
+      <param name="Optimizer/Strategy" type="string" value="0"/>
+      <!-- Graph optimization strategy: 0=TORO, 1=g2o and 2=GTSAM. -->
+      <param name="Optimizer/Slam2D" type="string" value="true"/>
+      <param name="Optimizer/Iterations" type="string" value="30"/>
+      <param name="Optimizer/Robust" type="string" value="true"/>
+      <param name="g2o/Optimizer" type="string" value="1"/>
+      <!-- =Levenberg 1=GaussNewton -->
+      <param name="Optimizer/Robust" type="string" value="true"/>
+      <!-- Config. [Registration] -->
+      <param name="Reg/Force3DoF" type="string" value="true"/>
+      <param name="Reg/Strategy" type="string" value="0"/>
+      <!-- 0=Vis, 1=Icp, 2=VisIcp -->
+      <!-- Config. [Correspondence]  -->
+      <param name="Vis/CorFlowEps" type="string" value="0.01"/>
+      <param name="Vis/CorFlowIterations" type="string" value="20"/>
+      <param name="Vis/CorFlowMaxLevel" type="string" value="4"/>
+      <param name="Vis/CorFlowWinSize" type="string" value="11"/>
+      <param name="Vis/CorGuessWinSize" type="string" value="50"/>
+      <!-- [Vis/CorrespondenceType=0] -->
+      <param name="Vis/CorNNDR" type="string" value="0.7"/>
+      <!-- [Vis/CorrespondenceType=0] -->
+      <param name="Vis/CorNNType" type="string" value="1"/>
+      <!-- [Vis/CorrespondenceType=0] - kNNFlannNaive=0, kNNFlannKdTree=1, kNNFlannLSH=2, kNNBruteForce=3, kNNBruteForceGPU=4 -->
+      <param name="Vis/CorType" type="string" value="0"/>
+      <!-- 0=Features Matching, 1=Optical Flow -->
+      <param name="Vis/EstimationType" type="string" value="1"/>
+      <!-- 0:3D->3D, 1:3D->2D (PnP), 2:2D->2D (Epipolar Geometry) -->
+      <param name="Vis/EpipolarGeometryVar" type="string" value="0.05"/>
+      <!-- [Vis/EstimationType = 2] Epipolar geometry maximum variance to accept the transformation.-->
+      <param name="Vis/FeatureType" type="string" value="6"/>
+      <!-- 0=SURF 1=SIFT 2=ORB 3=FAST/FREAK 4=FAST/BRIEF 5=GFTT/FREAK 6=GFTT/BRIEF 7=BRISK 8=GFTT/ORB -->
+      <param name="Vis/ForwardEstOnly" type="string" value="true"/>
+      <param name="Vis/InlierDistance" type="string" value="0.1"/>
+      <!-- [Vis/EstimationType = 0] Maximum distance for feature correspondences. Used by 3D->3D estimation approach. -->
+      <param name="Vis/Iterations" type="string" value="100"/>
+      <!-- Maximum iterations to compute the transform. -->
+      <param name="Vis/MaxDepth" type="string" value="16"/>
+      <param name="Vis/MaxFeatures" type="string" value="2000"/>
+      <param name="Vis/MinDepth" type="string" value="0"/>
+      <param name="Vis/MinInliers" type="string" value="10"/>
+      <!-- Minimum feature correspondences to compute/accept the transformation. -->
+      <param name="Vis/PnPFlags" type="string" value="1"/>
+      <!-- [Vis/EstimationType = 1] PnP flags: 0=Iterative, 1=EPNP, 2=P3P -->
+      <param name="Vis/PnPRefineIterations" type="string" value="5"/>
+      <!-- [Vis/EstimationType = 1] Refine iterations -->
+      <param name="Vis/RoiRatios" type="string" value="0.0 0.0 0.0 0.0"/>
+      <!-- Region of interest ratios [left, right, top, bottom]. -->
+      <param name="Vis/SubPixIterations" type="string" value="0"/>
+      <!-- 0 disables sub pixel refining.-->
+      <!-- Config. [CLoop]  -->
+      <param name="Kp/DetectorStrategy" type="string" value="6"/>
+      <!-- 0=SURF 1=SIFT 2=ORB 3=FAST/FREAK 4=FAST/BRIEF 5=GFTT/FREAK 6=GFTT/BRIEF 7=BRISK 8=GFTT/ORB. -->
+      <param name="Kp/IncrementalDictionary" type="string" value="false"/>
+      <param name="Kp/IncrementalFlann" type="string" value="false"/>
+      <param name="Kp/MaxDepth" type="string" value="0"/>
+      <param name="Kp/MaxFeatures" type="string" value="2000"/>
+      <param name="Kp/MinDepth" type="string" value="1"/>
+      <!-- kNNFlannNaive=0, kNNFlannKdTree=1, kNNFlannLSH=2, kNNBruteForce=3, kNNBruteForceGPU=4 -->
+      <param name="Kp/NNStrategy" type="string" value="1"/>
+      <param name="Kp/NewWordsComparedTogether" type="string" value="true"/>
+      <param name="Kp/NndrRatio" type="string" value="0.7"/>
+      <param name="Kp/Parallelized" type="string" value="true"/>
+      <param name="Kp/RoiRatios" type="string" value="0.0 0.0 0.0 0.0"/>
+      <param name="Mem/IncrementalMemory" type="string" value="true"/>
+      <!-- SLAM mode, otherwise it is Localization mode. -->
+      <param name="Mem/InitWMWithAllNodes" type="string" value="false"/>
+      <!-- Initialize the Working Memory with all nodes in Long-Term Memory. When false, it is initialized with nodes of the previous session. -->
+      <param name="GFTT/BlockSize" type="string" value="5"/>
+      <param name="GFTT/K" type="string" value="0.04"/>
+      <param name="GFTT/MinDistance" type="string" value="10"/>
+      <param name="GFTT/QualityLevel" type="string" value="0.0001"/>
+      <param name="GFTT/UseHarrisDetector" type="string" value="false"/>
+      <!-- RTAB-Map's parameters -->
+      <param name="Rtabmap/CreateIntermediateNodes" type="string" value="true"/>
+      <!--Create intermediate nodes between loop closure detection. Only used when Rtabmap/DetectionRate>-->
+      <param name="Rtabmap/DetectionRate" type="string" value="3"/>
+      <param name="Rtabmap/ImageBufferSize" type="string" value="5"/>
+      <param name="Rtabmap/LoopRatio" type="string" value="0.2"/>
+      <param name="Rtabmap/LoopThr" type="string" value="0.11"/>
+      <param name="Rtabmap/MaxRetrieved" type="string" value="3"/>
+      <param name="Rtabmap/MemoryThr" type="string" value="400"/>
+      <param name="Rtabmap/StartNewMapOnLoopClosure" type="string" value="false"/>
+      <!-- Start a new map only if there is a global loop closure with a previous map. -->
+      <param name="Rtabmap/PublishStats" type="string" value="true"/>
+      <param name="Rtabmap/TimeThr" type="string" value="700"/>
+      <!-- Maximum time allowed for the detector (ms) (0 means infinity) -->
+      <param name="Rtabmap/VhStrategy" type="string" value="0"/>
+      <!-- None 0, Similarity 1, Epipolar 2. -->
+      <param name="VhEp/MatchCountMin" type="string" value="10"/>
+      <!-- Minimum of matching visual words pairs to accept the loop hypothesis. -->
+      <param name="VhEp/RansacParam1" type="string" value="3"/>
+      <!-- Fundamental matrix: Max distance (in pixels) from the epipolar line for a point to be inlier. -->
+      <param name="VhEp/RansacParam2" type="string" value="0.95"/>
+      <!-- Fundamental matrix: Performance of the RANSAC. -->
+      <!-- Config. [Stereo]  -->
+      <param name="Stereo/OpticalFlow" type="string" value="false"/>
+      <param name="Stereo/Eps" type="string" value="0.01"/>
+      <param name="Stereo/Iterations" type="string" value="30"/>
+      <param name="Stereo/MaxDisparity" type="string" value="128"/>
+      <param name="Stereo/MaxLevel" type="string" value="3"/>
+      <param name="Stereo/SSD" type="string" value="true"/>
+      <param name="Stereo/WinHeight" type="string" value="3"/>
+      <param name="Stereo/WinWidth" type="string" value="15"/>
+    </node>
+  </group>
+</launch>

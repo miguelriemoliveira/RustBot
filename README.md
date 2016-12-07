@@ -61,7 +61,10 @@ Also you should run
 sudo pip install --upgrade protobuf
 ```
 
-To use windows based control, you must install the scripts that windows will use through a non-interactive ssh tunnel. To do that, run:
+To use windows based control, you must install the scripts that windows will use through a non-interactive ssh tunnel. First you need to make sure the .rosrc file 
+
+
+Then, run:
 
 ```bash
 roscd rustbot_bringug && cd ../scripts
