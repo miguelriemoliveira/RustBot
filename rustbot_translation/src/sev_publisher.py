@@ -165,6 +165,11 @@ def odometryMsg2Proto(msg, proto):
 
 
 def timerCallback(event):
+    global rcv_left_image
+    global rcv_right_image
+    global rcv_nav_sat_fix
+    global rcv_odometry
+    global rcv_point_cloud
 
     print("Timer callback")
     #Check if all msgs were received
