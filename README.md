@@ -30,15 +30,16 @@ The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a pl
 ## <a name="quickstart"></a>Quick Start
 
 * Connect all inter-cables (processing unit box <--> gimbal camera box), 2 POE ethernets, 1 USB, and 1 Power Cable 
+* Connection of an external PC 
  * Option 1, connection with wifi hotspot
    * Connect the WiFi access point (TP-LINK), if there is available internet by ethernet connect the ethernet cable and then the the power transformer. 
-   * Connect your PC to the WiFi Hot-spot with SEVsys name
-   * The  processing unit box (NUC pc) has the IP 192.168.0.150 on the SEVsys
+    * Connect your PC to the WiFi Hot-spot with SEVsys name
+    * The  processing unit box (NUC pc) has the IP 192.168.0.150 on the SEVsys
  * Option 2, connection with ethernet cable
-   * Connect an Ethernet cable from your laptop to the switch inside the sensor's box
-   * Set a static IP address (the NUC computer has ip 169.254.4.50, so use 169.254.4.51 for example)
-   * Ping the NUC Computer to see if everything is ok, i.e. ```ping 169.254.4.50```
-   * Launch the ssh connection ```ssh sev@169.254.4.50``` (the password is written in a sticker on the NUC computer)
+   * Connect an Ethernet cable from your laptop to the processing unit box (Pay attentio there are two POE ethernet and only one normal ethernet)
+    * Set a static IP address (the NUC computer has ip 169.254.4.50, so use 169.254.4.51 for example)
+    * Ping the NUC Computer to see if everything is ok, i.e. ```ping 169.254.4.50```
+    * Launch the ssh connection ```ssh sev@169.254.4.50``` (the password is written in a sticker on the NUC computer)
 * Connect the power cable to the processing unit box.
 * Wait until gimbal camera box stop of bipping (attention the gimbal camera box must be keep stable for the gyro calibration)
 
