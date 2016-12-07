@@ -15,7 +15,7 @@
   <node pkg="tf" type="static_transform_publisher" name="camera_odom_link_vehicle" args="$(arg vehicle_rotate) odom_vehicle odom 30"/>
   <node pkg="tf" type="static_transform_publisher" name="left_optical2stereo_camera" args="0 0 0 0 0 0 stereo_camera left_optical 30"/>
   <!-- PARAMETERS -->
-  <param name="use_sim_time" type="bool" value="true"/>
+  <param name="use_sim_time" type="bool" value="false"/>
   <param name="approx_sync" type="bool" value="true"/>
   <param name="stereo_approx_sync" type="bool" value="true"/>
   <arg name="queue_size" default="50"/>
