@@ -166,6 +166,7 @@ def odometryMsg2Proto(msg, proto):
 
 def timerCallback(event):
 
+    print("Timer callback")
     #Check if all msgs were received
     if rcv_left_image == False or rcv_right_image == False or rcv_nav_sat_fix == False or rcv_odometry == False or rcv_point_cloud == False:
         print("Did not receive all required ros messages. Cannot publish the zmq message. Make sure messages are being published at least at 1Hz on topics:\n/odom " + str(rcv_odometry) + "\n/stereo/left/image_raw " + str(rcv_left_image) + "\n/mavros/global_position/raw/fix " + str(rcv_nav_sat_fix)+ "\n/stereo/points2 " + str(rcv_point_cloud) + "\n/stereo/right/image_raw " + str(rcv_right_image))
@@ -239,14 +240,14 @@ def main(args):
 
     rospy.Subscriber("/mavros/global_position/raw/fix", NavSatFix, navSatFixReceivedCallback)
 
-    rospy.Subscriber("/odom", Odometry, odometryReceivedCallback)
+    rospy.Subscriber("/stereo_odometry", Odometry, odometryReceivedCallback)
 
 
     #cv2.namedWindow("Left Camera")
     #cv2.namedWindow("Right Camera")
 
     #TODO This wait is to try to get at least one message of each time before publishing the message. Its a blind wait so sometimes it does not work. In the future, the condition above should be checked before sending
-    rospy.Timer(rospy.Duration(0.1), timerCallback)
+    rospy.Timer(rospy.Duration(1), timerCallback)
 
     #Spin infinetely
     rospy.spin()
