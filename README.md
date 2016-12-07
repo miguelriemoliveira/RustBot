@@ -81,9 +81,8 @@ If asked to replace say yes.
 To start the complete stereo system, just run 
 
 ```bash
-roslaunch rustbot_bringup all.launch
+roslaunch rustbot_bringup all.launch fps:=10 do_stereo:=falsev do_slam:=true
 ```
-
 
 To launch a single camera use
 
