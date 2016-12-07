@@ -29,15 +29,12 @@ The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a pl
 
 ## <a name="quickstart"></a>Quick Start
 
-Markup : * Connect all inter-cables (processing unit box <--> gimbal camera box), 2 POE ethernets, 1 USB, and 1 Power Cable 
-         * Connect the WiFi access point (TP-LINK), if there is available internet by ethernet connect the ethernet cable and then the the power transformer. 
-         * Connect the power cable to the processing unit box.
-         * Wait until gimbal camera box stop of bipping (attention the gimbal camera box must be keep stable for the gyro calibration)
-         * Connect your PC to the WiFi Hot-spot with SEVsys name
-         * The  processing unit box (NUC pc) has the IP 192.168.0.150 on the SEVsys
-         
-
-
+* Connect all inter-cables (processing unit box <--> gimbal camera box), 2 POE ethernets, 1 USB, and 1 Power Cable 
+* Connect the WiFi access point (TP-LINK), if there is available internet by ethernet connect the ethernet cable and then the the power transformer. 
+* Connect the power cable to the processing unit box.
+* Wait until gimbal camera box stop of bipping (attention the gimbal camera box must be keep stable for the gyro calibration)
+* Connect your PC to the WiFi Hot-spot with SEVsys name
+* The  processing unit box (NUC pc) has the IP 192.168.0.150 on the SEVsys
 
 
 ## <a name="installation"></a>Installation
