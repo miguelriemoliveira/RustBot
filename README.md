@@ -30,7 +30,7 @@ The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a pl
 ## <a name="quickstart"></a>Quick Start
 
 * Connect all inter-cables (processing unit box <--> gimbal camera box), 2 POE ethernets, 1 USB, and 1 Power Cable 
-*Connect an external PC 
+* Connection of an external PC 
  * Option 1, connection with wifi hotspot
    * Connect the WiFi access point (TP-LINK), if there is available internet by ethernet connect the ethernet cable and then the the power transformer. 
     * Connect your PC to the WiFi Hot-spot with SEVsys name
