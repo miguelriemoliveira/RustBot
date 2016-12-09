@@ -104,21 +104,13 @@ If asked to replace say yes.
 To start the complete stereo system, just run 
 
 ```bash
-roslaunch rustbot_bringup all.launch fps:=10 do_stereo:=true do_slam:=true
+roslaunch rustbot_bringup all.launch fps:=4 do_stereo:=true do_slam:=true
 ```
-
 To launch a single camera use
 
 ```bash
 roslaunch rustbot_bringup left_camera.launch
 ```
-
-Note that to run stereo on high resolution images the processing takes a long time. Typically, for 1600x1200 images, our SGBM stereo outputs disparity images at 0.2 Hz. If you want a point cloud to be generated for each disparity image, then, because the point_cloud2 nodelet uses a message filter to get approximately synced image, camera_info and disparity messages, you must run the stereo_processing with a low frame rate and a large queue size. That way the point_cloud2 nodelet can get synced messages and produce the point clouds, e.g.:
-
-```bash
-roslaunch rustbot_bringup all.launch fps:=1 queue_size:=50
-```
-
 ## <a name="connectingssh"></a>Connecting via ssh
 
 To connect to the remote NUC computer
@@ -173,7 +165,7 @@ The following commands should be executed from the NUC computer. Thus, if you wa
 To record raw data we must first launch the camera drivers (no need to run stereo processing, since this will be done offline)
 
 ```bash
-roslaunch rustbot_bringup all.launch fps:=10 do_stereo:=false
+roslaunch rustbot_bringup all.launch fps:=4 do_stereo:=false
 ```
 
 Then, to record messages, run
