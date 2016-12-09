@@ -19,6 +19,9 @@ If you want to use windows for connecting to the sensor check out this [reposito
 * [Finding IP Address of Cameras](#findingcameraip)
 * [ZeroMQ + Google Protocol Buffers Tutorial](#zeromqtutorial)
 * [Compile Google Protocol Buffers Messages](#compilemessages)
+* [Update pen-wifi drivers after kernel uptade] (#penwifi)
+
+
 
 ## <a name="therobot"></a>The Robot
 
@@ -346,3 +349,10 @@ protoc --version
 ```
 
 See [this](https://developers.google.com/protocol-buffers/docs/pythontutorial) for additional info.
+
+## <a name="penwifi"></a>Update pen-wifi drivers after kernel uptade
+
+cd ~/workingcopy/mt7610u_wifi_sta_v3002_dpo_20130916
+make
+sudo make install
+more: http://criis-projects.inesctec.pt/issues/2496
