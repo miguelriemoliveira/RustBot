@@ -351,8 +351,12 @@ protoc --version
 See [this](https://developers.google.com/protocol-buffers/docs/pythontutorial) for additional info.
 
 ## <a name="penwifi"></a>Update pen-wifi drivers after kernel uptade
-
-cd ~/workingcopy/mt7610u_wifi_sta_v3002_dpo_20130916
-make
-sudo make install
-more: http://criis-projects.inesctec.pt/issues/2496
+```bash
+ cd ~/workingcopy/mt7610u_wifi_sta_v3002_dpo_20130916
+ 
+ make
+ 
+ sudo make install
+ 
+ more: http://criis-projects.inesctec.pt/issues/2496
+```
