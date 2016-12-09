@@ -1,5 +1,11 @@
-#!/bin/bash bash
+#!/usr/bin/env bash
 source ~/.bashrc
-#roslaunch rustbot_bringup all.launch do_stereo:=true online_stereo:=true respawn:=true
-touch /tmp/touaqui.txt
+source ~/.rosrc
+
+#Launch the system as described in https://github.com/miguelriemoliveira/RustBot#usage
+#roslaunch rustbot_bringup all.launch fps:=10 do_stereo:=true online_stereo:=true
+
+touch /tmp/executed_bringup_system.bash.log
+
+roscore
 
