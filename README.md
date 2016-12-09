@@ -173,9 +173,15 @@ Then, to record messages, run
 ```bash
 roslaunch rustbot_bringup record_raw.launch
 ```
-
 After stopping (using Ctrl-X) the recorder node, the bag file can be found on the desktop, with the date and hour, e.g., 
 _sev_2016-11-24-14-48-30.bag_.
+
+By default all messages are saved but the rosbags are quite big. If you want to save only raw data, i.e., wihtout stereo + slam processing, run
+
+```bash
+roslaunch rustbot_bringup record_raw.launch only_raw_data:=true
+```
+
 
 ## <a name="playingbackdata"></a>Playing Back Data
 
