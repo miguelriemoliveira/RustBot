@@ -362,7 +362,9 @@ See [this](https://developers.google.com/protocol-buffers/docs/pythontutorial) f
 
 ## <a name="copybagfilesubuntu"></a>Copy bag files to local computer (Ubuntu)
 
-To copy the bag files from the NUC computer to a local file, select Places -- Connect to Server.
+To copy the bag files from the NUC computer to a local file, first connect to the wireless network as described in section [Quick start](#quickstart)
+
+Then, select Places -- Connect to Server.
 Then, add 
 
 ```bash
