@@ -6,6 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /LeftRectified1
+        - /LeftRectified1/Status1
         - /Axes1
         - /TF1/Frames1
       Splitter Ratio: 0.604701
@@ -28,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: RightRectified
+    SyncSource: PointCloud2
 Visualization Manager:
   Class: ""
   Displays:
