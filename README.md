@@ -20,6 +20,7 @@ If you want to use windows for connecting to the sensor check out this [reposito
 * [ZeroMQ + Google Protocol Buffers Tutorial](#zeromqtutorial)
 * [Compile Google Protocol Buffers Messages](#compilemessages)
 * [Update pen-wifi drivers after kernel uptade] (#penwifi)
+* [Copy bag files to local computer (Ubuntu)] (#copybagfilesubuntu)
 
 
 
@@ -355,6 +356,17 @@ See [this](https://developers.google.com/protocol-buffers/docs/pythontutorial) f
  make
  
  sudo make install
- 
+ ```
  more: http://criis-projects.inesctec.pt/issues/2496
+
+
+## <a name="copybagfilesubuntu"></a>Copy bag files to local computer (Ubuntu)
+
+To copy the bag files from the NUC computer to a local file, select Places -- Connect to Server.
+Then, add 
+
+```bash
+sftp://192.168.0.150/home/sev/Desktop
 ```
+
+Drag and drop the bag file to the place you want on your local computer.
