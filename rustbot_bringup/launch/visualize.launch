@@ -18,19 +18,19 @@
   <!--<param name="autosize" value="false"/>-->
   <!--<param name="window_name" value="/stereo/right/image_raw"/>-->
   <!--</node>-->
-  <node name="left_rect_view" pkg="image_view" type="image_view">
-    <remap from="image" to="/stereo/left/image_rect"/>
-    <param name="autosize" value="false"/>
-    <param name="window_name" value="/stereo/left/image_rect"/>
-  </node>
-  <node name="right_rect_view" pkg="image_view" type="image_view">
-    <remap from="image" to="/stereo/right/image_rect"/>
-    <param name="autosize" value="false"/>
-    <param name="window_name" value="/stereo/right/image_rect"/>
-  </node>
-  <node name="disparity_view" pkg="image_view" type="disparity_view">
-    <remap from="image" to="/stereo/disparity"/>
-    <param name="autosize" value="false"/>
-    <param name="window_name" value="/stereo/disparity"/>
-  </node>
+  <!--<node name="left_rect_view" pkg="image_view" type="image_view">-->
+    <!--<remap from="image" to="/stereo/left/image_rect"/>-->
+    <!--<param name="autosize" value="false"/>-->
+    <!--<param name="window_name" value="/stereo/left/image_rect"/>-->
+  <!--</node>-->
+  <!--<node name="right_rect_view" pkg="image_view" type="image_view">-->
+    <!--<remap from="image" to="/stereo/right/image_rect"/>-->
+    <!--<param name="autosize" value="false"/>-->
+    <!--<param name="window_name" value="/stereo/right/image_rect"/>-->
+  <!--</node>-->
+  <!--<node name="disparity_view" pkg="image_view" type="disparity_view">-->
+    <!--<remap from="image" to="/stereo/disparity"/>-->
+    <!--<param name="autosize" value="false"/>-->
+    <!--<param name="window_name" value="/stereo/disparity"/>-->
+  <!--</node>-->
 </launch>
