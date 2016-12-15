@@ -7,11 +7,12 @@
 #include <pcl/filters/voxel_grid.h>
 
 #include <tf/transform_listener.h>
+#include <tf_conversions/tf_eigen.h>
 #include <sensor_msgs/PointCloud2.h>
 
 #include <pcl_ros/transforms.h>
 
-typedef pcl::PointXYZRGBA PointT;
+typedef pcl::PointXYZRGB PointT;
 
 std::string filename = "output.pcd";
 
@@ -22,6 +23,8 @@ pcl::PointCloud<PointT>::Ptr cloud;
 pcl::PointCloud<PointT>::Ptr tmp_cloud;
 pcl::PointCloud<PointT>::Ptr cloud_transformed;
 
+sensor_msgs::PointCloud2 msg_out;
+
 pcl::VoxelGrid<PointT> grid;
 
 tf::TransformListener *p_listener;
@@ -29,46 +32,56 @@ boost::shared_ptr<ros::Publisher> pub;
 
 void cloud_open_target (const sensor_msgs::PointCloud2ConstPtr& msg)
 {
-
     pcl::fromROSMsg (*msg, *cloud);
 
-    ROS_INFO("Size of cloud = %ld", cloud->points.size());
+    std::vector<int> indicesNAN;
+    pcl::removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
 
-    printf("LINE=%d\n",__LINE__);
-    pcl_ros::transformPointCloud(ros::names::remap("/map"), *cloud, *cloud_transformed, *p_listener);
-    printf("LINE=%d\n",__LINE__);
+    ros::Time tic = ros::Time::now();
+    ros::Time t = msg->header.stamp;
+    tf::StampedTransform trans;
+    try
+    {
+        p_listener->waitForTransform(ros::names::remap("/map"), msg->header.frame_id, t, ros::Duration(3.0));
+        p_listener->lookupTransform(ros::names::remap("/map"), msg->header.frame_id, t, trans);
+    }
+    catch (tf::TransformException& ex){
+        ROS_ERROR("%s",ex.what());
+        //ros::Duration(1.0).sleep();
+        ROS_WARN("Cannot accumulate");
+        return;
+    }
+    ROS_INFO("Collected transforms (%0.3f secs)", (ros::Time::now() - tic).toSec());
 
 
-    ROS_INFO("Size of input cloud = %ld", cloud_transformed->points.size());
-    printf("LINE=%d\n",__LINE__);
+    //try{
+        //p_listener->waitForTransform(msg->header.frame_id, ros::names::remap("/map"), msg->header.stamp, ros::Duration(2.0));
+        //pcl_ros::transformPointCloud(ros::names::remap("/map"), *cloud, *cloud_transformed, *p_listener);
+    //}
+    //catch (tf::TransformException ex)
+    //{
+        //ROS_ERROR("%s",ex.what());
+        //return;
+    //}
+
+
+    //Transform point cloud
+    Eigen::Affine3d eigen_trf;                                  
+    tf::transformTFToEigen (trans, eigen_trf);
+    pcl::transformPointCloud<PointT>(*cloud, *cloud_transformed, eigen_trf);
+
+
+
     (*accumulated_cloud) += (*cloud_transformed);
-    printf("LINE=%d\n",__LINE__);
 
-
-    ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
-    (*tmp_cloud) = *accumulated_cloud;
-    printf("LINE=%d\n",__LINE__);
-    grid.setInputCloud (tmp_cloud);
-    printf("LINE=%d\n",__LINE__);
+    grid.setInputCloud (accumulated_cloud);
+    grid.setLeafSize (0.03f, 0.03f, 0.03f);
     grid.filter (*accumulated_cloud);
-    printf("LINE=%d\n",__LINE__);
-
     ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
 
-    
-    sensor_msgs::PointCloud2 msg_out;
-    printf("LINE=%d\n",__LINE__);
-    pcl::toROSMsg (*cloud, msg_out);
-    //pcl::toROSMsg (*accumulated_cloud, msg_out);
-    printf("LINE=%d\n",__LINE__);
-    //msg_out.header.stamp = ros::Time::now();
-    //printf("LINE=%d\n",__LINE__);
-    //msg_out.is_dense = 0;
-    printf("LINE=%d\n",__LINE__);
+    pcl::toROSMsg (*accumulated_cloud, msg_out);
+    msg_out.header.stamp = ros::Time::now();
     pub->publish(msg_out);
-    printf("LINE=%d\n",__LINE__);
-
-    ROS_INFO("Size of msg_out = %d", msg_out.width);
 }
 
 
@@ -90,10 +103,7 @@ int main (int argc, char** argv)
 
     accumulated_cloud->header.frame_id = ros::names::remap("/map");
     p_listener = (tf::TransformListener*) new tf::TransformListener;
-    
-    grid.setLeafSize (0.1f, 0.1f, 0.1f);
-    //grid.setInputCloud (accumulated_cloud);
-    //grid.filter (*accumulated_cloud_filtered);
+
 
     ros::Duration(2).sleep();
 
@@ -101,7 +111,7 @@ int main (int argc, char** argv)
     ros::Subscriber sub_target = nh.subscribe ("input", 1, cloud_open_target);
 
     pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
-    *pub = nh.advertise<sensor_msgs::PointCloud2>("accumulated_point_cloud", 1);
+    *pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 1);
 
 
     while (ros::ok())
@@ -110,4 +120,7 @@ int main (int argc, char** argv)
         ros::spinOnce();
     }
 
+
+    //printf("Saving to file %s\n", filename.c_str());;
+    //pcl::io::savePCDFileASCII (filename, *accumulated_cloud);
 }
