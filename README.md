@@ -203,32 +203,10 @@ rosbag play GPS_IMU_2016-06-14-17-01-59.bag -l
 Note2: if your bagfile does not contain odometry info, you can publish dummy /odom messages by running:
 
 ```bash
-rostopic pub /odom nav_msgs/Odometry "header:
-  seq: 0
-  stamp:
-    secs: 0
-    nsecs: 0
-  frame_id: ''
-child_frame_id: ''
-pose:
-  pose:
-    position: {x: 0.0, y: 0.0, z: 5.0}
-    orientation: {x: 0.0, y: 0.0, z: 0.0, w: 0.0}
-  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-twist:
-  twist:
-    linear: {x: 0.0, y: 1.0, z: 0.0}
-    angular: {x: 0.0, y: 0.0, z: 0.0}
-  covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0]" -r 10
+rostopic pub /odom nav_msgs/Odometry <then press tab tab and the message will be filled> -r 10
 ```
 
 Important: If running the rqt_bag, you must press the right mouse button over all topics in the bag file and select play. Otherwise, the topics are not published.
-
-
 
 ## <a name="stereobagfile"></a>Stereo and SLAM from a Bagfile
 
@@ -247,7 +225,7 @@ Now you should receive both disparity images /stereo/disparity as well as point 
 Note that in order for this node to work, there must be some node publishing images and point clouds.
 This can be done online (not yet funcional) or offline.
 
-To _publish images offline_ follow sections [Playing Back Data](playingbackdata) to publish the recorded images, and also section [Stereo and SLAM from a Bagfile](#stereobagfile) to publish the disparity maps and the point clouds.
+To _publish images offline_ follow sections [Playing Back Data](#playingbackdata) to publish the recorded images, and also section [Stereo and SLAM from a Bagfile](#stereobagfile) to publish the disparity maps and the point clouds.
 
 
 To launch the ZMQ publisher, do:
