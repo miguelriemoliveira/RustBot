@@ -1,49 +1,68 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="do_stereo" default="true"/>
-  <arg name="do_slam" default="true"/>
-  <arg name="do_gps" default="true"/>
-  <arg name="online_stereo" default="true"/>
-  <arg name="config_stereo" default="false"/>
-  <arg name="fps" default="1"/>
-  <arg name="queue_size" default="50"/>
+<arg name="do_stereo" default="true"/>
+<arg name="do_slam" default="true"/>
+<arg name="do_gps" default="true"/>
+<arg name="do_accumulation" default="false"/>
+<arg name="online_stereo" default="true"/>
+<arg name="config_stereo" default="false"/>
+<arg name="fps" default="1"/>
+<arg name="queue_size" default="50"/>
 
 
-    <group if="$(arg do_gps)">
-  <include file="$(find rustbot_bringup)/launch/gps.launch">
+<!--GPS drivers should work only on online mode-->
+<group if="$(arg online_stereo)">
+<group if="$(arg do_gps)">
+<include file="$(find rustbot_bringup)/launch/gps.launch">
 </include>
+</group>
+</group>
 
-    </group>
-  <group ns="stereo">
-    <group if="$(arg online_stereo)">
-      <include file="$(find rustbot_bringup)/launch/left_camera.launch">
-        <arg name="fps" value="$(arg fps)"/>
-      </include>
-      <include file="$(find rustbot_bringup)/launch/right_camera.launch">
-        <arg name="fps" value="$(arg fps)"/>
-      </include>
-    </group>
-    <group if="$(arg do_stereo)">
-      <node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" output="screen">
-        <param name="approximate_sync" value="true"/>
-        <param name="queue_size" value="$(arg queue_size)"/>
-        <rosparam command="load" file="$(find rustbot_calibration)/calibration/stereo_image_proc.yaml"/>
-      </node>
-    </group>
-  </group>
-  <group if="$(arg config_stereo)">
-    <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen">
+<!--Stereo namespace-->
+<group ns="stereo">
+
+<!--Camera drivers (should work only in online mode)-->
+<group if="$(arg online_stereo)">
+<include file="$(find rustbot_bringup)/launch/left_camera.launch">
+<arg name="fps" value="$(arg fps)"/>
+</include>
+<include file="$(find rustbot_bringup)/launch/right_camera.launch">
+<arg name="fps" value="$(arg fps)"/>
+</include>
+</group>
+
+<!--Stereo processing-->
+<group if="$(arg do_stereo)">
+<node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" output="screen">
+<param name="approximate_sync" value="true"/>
+<param name="queue_size" value="$(arg queue_size)"/>
+<rosparam command="load" file="$(find rustbot_calibration)/calibration/stereo_image_proc.yaml"/>
 </node>
-  </group>
-  <!--SLAM launch files-->
-  <group if="$(arg do_slam)">
-    <include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_play_aux.launch">
-</include>
-    <include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_slam_rtabmapOdometryMapping.launch">
-</include>
-  </group>
-  <!--Launch the sev zmq+protobuf publisher-->
-  <node name="sev_publisher" pkg="rustbot_translation" type="sev_publisher.py" output="screen">
+</group>
+</group>
+
+<!--Configure stereo-->
+<group if="$(arg config_stereo)">
+<node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen">
 </node>
+</group>
+
+<!--SLAM launch files-->
+<group if="$(arg do_slam)">
+<include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_play_aux.launch">
+</include>
+<include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_slam_rtabmapOdometryMapping.launch">
+</include>
+</group>
+
+<!--Point cloud accumulator-->
+<group if="$(arg do_accumulation)">
+<include file="$(find rustbot_bringup)/launch/accumulate.launch">
+</include>
+</group>
+
+<!--SEV zmq+protobuf publisher-->
+<node name="sev_publisher" pkg="rustbot_translation" type="sev_publisher.py" output="screen">
+</node>
+
 </launch>
-
