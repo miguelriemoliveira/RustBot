@@ -372,3 +372,8 @@ sftp://192.168.0.150/home/sev/Desktop
 ```
 
 Drag and drop the bag file to the place you want on your local computer.
+
+
+## <a name="Clean"></a>Clean a rosbag file 
+
+rosbag filter sev_2016-12-14-12-19-55.bag test.bag '(topic=="/stereo/left/image_raw/compressed" or topic =="/stereo/left/image_color/compressed" or topic=="/stereo/left/camera_info" or topic=="/stereo/right/image_raw/compressed" or topic=="/stereo/right/image_color/compressed" or topic=="/stereo/right/camera_info" or topic=="/mavros/global_position/raw/fix" or topic=="/mavros/imu/data" or topic=="/mavros/imu/data_raw" or topic=="/mavros/global_position/raw/gps_vel" or topic=="/mavros/global_position/raw/global" or topic=="/stereo_odometry" or topic=="/stereo/points2") or (topic=="/tf" and m.transforms[0].header.frame_id!="map")'
