@@ -14,7 +14,7 @@ If you want to use windows for connecting to the sensor check out this [reposito
 * [Tunning Stereo Parameters](#tunningparameters)
 * [Saving a Bag File](#savingabagfile)
 * [Playing Back Data](#playingbackdata)
-* [Stereo from a Bagfile](#stereobagfile)
+* [Stereo and SLAM from a Bagfile](#stereobagfile)
 * [Publishing Data Using ZMQ](#publishingdatazmq)
 * [Finding IP Address of Cameras](#findingcameraip)
 * [ZeroMQ + Google Protocol Buffers Tutorial](#zeromqtutorial)
@@ -230,14 +230,14 @@ Important: If running the rqt_bag, you must press the right mouse button over al
 
 
 
-## <a name="stereobagfile"></a>Stereo from a Bagfile
+## <a name="stereobagfile"></a>Stereo and SLAM from a Bagfile
 
 First, you must be playing back recorded data. See section [Playing Back Data](#playingbackdata)
 
 To run the stereo
 
 ```bash
-roslaunch rustbot_bringup all.launch do_stereo:=true online_stereo:=false 
+roslaunch rustbot_bringup all.launch do_stereo:=true do_slam:=true online_stereo:=false 
 ```
 
 Now you should receive both disparity images /stereo/disparity as well as point clouds /stereo/points2
@@ -247,7 +247,7 @@ Now you should receive both disparity images /stereo/disparity as well as point 
 Note that in order for this node to work, there must be some node publishing images and point clouds.
 This can be done online (not yet funcional) or offline.
 
-To _publish images offline_ follow sections [Playing Back Data](playingbackdata) to publish the recorded images, and also section [Stereo from a Bagfile](#stereobagfile) to publish the disparity maps and the point clouds.
+To _publish images offline_ follow sections [Playing Back Data](playingbackdata) to publish the recorded images, and also section [Stereo and SLAM from a Bagfile](#stereobagfile) to publish the disparity maps and the point clouds.
 
 
 To launch the ZMQ publisher, do:
