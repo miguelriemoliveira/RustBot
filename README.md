@@ -149,7 +149,7 @@ roslaunch rustbot_bringup all.launch fps:=3 config_stereo:=true
 
 if you are running from a rosbag file:
 ```bash
-roslaunch rustbot_bringup all.launch fps:=3 config_stereo:=true online_stereo:=false do_gps:=false
+roslaunch rustbot_bringup all.launch config_stereo:=true online_stereo:=false do_gps:=false
 ```
 
 and then
