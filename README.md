@@ -22,11 +22,8 @@ If you want to use windows for connecting to the sensor check out this [reposito
 * [Compile Google Protocol Buffers Messages](#compilemessages)
 * [Update pen-wifi drivers after kernel uptade] (#penwifi)
 * [Copy bag files to local computer (Ubuntu)] (#copybagfilesubuntu)
-* [Fix a rosbag file (bags collected before 14-12-2016) ] (#fixrosbag)
-
-
-
-
+* [Fix a rosbag file (bags collected before 14-12-2016)] (#fixrosbag)
+* [Getting a bagfile with only raw data from a complete bagfile] (#rawfromcomplete)
 
 ## <a name="therobot"></a>The Robot
 
@@ -380,6 +377,6 @@ It is possible to extract from the _complete.bag_ a _rawdata.bag_. To do this, e
 rosbag filter complete.bag rawdata.bag '(topic=="/stereo/left/image_raw/compressed" or topic =="/stereo/left/image_color/compressed" or topic=="/stereo/left/camera_info" or topic=="/stereo/right/image_raw/compressed" or topic=="/stereo/right/image_color/compressed" or topic=="/stereo/right/camera_info" or topic=="/mavros/global_position/raw/fix" or topic=="/mavros/imu/data" or topic=="/mavros/imu/data_raw" or topic=="/mavros/global_position/raw/gps_vel" or topic=="/mavros/global_position/raw/global" or topic=="/tf")'
 ```
 
-Note: if you have a bagfile collected before 14-12-2016 you may want to fix it first (see #fixrosbag).
+Note: if you have a bagfile collected before 14-12-2016 you may want to fix it first (see [Fix a rosbag file (bags collected before 14-12-2016) ](#fixrosbag)).
 
 
