@@ -15,12 +15,16 @@ If you want to use windows for connecting to the sensor check out this [reposito
 * [Saving a Bag File](#savingabagfile)
 * [Playing Back Data](#playingbackdata)
 * [Stereo and SLAM from a Bagfile](#stereobagfile)
+* [Getting a bagfile with only raw data from a complete bagfile](#rawfromcomplete)
 * [Publishing Data Using ZMQ](#publishingdatazmq)
 * [Finding IP Address of Cameras](#findingcameraip)
 * [ZeroMQ + Google Protocol Buffers Tutorial](#zeromqtutorial)
 * [Compile Google Protocol Buffers Messages](#compilemessages)
 * [Update pen-wifi drivers after kernel uptade] (#penwifi)
 * [Copy bag files to local computer (Ubuntu)] (#copybagfilesubuntu)
+* [Fix a rosbag file (bags collected before 14-12-2016) ] (#fixrosbag)
+
+
 
 
 
@@ -220,6 +224,7 @@ roslaunch rustbot_bringup all.launch do_stereo:=true do_slam:=true online_stereo
 
 Now you should receive both disparity images /stereo/disparity as well as point clouds /stereo/points2
 
+
 ## <a name="publishingdatazmq"></a>Publishing Data Using ZMQ
 
 Note that in order for this node to work, there must be some node publishing images and point clouds.
@@ -356,7 +361,25 @@ sftp://192.168.0.150/home/sev/Desktop
 
 Drag and drop the bag file to the place you want on your local computer.
 
+## <a name="fixrosbag"></a>Fix a rosbag file (bags collected before 14-12-2016) 
 
-## <a name="Clean"></a>Clean a rosbag file 
+Bag files collected before 14-12-2016 had a conflit with the same tf frames being published by slam and mavros.
+You can "fix" them by removing the tfs published by mavros:
 
-rosbag filter sev_2016-12-14-12-19-55.bag test.bag '(topic=="/stereo/left/image_raw/compressed" or topic =="/stereo/left/image_color/compressed" or topic=="/stereo/left/camera_info" or topic=="/stereo/right/image_raw/compressed" or topic=="/stereo/right/image_color/compressed" or topic=="/stereo/right/camera_info" or topic=="/mavros/global_position/raw/fix" or topic=="/mavros/imu/data" or topic=="/mavros/imu/data_raw" or topic=="/mavros/global_position/raw/gps_vel" or topic=="/mavros/global_position/raw/global" or topic=="/stereo_odometry" or topic=="/stereo/points2") or (topic=="/tf" and m.transforms[0].header.frame_id!="map")'
+```bash
+rosbag filter original.bag fixed.bag '(topic=="/stereo/left/image_raw/compressed" or topic =="/stereo/left/image_color/compressed" or topic=="/stereo/left/camera_info" or topic=="/stereo/right/image_raw/compressed" or topic=="/stereo/right/image_color/compressed" or topic=="/stereo/right/camera_info" or topic=="/mavros/global_position/raw/fix" or topic=="/mavros/imu/data" or topic=="/mavros/imu/data_raw" or topic=="/mavros/global_position/raw/gps_vel" or topic=="/mavros/global_position/raw/global" or topic=="/stereo_odometry" or topic=="/stereo/points2") or (topic=="/tf" and m.transforms[0].header.frame_id!="map")'
+```
+
+## <a name="rawfromcomplete"></a>Getting a bagfile with only raw data from a complete bagfile
+
+Assume you have a bag file (_complete.bag_) with all the system messages. You will have also messages on topics _/stereo/points2_ and _/stereo_camera/odometry_. These messages are produced by the processing of the stereo and SLAM nodes respectivelly.
+
+It is possible to extract from the _complete.bag_ a _rawdata.bag_. To do this, execute:
+
+```bash
+rosbag filter complete.bag rawdata.bag '(topic=="/stereo/left/image_raw/compressed" or topic =="/stereo/left/image_color/compressed" or topic=="/stereo/left/camera_info" or topic=="/stereo/right/image_raw/compressed" or topic=="/stereo/right/image_color/compressed" or topic=="/stereo/right/camera_info" or topic=="/mavros/global_position/raw/fix" or topic=="/mavros/imu/data" or topic=="/mavros/imu/data_raw" or topic=="/mavros/global_position/raw/gps_vel" or topic=="/mavros/global_position/raw/global" or topic=="/tf")'
+```
+
+Note: if you have a bagfile collected before 14-12-2016 you may want to fix it first (see #fixrosbag).
+
+
