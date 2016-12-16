@@ -7,13 +7,10 @@
   <arg name="config_stereo" default="false"/>
   <arg name="fps" default="1"/>
   <arg name="queue_size" default="50"/>
-
-
-    <group if="$(arg do_gps)">
-  <include file="$(find rustbot_bringup)/launch/gps.launch">
+  <group if="$(arg do_gps)">
+    <include file="$(find rustbot_bringup)/launch/gps.launch">
 </include>
-
-    </group>
+  </group>
   <group ns="stereo">
     <group if="$(arg online_stereo)">
       <include file="$(find rustbot_bringup)/launch/left_camera.launch">
@@ -46,4 +43,3 @@
   <node name="sev_publisher" pkg="rustbot_translation" type="sev_publisher.py" output="screen">
 </node>
 </launch>
-

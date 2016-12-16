@@ -17,26 +17,36 @@ typedef pcl::PointXYZRGB PointT;
 std::string filename = "output.pcd";
 
 pcl::PointCloud<PointT>::Ptr accumulated_cloud;
-pcl::PointCloud<PointT>::Ptr accumulated_cloud_filtered;
+//pcl::PointCloud<PointT>::Ptr accumulated_cloud_filtered;
 
-pcl::PointCloud<PointT>::Ptr cloud;
-pcl::PointCloud<PointT>::Ptr tmp_cloud;
-pcl::PointCloud<PointT>::Ptr cloud_transformed;
-
-sensor_msgs::PointCloud2 msg_out;
-
-pcl::VoxelGrid<PointT> grid;
 
 tf::TransformListener *p_listener;
 boost::shared_ptr<ros::Publisher> pub;
 
 void cloud_open_target (const sensor_msgs::PointCloud2ConstPtr& msg)
 {
+    //declare variables
+    pcl::PointCloud<PointT>::Ptr cloud;
+    pcl::PointCloud<PointT>::Ptr cloud_transformed;
+    pcl::PointCloud<PointT>::Ptr tmp_cloud;
+    pcl::VoxelGrid<PointT> grid;
+    sensor_msgs::PointCloud2 msg_out;
+
+    //allocate objects for pointers
+    cloud = (pcl::PointCloud<PointT>::Ptr) (new pcl::PointCloud<PointT>);
+    cloud_transformed = (pcl::PointCloud<PointT>::Ptr) (new pcl::PointCloud<PointT>);
+    tmp_cloud = (pcl::PointCloud<PointT>::Ptr) (new pcl::PointCloud<PointT>);
+
+
+    //Convert the ros message to pcl point cloud
     pcl::fromROSMsg (*msg, *cloud);
 
+    //Remove any NAN points in the cloud
     std::vector<int> indicesNAN;
     pcl::removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
+    //pcl::removeNaNFromPointCloud(*accumulated_cloud, *accumulated_cloud, indicesNAN);
 
+    //Get the transform, return if cannot get it
     ros::Time tic = ros::Time::now();
     ros::Time t = msg->header.stamp;
     tf::StampedTransform trans;
@@ -54,34 +64,31 @@ void cloud_open_target (const sensor_msgs::PointCloud2ConstPtr& msg)
     ROS_INFO("Collected transforms (%0.3f secs)", (ros::Time::now() - tic).toSec());
 
 
-    //try{
-        //p_listener->waitForTransform(msg->header.frame_id, ros::names::remap("/map"), msg->header.stamp, ros::Duration(2.0));
-        //pcl_ros::transformPointCloud(ros::names::remap("/map"), *cloud, *cloud_transformed, *p_listener);
-    //}
-    //catch (tf::TransformException ex)
-    //{
-        //ROS_ERROR("%s",ex.what());
-        //return;
-    //}
-
-
-    //Transform point cloud
+    //Transform point cloud using the transform obtained
     Eigen::Affine3d eigen_trf;                                  
     tf::transformTFToEigen (trans, eigen_trf);
     pcl::transformPointCloud<PointT>(*cloud, *cloud_transformed, eigen_trf);
 
-
-
+    //Accumulate the point cloud using the += operator
+    ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
     (*accumulated_cloud) += (*cloud_transformed);
 
-    grid.setInputCloud (accumulated_cloud);
-    grid.setLeafSize (0.03f, 0.03f, 0.03f);
+    //Voxel grid filter the accumulated cloud
+    *tmp_cloud = *accumulated_cloud;
+    grid.setInputCloud(tmp_cloud);
+    //grid.setLeafSize (0.5f, 0.5f, 0.5f);
+    grid.setLeafSize (0.05f, 0.05f, 0.05f);
     grid.filter (*accumulated_cloud);
     ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
 
+    //Conver the pcl point cloud to ros msg and publish
     pcl::toROSMsg (*accumulated_cloud, msg_out);
-    msg_out.header.stamp = ros::Time::now();
+    msg_out.header.stamp = t;
     pub->publish(msg_out);
+
+    cloud.reset();
+    tmp_cloud.reset();
+    cloud_transformed.reset();
 }
 
 
@@ -95,9 +102,6 @@ int main (int argc, char** argv)
     ros::NodeHandle nh;
 
     accumulated_cloud = (pcl::PointCloud<PointT>::Ptr) new pcl::PointCloud<PointT>;
-    cloud = (pcl::PointCloud<PointT>::Ptr) (new pcl::PointCloud<PointT>);
-    cloud_transformed = (pcl::PointCloud<PointT>::Ptr) (new pcl::PointCloud<PointT>);
-    tmp_cloud = (pcl::PointCloud<PointT>::Ptr) (new pcl::PointCloud<PointT>);
 
 
 
@@ -121,6 +125,6 @@ int main (int argc, char** argv)
     }
 
 
-    //printf("Saving to file %s\n", filename.c_str());;
-    //pcl::io::savePCDFileASCII (filename, *accumulated_cloud);
+    printf("Saving to file %s\n", filename.c_str());;
+    pcl::io::savePCDFileASCII (filename, *accumulated_cloud);
 }
