@@ -26,45 +26,45 @@
       <param name="queue_size" type="int" value="10"/>
       <!-- Config. [Stereo]  -->
       <param name="Stereo/OpticalFlow" type="string" value="false"/>
-      <param name="Stereo/Eps" type="string" value="0.01"/>
-      <param name="Stereo/Iterations" type="string" value="30"/>
-      <param name="Stereo/MaxDisparity" type="string" value="128"/>
+      <param name="Stereo/Eps" type="string" value="0.1"/>
+      <param name="Stereo/Iterations" type="string" value="40"/>
+      <param name="Stereo/MaxDisparity" type="string" value="200"/>
       <param name="Stereo/MaxLevel" type="string" value="3"/>
       <param name="Stereo/SSD" type="string" value="true"/>
       <param name="Stereo/WinHeight" type="string" value="3"/>
       <param name="Stereo/WinWidth" type="string" value="15"/>
       <!-- Config. [Correspondence]  -->
-      <param name="Vis/CorFlowEps" type="string" value="0.01"/>
+      <param name="Vis/CorFlowEps" type="string" value="0.2"/>
       <param name="Vis/CorFlowIterations" type="string" value="30"/>
       <param name="Vis/CorFlowMaxLevel" type="string" value="3"/>
-      <param name="Vis/CorFlowWinSize" type="string" value="16"/>
+      <param name="Vis/CorFlowWinSize" type="string" value="14"/>
       <param name="Vis/CorGuessWinSize" type="string" value="50"/>
       <!-- [Vis/CorrespondenceType=0] -->
-      <param name="Vis/CorNNDR" type="string" value="1.2"/>
+      <param name="Vis/CorNNDR" type="string" value="1."/>
       <!-- [Vis/CorrespondenceType=0] -->
       <param name="Vis/CorNNType" type="string" value="1"/>
       <!-- [Vis/CorrespondenceType=0] - kNNFlannNaive=0, kNNFlannKdTree=1, kNNFlannLSH=2, kNNBruteForce=3, kNNBruteForceGPU=4 -->
-      <param name="Vis/CorType" type="string" value="1"/>
+      <param name="Vis/CorType" type="string" value="2"/>
       <!-- 0=Features Matching, 1=Optical Flow -->
-      <param name="Vis/EstimationType" type="string" value="1"/>
+      <param name="Vis/EstimationType" type="string" value="0"/>
       <!-- 0:3D->3D, 1:3D->2D (PnP), 2:2D->2D (Epipolar Geometry) -->
-      <param name="Vis/EpipolarGeometryVar" type="string" value="0.05"/>
+      <param name="Vis/EpipolarGeometryVar" type="string" value="0.1"/>
       <!-- [Vis/EstimationType = 2] Epipolar geometry maximum variance to accept the transformation.-->
-      <param name="Vis/FeatureType" type="string" value="6"/>
+      <param name="Vis/FeatureType" type="string" value="3"/>
       <!-- 0=SURF 1=SIFT 2=ORB 3=FAST/FREAK 4=FAST/BRIEF 5=GFTT/FREAK 6=GFTT/BRIEF 7=BRISK 8=GFTT/ORB -->
       <param name="Vis/ForwardEstOnly" type="string" value="true"/>
-      <param name="Vis/InlierDistance" type="string" value="0.1"/>
+      <param name="Vis/InlierDistance" type="string" value="1.1"/>
       <!-- [Vis/EstimationType = 0] Maximum distance for feature correspondences. Used by 3D->3D estimation approach. -->
       <param name="Vis/Iterations" type="string" value="100"/>
       <!-- Maximum iterations to compute the transform. -->
-      <param name="Vis/MaxDepth" type="string" value="16"/>
+      <param name="Vis/MaxDepth" type="string" value="30"/>
       <param name="Vis/MaxFeatures" type="string" value="2000"/>
       <param name="Vis/MinDepth" type="string" value="0"/>
-      <param name="Vis/MinInliers" type="string" value="10"/>
+      <param name="Vis/MinInliers" type="string" value="8"/>
       <!-- Minimum feature correspondences to compute/accept the transformation. -->
-      <param name="Vis/PnPFlags" type="string" value="1"/>
+      <param name="Vis/PnPFlags" type="string" value="0"/>
       <!-- [Vis/EstimationType = 1] PnP flags: 0=Iterative, 1=EPNP, 2=P3P -->
-      <param name="Vis/PnPRefineIterations" type="string" value="5"/>
+      <param name="Vis/PnPRefineIterations" type="string" value="10"/>
       <!-- [Vis/EstimationType = 1] Refine iterations -->
       <param name="Vis/RoiRatios" type="string" value="0.0 0.0 0.0 0.0"/>
       <!-- Region of interest ratios [left, right, top, bottom]. -->
@@ -72,8 +72,8 @@
       <!-- 0 disables sub pixel refining.-->
       <param name="GFTT/BlockSize" type="string" value="5"/>
       <param name="GFTT/K" type="string" value="0.04"/>
-      <param name="GFTT/MinDistance" type="string" value="10"/>
-      <param name="GFTT/QualityLevel" type="string" value="0.0001"/>
+      <param name="GFTT/MinDistance" type="string" value="0.2"/>
+      <param name="GFTT/QualityLevel" type="string" value="0.001"/>
       <param name="GFTT/UseHarrisDetector" type="string" value="false"/>
       <!-- Config. [Registration]  -->
       <param name="Reg/Strategy" type="string" value="0"/>
@@ -86,13 +86,13 @@
       <!-- Create a new keyframe when the number of ICP inliers drops under this ratio of points in last frame's scan. -->
       <param name="Odom/ResetCountdown" type="string" value="10"/>
       <!-- Automatically reset odometry after X consecutive images on which odometry cannot be computed (value=0 disables auto-reset) -->
-      <param name="Odom/KeyFrameThr" type="string" value="0.3"/>
+      <param name="Odom/KeyFrameThr" type="string" value="0.2"/>
       <!-- Create a new keyframe when the number of inliers drops under this ratio of features in last frame. -->
       <param name="Odom/ImageBufferSize" type="string" value="10"/>
       <!-- Data buffer size (0 min inf). -->
-      <param name="Odom/Holonomic" type="string" value="true"/>
+      <param name="Odom/Holonomic" type="string" value="false"/>
       <!-- If not, y value will be estimated from x and yaw values (y=x*tan(yaw)) -->
-      <param name="Odom/GuessMotion" type="string" value="false"/>
+      <param name="Odom/GuessMotion" type="string" value="true"/>
       <!-- Guess next transformation from the last motion computed. -->
       <param name="Odom/FilteringStrategy" type="string" value="0"/>
       <!-- 0=No filtering 1=Kalman filtering 2=Particle filtering -->
