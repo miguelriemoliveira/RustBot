@@ -142,6 +142,8 @@ rosrun camera_calibration cameracalibrator.py --size 7x5 --square 0.03 right:=/s
 
 ## <a name="tunningparameters"></a>Tunning Stereo Parameters
 
+Read [this](http://wiki.ros.org/stereo_image_proc/Tutorials/ChoosingGoodStereoParameters) tutorial.
+
 To tune the parameters of the stereo algorithm, run
 
 ```bash
