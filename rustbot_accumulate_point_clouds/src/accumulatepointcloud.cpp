@@ -14,7 +14,7 @@
 
 typedef pcl::PointXYZRGB PointT;
 
-std::string filename = "output.pcd";
+std::string filename = "/tmp/output.pcd";
 
 pcl::PointCloud<PointT>::Ptr accumulated_cloud;
 //pcl::PointCloud<PointT>::Ptr accumulated_cloud_filtered;
