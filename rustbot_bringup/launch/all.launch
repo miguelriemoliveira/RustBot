@@ -1,21 +1,27 @@
 <?xml version="1.0"?>
+<!--This launches all the rustbot system-->
 <launch>
+  <!--arguments-->
   <arg name="do_stereo" default="true"/>
   <arg name="do_slam" default="true"/>
   <arg name="do_gps" default="true"/>
   <arg name="do_accumulation" default="false"/>
+  <!--This is for running the system computing the stereo (and the slam) from played back offline data-->
   <arg name="online_stereo" default="true"/>
+  <!--To launch a gui for tunning the stereo parameters-->
   <arg name="config_stereo" default="false"/>
+  <!--The desired frames per second-->
   <arg name="fps" default="1"/>
+  <!--Queue size for the stereo images. More queue size better the possibilities to sync, but more memory required-->
   <arg name="queue_size" default="50"/>
   <!--GPS drivers should work only on online mode-->
   <group if="$(arg online_stereo)">
     <group if="$(arg do_gps)">
       <include file="$(find rustbot_bringup)/launch/gps.launch">
-</include>
+        </include>
     </group>
   </group>
-  <!--Stereo namespace-->
+  <!--Stereo nodes -->
   <group ns="stereo">
     <!--Camera drivers (should work only in online mode)-->
     <group if="$(arg online_stereo)">
@@ -38,28 +44,25 @@
   <!--Configure stereo-->
   <group if="$(arg config_stereo)">
     <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen">
-</node>
+        </node>
   </group>
-  <!--SLAM launch files-->
+  <!--SLAM launch files (several options to do slam. Andry's rtab, Miguel's rtab and Miguel's viso2)-->
   <group if="$(arg do_slam)">
-
     <!--<include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_play_aux.launch">-->
-<!--</include>-->
+    <!--</include>-->
     <!--<include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_slam_rtabmapOdometryMapping.launch">-->
-<!--</include>-->
+    <!--</include>-->
     <!--<include file="$(find rustbot_bringup)/launch/rtab.launch">-->
     <!--</include>-->
     <include file="$(find rustbot_bringup)/launch/viso2.launch">
-    </include>
-
+        </include>
   </group>
-
   <!--Point cloud accumulator-->
   <group if="$(arg do_accumulation)">
     <include file="$(find rustbot_bringup)/launch/accumulate.launch">
-</include>
+        </include>
   </group>
   <!--SEV zmq+protobuf publisher-->
   <node name="sev_publisher" pkg="rustbot_translation" type="sev_publisher.py" output="screen">
-  </node>
+    </node>
 </launch>

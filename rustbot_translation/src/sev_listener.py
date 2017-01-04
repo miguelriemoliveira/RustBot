@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#
+
 #imports
 import zmq
 import time
@@ -15,11 +15,10 @@ from nav_msgs.msg import Odometry
 from cv_bridge import CvBridge, CvBridgeError
 import sensor_msgs.point_cloud2 as pc2
 import copy
-
 import SEVData_pb2
 
 #--------------------------
-#Start of code
+# Global Vars
 #--------------------------
 
 #configure the zmq publisher
@@ -35,8 +34,11 @@ socket = context.socket(zmq.SUB)
 print("Started subscriber on tcp://" + ip + ":" + port + " , topic " + str(topic))
 sd = SEVData_pb2.SEVData()
 
-
+#--------------------------
+# Start of main
+#--------------------------
 def main(args):
+
     #prepare the listener
     global socket
     socket.connect("tcp://" + ip + ":" + port)
@@ -45,7 +47,6 @@ def main(args):
     #setup some opencv windows
     cv2.namedWindow("Listener Left Camera")
     cv2.namedWindow("Listener Right Camera")
-
 
     #Start the main loop
     while True:
@@ -101,9 +102,8 @@ def main(args):
 
 
         #---------------------------------
-        #Visualizing the received data
+        #Visualizing and /or printing the received data
         #---------------------------------
-
         print("Received new message with stamp:\n" + str(sd.header.stamp))
     
         print("First 10 points x,y,z and rgb (packed in float32) values (just for debug)")

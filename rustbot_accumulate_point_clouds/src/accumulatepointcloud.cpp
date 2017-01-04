@@ -1,29 +1,26 @@
+//Includes
 #include <ros/ros.h>
-// PCL specific includes
+#include <tf/transform_listener.h>
+#include <tf_conversions/tf_eigen.h>
+#include <sensor_msgs/PointCloud2.h>
+
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/filters/voxel_grid.h>
-
-#include <tf/transform_listener.h>
-#include <tf_conversions/tf_eigen.h>
-#include <sensor_msgs/PointCloud2.h>
-
 #include <pcl_ros/transforms.h>
 
+//Definitions
 typedef pcl::PointXYZRGB PointT;
 
+//Global vars
 std::string filename = "/tmp/output.pcd";
-
 pcl::PointCloud<PointT>::Ptr accumulated_cloud;
-//pcl::PointCloud<PointT>::Ptr accumulated_cloud_filtered;
-
-
 tf::TransformListener *p_listener;
 boost::shared_ptr<ros::Publisher> pub;
 
-void cloud_open_target (const sensor_msgs::PointCloud2ConstPtr& msg)
+void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
     //declare variables
     pcl::PointCloud<PointT>::Ptr cloud;
@@ -97,34 +94,31 @@ int main (int argc, char** argv)
 
     // Initialize ROS
     ros::init (argc, argv, "accumulatepointcloud");
-
-    // Node Handle
     ros::NodeHandle nh;
 
-    accumulated_cloud = (pcl::PointCloud<PointT>::Ptr) new pcl::PointCloud<PointT>;
-
-
-
-    accumulated_cloud->header.frame_id = ros::names::remap("/map");
+    //initialize the transform listenerand wait a bit 
     p_listener = (tf::TransformListener*) new tf::TransformListener;
-
-
     ros::Duration(2).sleep();
+
+    //Initialize accumulated cloud variable
+    accumulated_cloud = (pcl::PointCloud<PointT>::Ptr) new pcl::PointCloud<PointT>;
+    accumulated_cloud->header.frame_id = ros::names::remap("/map");
+
+    //Initialize the point cloud publisher
+    pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
+    *pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 1);
 
     // Create a ROS subscriber for the input point cloud
     ros::Subscriber sub_target = nh.subscribe ("input", 1, cloud_open_target);
 
-    pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
-    *pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 1);
-
-
+    //Loop infinetly
     while (ros::ok())
     {
         // Spin
         ros::spinOnce();
     }
 
-
+    //Save accumulated point cloud to a file
     printf("Saving to file %s\n", filename.c_str());;
     pcl::io::savePCDFileASCII (filename, *accumulated_cloud);
 }

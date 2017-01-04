@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<!--Launches the GPS-->
 <launch>
   <arg name="fcu_url" default="/dev/ttyACM0:115200"/>
   <node name="mavros" pkg="mavros" type="mavros_node" output="screen">

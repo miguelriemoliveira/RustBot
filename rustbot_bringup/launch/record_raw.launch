@@ -1,14 +1,18 @@
 <?xml version="1.0"?>
+<!--Launches the recording of the system messages. -->
 <launch>
-  <arg name="only_raw_data" default="false"/>
-  <group if="$(arg only_raw_data)">
+<!--arguments-->
+<arg name="only_raw_data" default="false"/> <!--Whether or not to record only raw data-->
+
     <!--To record only raw data-->
-    <node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/stereo/left/image_raw/compressed  /stereo/left/image_color/compressed /stereo/left/camera_info /stereo/right/image_raw/compressed /stereo/right/image_color/compressed /stereo/right/camera_info /tf /mavros/global_position/raw/fix /mavros/imu/data /mavros/imu/data_raw /mavros/global_position/raw/gps_vel /mavros/global_position/raw/global -o /home/$(env USER)/Desktop/sev">
-       </node>
-  </group>
-  <group unless="$(arg only_raw_data)">
+    <group if="$(arg only_raw_data)">
+        <node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/stereo/left/image_raw/compressed  /stereo/left/image_color/compressed /stereo/left/camera_info /stereo/right/image_raw/compressed /stereo/right/image_color/compressed /stereo/right/camera_info /tf /mavros/global_position/raw/fix /mavros/imu/data /mavros/imu/data_raw /mavros/global_position/raw/gps_vel /mavros/global_position/raw/global -o /home/$(env USER)/Desktop/sev">
+        </node>
+    </group>
+  
     <!--To record all data-->
-    <node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/stereo/left/image_raw/compressed /stereo/left/image_color/compressed /stereo/left/camera_info /stereo/right/image_raw/compressed /stereo/right/image_color/compressed /stereo/right/camera_info /tf /mavros/global_position/raw/fix /mavros/imu/data /mavros/imu/data_raw /mavros/global_position/raw/gps_vel /mavros/global_position/raw/global /stereo_odometry /stereo/points2 -o /home/$(env USER)/Desktop/sev">
+    <group unless="$(arg only_raw_data)">
+        <node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/stereo/left/image_raw/compressed /stereo/left/image_color/compressed /stereo/left/camera_info /stereo/right/image_raw/compressed /stereo/right/image_color/compressed /stereo/right/camera_info /tf /mavros/global_position/raw/fix /mavros/imu/data /mavros/imu/data_raw /mavros/global_position/raw/gps_vel /mavros/global_position/raw/global /stereo_odometry /stereo/points2 -o /home/$(env USER)/Desktop/sev">
        </node>
-  </group>
+    </group>
 </launch>
