@@ -101,6 +101,14 @@ bash ./install_scripts.bash
 ```
 If asked to replace say yes.
 
+Install VISO2
+```
+$ cd src
+$ wstool init
+$ wstool set viso2 --git git://github.com/srv/viso2.git
+$ wstool update
+
+```
 ## <a name="usage"></a>Usage
 
 To start the complete stereo system, just run 
@@ -218,8 +226,15 @@ First, you must be playing back recorded data. See section [Playing Back Data](#
 To run the stereo
 
 ```bash
-roslaunch rustbot_bringup all.launch do_stereo:=true do_slam:=true online_stereo:=false 
+roslaunch rustbot_bringup all.launch do_stereo:=true do_slam:=true online_stereo:=false do_gps:=false
 ```
+
+with accumulation 
+
+```bash
+roslaunch rustbot_bringup all.launch do_stereo:=true do_slam:=true online_stereo:=false do_gps:=false do_accumulation:=true
+```
+
 
 Now you should receive both disparity images /stereo/disparity as well as point clouds /stereo/points2
 
