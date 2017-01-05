@@ -226,8 +226,15 @@ First, you must be playing back recorded data. See section [Playing Back Data](#
 To run the stereo
 
 ```bash
-roslaunch rustbot_bringup all.launch do_stereo:=true do_slam:=true online_stereo:=false 
+roslaunch rustbot_bringup all.launch do_stereo:=true do_slam:=true online_stereo:=false do_gps:=false
 ```
+
+with accumulation 
+
+```bash
+roslaunch rustbot_bringup all.launch do_stereo:=true do_slam:=true online_stereo:=false do_gps:=false do_accumulation:=true
+```
+
 
 Now you should receive both disparity images /stereo/disparity as well as point clouds /stereo/points2
 
