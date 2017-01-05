@@ -1,36 +1,39 @@
 <?xml version="1.0"?>
 <launch>
-  <node name="rviz" pkg="rviz" type="rviz" args="--display-config $(find rustbot_bringup)/config/visualize.rviz" required="false"/>
-  <!--<node name="stereo_view" pkg="image_view" type="stereo_view">-->
-  <!--<remap from="stereo" to="/stereo/disparity"/>-->
-  <!--<remap from="image" to="image_color"/>-->
-  <!--<param name="approximate_sync" value="true"/>-->
-  <!--<param name="queue_size" value="15"/>-->
-  <!--<param name="autosize" value="false"/>-->
-  <!--</node>-->
-  <!--<node name="left_view" pkg="image_view" type="image_view">-->
-  <!--<remap from="image" to="/stereo/left/image_raw"/>-->
-  <!--<param name="autosize" value="false"/>-->
-  <!--<param name="window_name" value="/stereo/left/image_raw"/>-->
-  <!--</node>-->
-  <!--<node name="right_view" pkg="image_view" type="image_view">-->
-  <!--<remap from="image" to="/stereo/right/image_raw"/>-->
-  <!--<param name="autosize" value="false"/>-->
-  <!--<param name="window_name" value="/stereo/right/image_raw"/>-->
-  <!--</node>-->
-  <!--<node name="left_rect_view" pkg="image_view" type="image_view">-->
-    <!--<remap from="image" to="/stereo/left/image_rect"/>-->
-    <!--<param name="autosize" value="false"/>-->
-    <!--<param name="window_name" value="/stereo/left/image_rect"/>-->
-  <!--</node>-->
-  <!--<node name="right_rect_view" pkg="image_view" type="image_view">-->
-    <!--<remap from="image" to="/stereo/right/image_rect"/>-->
-    <!--<param name="autosize" value="false"/>-->
-    <!--<param name="window_name" value="/stereo/right/image_rect"/>-->
-  <!--</node>-->
-  <!--<node name="disparity_view" pkg="image_view" type="disparity_view">-->
-    <!--<remap from="image" to="/stereo/disparity"/>-->
-    <!--<param name="autosize" value="false"/>-->
-    <!--<param name="window_name" value="/stereo/disparity"/>-->
-  <!--</node>-->
+<!--Launch rviz with the proppor configuration file-->
+<node name="rviz" pkg="rviz" type="rviz" args="--display-config $(find rustbot_bringup)/config/visualize.rviz" required="false"/>
+
+<!--Launch other visualizations, e.g. iamge views-->
+<!--<node name="stereo_view" pkg="image_view" type="stereo_view">-->
+<!--<remap from="stereo" to="/stereo/disparity"/>-->
+<!--<remap from="image" to="image_color"/>-->
+<!--<param name="approximate_sync" value="true"/>-->
+<!--<param name="queue_size" value="15"/>-->
+<!--<param name="autosize" value="false"/>-->
+<!--</node>-->
+<!--<node name="left_view" pkg="image_view" type="image_view">-->
+<!--<remap from="image" to="/stereo/left/image_raw"/>-->
+<!--<param name="autosize" value="false"/>-->
+<!--<param name="window_name" value="/stereo/left/image_raw"/>-->
+<!--</node>-->
+<!--<node name="right_view" pkg="image_view" type="image_view">-->
+<!--<remap from="image" to="/stereo/right/image_raw"/>-->
+<!--<param name="autosize" value="false"/>-->
+<!--<param name="window_name" value="/stereo/right/image_raw"/>-->
+<!--</node>-->
+<!--<node name="left_rect_view" pkg="image_view" type="image_view">-->
+<!--<remap from="image" to="/stereo/left/image_rect"/>-->
+<!--<param name="autosize" value="false"/>-->
+<!--<param name="window_name" value="/stereo/left/image_rect"/>-->
+<!--</node>-->
+<!--<node name="right_rect_view" pkg="image_view" type="image_view">-->
+<!--<remap from="image" to="/stereo/right/image_rect"/>-->
+<!--<param name="autosize" value="false"/>-->
+<!--<param name="window_name" value="/stereo/right/image_rect"/>-->
+<!--</node>-->
+<!--<node name="disparity_view" pkg="image_view" type="disparity_view">-->
+<!--<remap from="image" to="/stereo/disparity"/>-->
+<!--<param name="autosize" value="false"/>-->
+<!--<param name="window_name" value="/stereo/disparity"/>-->
+<!--</node>-->
 </launch>

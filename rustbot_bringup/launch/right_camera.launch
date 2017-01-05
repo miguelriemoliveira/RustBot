@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<!--Launches the right camera-->
 <launch>
   <arg name="camera" default="right"/>
   <arg name="guid" default="50-0536881129"/>

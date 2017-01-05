@@ -1,25 +1,18 @@
 #!/usr/bin/env python
-#
-# python publisher using zeromq and google protocol buffers
-#Messages received will be of type example_msg, defined in 
-# msgs/SEVData.proto
-#
+#Python publisher using zeromq and google protocol buffers
+
 #imports
 import zmq
 import time
-
 import numpy as np
-
 import roslib
 import sys
 import rospy
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
-
 from sensor_msgs.msg import Image, PointCloud2, PointField, NavSatFix
 from std_msgs.msg import String
 from nav_msgs.msg import Odometry
-
 import google.protobuf
 import SEVData_pb2
 
@@ -55,6 +48,12 @@ rcv_odometry = False
 # Functions
 #--------------------------
 
+##
+# @brief Callback for left image received. Copies to a global var
+#
+# @param data the image message
+#
+# @return None
 def leftImageReceivedCallback(data):
     #print("Received left image")
     global cv_left_image
@@ -71,6 +70,12 @@ def leftImageReceivedCallback(data):
     #cv2.imshow("Left Camera", cv_image)
     #cv2.waitKey(50)
 
+##
+# @brief Callback for right image received. Copies to a global var
+#
+# @param data the image message
+#
+# @return None
 def rightImageReceivedCallback(data):
     #print("Received right image")
     global cv_right_image
@@ -87,6 +92,14 @@ def rightImageReceivedCallback(data):
     #cv2.imshow("Right Camera", cv_image)
     #cv2.waitKey(50)
 
+
+
+##
+# @brief callback for received point clouds. Copies to a global variable
+#
+# @param data the point cloud message
+#
+# @return none.
 def pointcloudReceivedCallback(data):
     global point_cloud2_msg 
     global rcv_point_cloud
@@ -94,6 +107,12 @@ def pointcloudReceivedCallback(data):
     point_cloud2_msg = data
     rcv_point_cloud = True
 
+##
+# @brief callback for received nav sat messages. Copies to a global variable
+#
+# @param data the nav sat message
+#
+# @return none.
 def navSatFixReceivedCallback(data):
     global nav_sat_fix_msg
     global rcv_nav_sat_fix
@@ -101,6 +120,12 @@ def navSatFixReceivedCallback(data):
     nav_sat_fix_msg = data
     rcv_nav_sat_fix = True
 
+##
+# @brief callback for received odometry messages. Copies to a global variable
+#
+# @param data the odometry message
+#
+# @return none.
 def odometryReceivedCallback(data):
     global odometry_msg
     global rcv_odometry
@@ -108,16 +133,38 @@ def odometryReceivedCallback(data):
     odometry_msg = data
     rcv_odometry = True
 
+##
+# @brief converts a header ros message to a proto format
+#
+# @param msg ros header
+# @param proto proto header
+#
+# @return None
 def headerMsg2Proto(msg, proto):
     proto.frame_id = msg.frame_id
     proto.stamp.seconds = msg.stamp.secs
     proto.stamp.nanos = msg.stamp.nsecs
 
+##
+# @brief converts a cvImage ros message to a proto format
+#
+# @param msg ros cvImage
+# @param msg ros header
+# @param proto proto cvImage
+#
+# @return None
 def cvImage2Proto(image, header, proto):
     headerMsg2Proto(header, proto.header)
     (proto.height, proto.width, _) = image.shape
     proto.data = bytes(image.data)
 
+##
+# @brief Converts a point cloud ros message to proto format
+#
+# @param msg the ros point cloud message
+# @param proto the proto message
+#
+# @return None
 def pointCloudMsg2Proto(msg, proto):
     headerMsg2Proto(msg.header, proto.header)
     proto.height = msg.height
@@ -135,6 +182,13 @@ def pointCloudMsg2Proto(msg, proto):
     proto.row_step = msg.row_step
     proto.data = msg.data
 
+##
+# @brief converts ros message to a proto message
+#
+# @param msg the ros message
+# @param proto the proto message
+#
+# @return None
 def navSatFixMsg2Proto(msg, proto):
     headerMsg2Proto(msg.header, proto.header)
     proto.latitude = msg.latitude
@@ -143,6 +197,13 @@ def navSatFixMsg2Proto(msg, proto):
     proto.status.status = msg.status.status
     proto.status.service = msg.status.service
 
+##
+# @brief converts ros message to a proto message
+#
+# @param msg the ros message
+# @param proto the proto message
+#
+# @return None
 def odometryMsg2Proto(msg, proto):
     headerMsg2Proto(msg.header, proto.header)
     proto.child_frame_id = msg.child_frame_id
@@ -164,7 +225,14 @@ def odometryMsg2Proto(msg, proto):
     proto.twist.twist.angular.z = msg.twist.twist.angular.z
 
 
+##
+# @brief Called when a timer event is triggered. Will send a new message
+#
+# @param event the timer event
+#
+# @return None
 def timerCallback(event):
+    #Use these global variables
     global rcv_left_image
     global rcv_right_image
     global rcv_nav_sat_fix
@@ -172,6 +240,7 @@ def timerCallback(event):
     global rcv_point_cloud
 
     print("Timer callback")
+
     #Check if all msgs were received
     if rcv_left_image == False or rcv_right_image == False or rcv_nav_sat_fix == False or rcv_odometry == False or rcv_point_cloud == False:
         print("Did not receive all required ros messages. Cannot publish the zmq message. Make sure messages are being published at least at 1Hz on topics:\n/odom " + str(rcv_odometry) + "\n/stereo/left/image_raw " + str(rcv_left_image) + "\n/mavros/global_position/raw/fix " + str(rcv_nav_sat_fix)+ "\n/stereo/points2 " + str(rcv_point_cloud) + "\n/stereo/right/image_raw " + str(rcv_right_image))
@@ -216,26 +285,21 @@ def timerCallback(event):
     socket.send("%d %s" % (topic, msg_as_string))
     print("Message sent in " + str(time.time() - start_time) + " sec")
 
+    #Set the received flags to false
     rcv_left_image = False
     rcv_right_image = False
     rcv_point_cloud = False
     rcv_nav_sat_fix = False
     rcv_odometry = False
 
-
 #--------------------------
-# Start of code
+# Start of main
 #--------------------------
-
-
-
 def main(args):
 
     #-------------------------------------------
     # Configuration of the zmq Publisher
     #-------------------------------------------
-
-
     socket.bind("tcp://" + ip + ":" + port)
     print("Started publisher on tcp://" + ip + ":" + port + " , topic " + str(topic))
 
@@ -245,25 +309,20 @@ def main(args):
     rospy.init_node('sev_publisher', anonymous=True)
     left_image_sub = rospy.Subscriber("/stereo/left/image_raw", Image, leftImageReceivedCallback)
     right_image_sub = rospy.Subscriber("/stereo/right/image_raw", Image, rightImageReceivedCallback)
-
     rospy.Subscriber("/stereo/points2", PointCloud2, pointcloudReceivedCallback)
-
     rospy.Subscriber("/mavros/global_position/raw/fix", NavSatFix, navSatFixReceivedCallback)
-
     rospy.Subscriber("/stereo_odometry", Odometry, odometryReceivedCallback)
-
 
     #cv2.namedWindow("Left Camera")
     #cv2.namedWindow("Right Camera")
 
-    #TODO This wait is to try to get at least one message of each time before publishing the message. Its a blind wait so sometimes it does not work. In the future, the condition above should be checked before sending
+    #This wait is to try to get at least one message of each time before publishing the message. Its a blind wait so sometimes it does not work. In the future, the condition above should be checked before sending
     rospy.Timer(rospy.Duration(1), timerCallback)
 
     #Spin infinetely
     rospy.spin()
 
     cv2.destroyAllWindows()
-
 
 if __name__ == '__main__':
     main(sys.argv)
