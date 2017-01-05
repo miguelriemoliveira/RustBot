@@ -101,6 +101,14 @@ bash ./install_scripts.bash
 ```
 If asked to replace say yes.
 
+Install VISO2
+```
+$ cd src
+$ wstool init
+$ wstool set viso2 --git git://github.com/srv/viso2.git
+$ wstool update
+
+```
 ## <a name="usage"></a>Usage
 
 To start the complete stereo system, just run 
