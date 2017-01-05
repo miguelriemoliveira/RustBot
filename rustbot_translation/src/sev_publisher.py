@@ -311,7 +311,8 @@ def main(args):
     right_image_sub = rospy.Subscriber("/stereo/right/image_raw", Image, rightImageReceivedCallback)
     rospy.Subscriber("/stereo/points2", PointCloud2, pointcloudReceivedCallback)
     rospy.Subscriber("/mavros/global_position/raw/fix", NavSatFix, navSatFixReceivedCallback)
-    rospy.Subscriber("/stereo_odometry", Odometry, odometryReceivedCallback)
+    #rospy.Subscriber("/stereo_odometry", Odometry, odometryReceivedCallback)
+    rospy.Subscriber("/stereo_odometer/odometry", Odometry, odometryReceivedCallback)
 
     #cv2.namedWindow("Left Camera")
     #cv2.namedWindow("Right Camera")
