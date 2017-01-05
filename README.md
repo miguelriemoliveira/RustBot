@@ -109,6 +109,11 @@ $ wstool set viso2 --git git://github.com/srv/viso2.git
 $ wstool update
 
 ```
+
+Install aerial maps visualization in rviz
+
+https://github.com/gareth-cross/rviz_satellite
+
 ## <a name="usage"></a>Usage
 
 To start the complete stereo system, just run 
