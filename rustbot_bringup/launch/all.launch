@@ -3,6 +3,7 @@
 <launch>
   <!--arguments-->
   <arg name="do_stereo" default="true"/>
+  <arg name="do_fusion" default="false"/>
   <arg name="do_slam" default="true"/>
   <arg name="do_gps" default="true"/>
   <arg name="do_accumulation" default="false"/>
@@ -14,6 +15,14 @@
   <arg name="fps" default="1"/>
   <!--Queue size for the stereo images. More queue size better the possibilities to sync, but more memory required-->
   <arg name="queue_size" default="50"/>
+
+  <!--data fusion-->
+  <group if="$(arg do_fusion)">
+     <include file="$(find rustbot_bringup)/launch/EKF_fusion.launch">
+        </include>
+  </group>
+
+
   <!--GPS drivers should work only on online mode-->
   <group if="$(arg online_stereo)">
     <group if="$(arg do_gps)">
