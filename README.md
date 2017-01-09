@@ -114,6 +114,13 @@ Install aerial maps visualization in rviz
 
 https://github.com/gareth-cross/rviz_satellite
 
+Install ekf filter 
+
+```bash
+sudo apt-get install ros-indigo-robot-pose-ekf ros-indigo-gps-common ros-indigo-robot-localization
+```
+
+
 ## <a name="usage"></a>Usage
 
 To start the complete stereo system, just run 
