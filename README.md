@@ -408,4 +408,14 @@ rosbag filter sev_2016-12-14-12-19-55_fixed.bag sev_2016-12-14-12-19-55_fixed_ra
 
 Note: if you have a bagfile collected before 14-12-2016 you may want to fix it first (see [Fix a rosbag file (bags collected before 14-12-2016) ](#fixrosbag)).
 
+##Correcting the frame id of IMU data
+
+
+
+```
+roscd rustbot_translation/
+ python rosbag_correct_imu_frame.py -i /home/sev/Desktop/sev_2016-12-14-12-19-55_fixed_raw2.bag -o /home/sev/Desktop/sev_2016-12-14-12-19-55_fixed_raw2_imu.bag
+ ```
+
+
 
