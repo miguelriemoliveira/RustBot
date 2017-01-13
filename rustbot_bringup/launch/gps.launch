@@ -5,6 +5,7 @@
   <node name="mavros" pkg="mavros" type="mavros_node" output="screen">
     <param name="fcu_url" value="$(arg fcu_url)"/>
     <param name="~/global_position/tf/child_frame_id" value="/odom_vehicle"/>
+    <param name="~/imu/frame_id" value="/imu_frame"/>
   </node>
   <node pkg="rosservice" type="rosservice" name="switch_onGPS" args="call --wait /mavros/set_stream_rate 0 10 1" respawn="false"/>
 </launch>

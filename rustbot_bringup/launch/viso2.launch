@@ -5,18 +5,13 @@
   <arg name="frameid_robot" default="base_link"/>
   <!--OR: base_footprint -->
   <arg name="frameid_camera" default="stereo_camera"/>
-  <!-- TF: "base_link" to "camera_link" [Rotate the camera frame.] -->
-  <arg name="pi/2" value="1.5707963267948966"/>
-  <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0 -$(arg pi/2)"/>
-  <node pkg="tf" type="static_transform_publisher" name="camera_base_link" args="$(arg optical_rotate) $(arg frameid_robot) $(arg frameid_camera) 30"/>
-  <arg name="vehicle_rotate" value="0 0 0 0 0.13179938779906864 0"/>
-  <node pkg="tf" type="static_transform_publisher" name="camera_odom_link_vehicle" args="$(arg vehicle_rotate) odom_vehicle odom 30"/>
-  <node pkg="tf" type="static_transform_publisher" name="left_optical2stereo_camera" args="0 0 0 0 0 0 stereo_camera left_optical 30"/>
+
   <!-- Viso2 -->
   <node pkg="viso2_ros" type="stereo_odometer" name="stereo_odometer" output="screen">
     <remap from="stereo" to="$(arg camera)"/>
     <remap from="image" to="image_rect"/>
     <param name="base_link_frame_id" value="base_link"/>
     <param name="approximate_sync" value="true"/>
+    <param name="publish_tf" value="false"/>
   </node>
 </launch>
