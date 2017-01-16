@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--This launches all the rustbot system-->
+<launch>
+  <!--arguments-->
+  <!--<arg name="do_stereo" default="true"/>-->
+
+  <!--to have gps odometry msgs-->
+  <node name="gps_conv" pkg="gps_common" type="utm_odometry_node">
+    <remap from="odom" to="/gps/odometry"/>
+    <remap from="fix" to="/mavros/global_position/raw/fix"/>
+    <param name="rot_covariance" value="99999"/>
+    <param name="frame_id" value="utm"/>
+  </node>
+
+  <node name="measure_odom_errory" pkg="rustbot_evaluation" type="measure_odom_error.py" output="screen">
+  </node>
+
+</launch>
