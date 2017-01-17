@@ -13,5 +13,6 @@
   <!--playback a bag file in visual mode-->
   <!--<node pkg="rqt_bag" type="rqt_bag" name="rqt_bag" output="screen" args=" $(arg bag)"/>-->
   <!--playback a bag file-->
-  <node pkg="rosbag" type="play" name="rosbag_play" output="screen" args=" $(arg bag) -l -s 0 --clock -r 0.4 "/>
+  <!--<node pkg="rosbag" type="play" name="rosbag_play" output="screen" args=" $(arg bag) -l -s 30 -clock -r 1 -duration 12"/>-->
+  <node pkg="rosbag" type="play" name="rosbag_play" output="screen" args=" $(arg bag) -l -s 30 --clock -r 1"/>
 </launch>

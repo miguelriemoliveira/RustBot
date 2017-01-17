@@ -24,6 +24,7 @@ If you want to use windows for connecting to the sensor check out this [reposito
 * [Copy bag files to local computer (Ubuntu)] (#copybagfilesubuntu)
 * [Fix a rosbag file (bags collected before 14-12-2016)] (#fixrosbag)
 * [Getting a bagfile with only raw data from a complete bagfile] (#rawfromcomplete)
+* [Evaluating Odometry Errors] (#evaluateodometry)
 
 ## <a name="therobot"></a>The Robot
 
@@ -410,12 +411,20 @@ Note: if you have a bagfile collected before 14-12-2016 you may want to fix it f
 
 ##Correcting the frame id of IMU data
 
-
-
 ```
 roscd rustbot_translation/
  python rosbag_correct_imu_frame.py -i /home/sev/Desktop/sev_2016-12-14-12-19-55_fixed_raw2.bag -o /home/sev/Desktop/sev_2016-12-14-12-19-55_fixed_raw2_imu.bag
  ```
 
+## <a name="evaluateodometry"></a>Evaluating Odometry Errors
 
-
+You must first launch the normal playback and stereo+slam processing, i.e. see [Playing Back Data](#playingbackdata)
+ and [Stereo and SLAM from a Bagfile](#stereobagfile)
+ 
+ Then, launch:
+ 
+ ```bash
+ roslaunch rustbot_bringup evaluate_odom_error.launch
+ ```
+ 
+ 
