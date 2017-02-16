@@ -7,6 +7,8 @@
   <arg name="do_slam" default="true"/>
   <arg name="do_gps" default="true"/>
   <arg name="do_accumulation" default="false"/>
+  <arg name="do_zmq_publish" default="true"/>
+
   <!--This is for running the system computing the stereo (and the slam) from played back offline data-->
   <arg name="online_stereo" default="true"/>
   <!--To launch a gui for tunning the stereo parameters-->
@@ -15,14 +17,11 @@
   <arg name="fps" default="1"/>
   <!--Queue size for the stereo images. More queue size better the possibilities to sync, but more memory required-->
   <arg name="queue_size" default="50"/>
-
   <!--data fusion-->
   <group if="$(arg do_fusion)">
-     <include file="$(find rustbot_bringup)/launch/EKF_fusion.launch">
+    <include file="$(find rustbot_bringup)/launch/EKF_fusion.launch">
         </include>
   </group>
-
-
   <!--GPS drivers should work only on online mode-->
   <group if="$(arg online_stereo)">
     <group if="$(arg do_gps)">
@@ -71,7 +70,11 @@
     <include file="$(find rustbot_bringup)/launch/accumulate.launch">
         </include>
   </group>
-  <!--SEV zmq+protobuf publisher-->
-  <node name="sev_publisher" pkg="rustbot_translation" type="sev_publisher.py" output="screen">
+
+  <group if="$(arg do_zmq_publish)">
+    <!--SEV zmq+protobuf publisher-->
+    <node name="sev_publisher" pkg="rustbot_translation" type="sev_publisher.py" output="screen">
     </node>
+  </group>
+
 </launch>

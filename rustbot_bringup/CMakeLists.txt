@@ -75,6 +75,7 @@ find_package(catkin REQUIRED COMPONENTS
   FILES
 #   Message1.msg
    Eulers.msg
+   imu_parameters.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -112,10 +113,10 @@ find_package(catkin REQUIRED COMPONENTS
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
+generate_dynamic_reconfigure_options(
+   cfg/node_imu_params.cfg
 #   cfg/DynReconf2.cfg
-# )
+ )
 
 ###################################
 ## catkin specific configuration ##
@@ -174,6 +175,16 @@ target_link_libraries(crob_underwater_railinspect_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
 )
+
+
+add_executable(imu_republish src/imu_republisher_core.cpp src/imu_republisher.cpp)
+add_dependencies(imu_republish ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(rustbot_bringup ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(imu_republish
+  ${catkin_LIBRARIES}
+)
+
+
 #############
 ## Install ##
 #############

@@ -195,7 +195,7 @@ The following commands should be executed from the NUC computer. Thus, if you wa
 To record raw data we must first launch the camera drivers (no need to run stereo processing, since this will be done offline)
 
 ```bash
-roslaunch rustbot_bringup all.launch fps:=4 do_stereo:=false
+roslaunch rustbot_bringup all.launch do_stereo:=false do_slam:=false online_stereo:=true do_gps:=true do_accumulation:=false do_fusion:=false do_zmq_publish:=false fps:=5
 ```
 
 Then, to record messages, run

@@ -4,8 +4,14 @@
   <arg name="fcu_url" default="/dev/ttyACM0:115200"/>
   <node name="mavros" pkg="mavros" type="mavros_node" output="screen">
     <param name="fcu_url" value="$(arg fcu_url)"/>
-    <param name="~/global_position/tf/child_frame_id" value="/odom_vehicle"/>
-    <param name="~/imu/frame_id" value="/imu_frame"/>
+    <param name="~/global_position/tf/child_frame_id" value="odom_vehicle"/>
+    <param name="~/imu/frame_id" value="imu_frame"/>
+    <param name="~/global_position/tf/send" value="false"/>
+    <param name="~/local_position/tf/send" value="false"/>
+    <param name="~/cmd/arming" value="false"/>
   </node>
-  <node pkg="rosservice" type="rosservice" name="switch_onGPS" args="call --wait /mavros/set_stream_rate 0 10 1" respawn="false"/>
+
+  <node name="imu_republish_to_enu" pkg="rustbot_bringup" type="imu_republish" output="screen">
+  </node>
+  <!-- <node pkg="rosservice" type="rosservice" name="switch_onGPS" args="call -wait /mavros/set_stream_rate 0 20 1" respawn="false"/> -->
 </launch>
