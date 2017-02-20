@@ -67,8 +67,14 @@
     <!--</include>-->
     <!--<include file="$(find rustbot_bringup)/launch/rtab.launch">-->
     <!--</include>-->
-    <include file="$(find rustbot_bringup)/launch/viso2.launch">
-        </include>
+	<group if="$(arg do_fusion)">
+	    <include file="$(find rustbot_bringup)/launch/viso2.launch">
+		</include>
+        </group>
+	<group unless="$(arg do_fusion)">
+	    <include file="$(find rustbot_bringup)/launch/viso2_withtf.launch">
+		</include>
+        </group>
   </group>
   <!--Point cloud accumulator-->
   <group if="$(arg do_accumulation)">
