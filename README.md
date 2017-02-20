@@ -49,7 +49,7 @@ The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a pl
       * Launch the ssh connection ```ssh sev@169.254.4.50``` (the password is written in a sticker on the NUC computer)
     * IF using Windows
       * Install Putty
-      * Connect ssh to NUC COMPUTER
+      * Connect ssh to NUC computer
 * Connect the power cable to the processing unit box.
 * Wait until gimbal camera box stop of bipping (attention the gimbal camera box must be keep stable for the gyro calibration)
 * Start the recording 
