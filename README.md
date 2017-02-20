@@ -36,6 +36,8 @@ The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a pl
 ## <a name="quickstart"></a>Quick Start
 
 * Connect all inter-cables (processing unit box <--> gimbal camera box), 2 POE ethernets, 1 USB, and 1 Power Cable 
+* Connect the power cable to the processing unit box.
+* Wait until gimbal camera box stop of bipping (attention the gimbal camera box must be keep stable for the gyro calibration)
 * Connection of an external PC 
  * Option 1, connection with wifi hotspot
    * Connect the WiFi access point (TP-LINK), if there is available internet by ethernet connect the ethernet cable and then the the power transformer. 
@@ -50,8 +52,6 @@ The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a pl
     * IF using Windows
       * Install Putty
       * Connect ssh to NUC computer
-* Connect the power cable to the processing unit box.
-* Wait until gimbal camera box stop of bipping (attention the gimbal camera box must be keep stable for the gyro calibration)
 * Start the recording 
 
 ```bash
