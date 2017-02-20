@@ -48,8 +48,15 @@ The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a pl
     * Launch the ssh connection ```ssh sev@169.254.4.50``` (the password is written in a sticker on the NUC computer)
 * Connect the power cable to the processing unit box.
 * Wait until gimbal camera box stop of bipping (attention the gimbal camera box must be keep stable for the gyro calibration)
+* Start the recording 
 
+```bash
+roslaunch rustbot_bringup all.launch do_stereo:=false do_slam:=false online_stereo:=true do_gps:=true do_accumulation:=false do_fusion:=false do_zmq_publish:=false fps:=5
+```
 
+```bash
+roslaunch rustbot_bringup record_raw.launch only_raw_data:=true
+```
 
 ## <a name="installation"></a>Installation
 

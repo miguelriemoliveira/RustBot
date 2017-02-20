@@ -5,9 +5,9 @@
  * Constructor.
  *------------------------------------------------------------------*/
 
-IMU_replublish::IMU_replublish()
-{
+IMU_replublish::IMU_replublish(){
     n_msg=0;
+    imu_deg=0;
 } // end IMU_replublish()
 
 /*--------------------------------------------------------------------
@@ -15,8 +15,7 @@ IMU_replublish::IMU_replublish()
  * Destructor.
  *------------------------------------------------------------------*/
 
-IMU_replublish::~IMU_replublish()
-{
+IMU_replublish::~IMU_replublish(){
 } // end ~IMU_replublish()
 
 /*--------------------------------------------------------------------
@@ -24,19 +23,13 @@ IMU_replublish::~IMU_replublish()
  * Publish the message.
  *------------------------------------------------------------------*/
 
-void IMU_replublish::publishMessage(ros::Publisher *pub_message)
-{
+void IMU_replublish::publishMessage(ros::Publisher *pub_message){
   //::node_example_data msg;
   //msg.message = message;
  /// msg.a = a;
   //msg.b = b;
-    tf::Quaternion q;
-    tf::quaternionMsgToTF(IMU_data.orientation,q);
-    tf::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll,pitch,yaw);
- std::cout << "Roll: " << roll << ", Pitch: " << pitch << ", Yaw: " << yaw << std::endl;
-  pub_message->publish(IMU_data);
+    //td::cout << "Roll: " << roll << ", Pitch: " << pitch << ", Yaw: " << yaw << std::endl;
+    pub_message->publish(IMU_data);
 } // end publishMessage()
 
 /*--------------------------------------------------------------------
@@ -49,9 +42,9 @@ void IMU_replublish::IMU_data_messageCallback(const sensor_msgs::Imu::ConstPtr& 
         n_msg++;
     }
 
-    IMU_data = *msg;
+   // IMU_data = *msg;
 
-    publishMessage(&pub_message_IMU);
+    //publishMessage(&pub_message_IMU);
 
   //message = msg->message;
  // a = msg->a;
@@ -69,9 +62,42 @@ void IMU_replublish::IMU_data_messageCallback(const sensor_msgs::Imu::ConstPtr& 
 
 void IMU_replublish::IMU_MAG_data_messageCallback(const sensor_msgs::MagneticFieldConstPtr &msg){
 
-    std::cout << msg->magnetic_field.x << " | "<< msg->magnetic_field.y << " deu=" << atan2(msg->magnetic_field.y,msg->magnetic_field.x) << std::endl;
+  //  std::cout << msg->magnetic_field.x << " | "<< msg->magnetic_field.y << " deu=" << atan2(msg->magnetic_field.y,msg->magnetic_field.x) << std::endl;
+    tf::Matrix3x3 obs_mat;
+    obs_mat.setRPY(0,0,atan2(msg->magnetic_field.y, msg->magnetic_field.x));
+    tf::Quaternion qt_tf;
+    obs_mat.getRotation(qt_tf);
 
+    IMU_data.orientation.x=qt_tf.getX();
+    IMU_data.orientation.y=qt_tf.getY();
+    IMU_data.orientation.z=qt_tf.getZ();
+    IMU_data.orientation.w=qt_tf.getW();
+    IMU_data.orientation_covariance.at(0)=1.0;
+    IMU_data.orientation_covariance.at(4)=1.0;
+    IMU_data.orientation_covariance.at(8)=1.0;
+    IMU_data.header.frame_id.assign("imu_frame");
+    publishMessage(&pub_message_IMU);
+    imu_deg=1;
+    //pub_message->publish(IMU_data);
+}
 
+void IMU_replublish::IMU_data_yawmag_messageCallback(const std_msgs::Float64ConstPtr &msg){
+  if( imu_deg==1 ) return;
+  //  std::cout << msg->magnetic_field.x << " | "<< msg->magnetic_field.y << " deu=" << atan2(msg->magnetic_field.y,msg->magnetic_field.x) << std::endl;
+  tf::Matrix3x3 obs_mat;
+  obs_mat.setRPY(0,0,msg->data * 3.14/180.0);
+  tf::Quaternion qt_tf;
+  obs_mat.getRotation(qt_tf);
+
+  IMU_data.orientation.x=qt_tf.getX();
+  IMU_data.orientation.y=qt_tf.getY();
+  IMU_data.orientation.z=qt_tf.getZ();
+  IMU_data.orientation.w=qt_tf.getW();
+  IMU_data.orientation_covariance.at(0)=1.0;
+  IMU_data.orientation_covariance.at(4)=1.0;
+  IMU_data.orientation_covariance.at(8)=1.0;
+  IMU_data.header.frame_id.assign("imu_frame");
+  publishMessage(&pub_message_IMU);
 
 } // end publishCallback()
 
@@ -79,9 +105,7 @@ void IMU_replublish::IMU_MAG_data_messageCallback(const sensor_msgs::MagneticFie
  * configCallback()
  * Callback function for dynamic reconfigure server.
  *------------------------------------------------------------------*/
-
-void IMU_replublish::configCallback(rustbot_bringup::imu_parameters &config, uint32_t level)
-{
+void IMU_replublish::configCallback(rustbot_bringup::imu_parameters &config, uint32_t level){
   // Set class variables to new values. They should match what is input at the dynamic reconfigure GUI.
   message = config.message.c_str();
   a = config.a;

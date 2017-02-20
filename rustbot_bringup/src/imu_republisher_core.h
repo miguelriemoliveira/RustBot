@@ -4,6 +4,7 @@
 // ROS includes.
 #include "ros/ros.h"
 #include "ros/time.h"
+#include  "std_msgs/Float64.h"
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/MagneticField.h"
 // Dynamic reconfigure includes.
@@ -34,6 +35,7 @@ public:
   //! Callback function for subscriber.
   void IMU_data_messageCallback(const sensor_msgs::Imu::ConstPtr& msg);
   void IMU_MAG_data_messageCallback(const  sensor_msgs::MagneticFieldConstPtr & msg);
+  void IMU_data_yawmag_messageCallback(const std_msgs::Float64ConstPtr &msg);
 
   //! The actual message.
   string message;
@@ -43,6 +45,7 @@ public:
 
   //! The second integer to use in addition.
   int b;
+  int imu_deg;
 };
 
 #endif // SR_NODE_EXAMPLE_CORE_H

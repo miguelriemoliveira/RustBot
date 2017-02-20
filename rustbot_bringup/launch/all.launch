@@ -29,6 +29,11 @@
         </include>
     </group>
   </group>
+   <group unless="$(arg do_gps)">
+      <node name="imu_republish_to_enu" pkg="rustbot_bringup" type="imu_republish" output="screen">
+	<param name="not_sim" value="false"/>
+      </node>
+    </group>
   <!--Stereo nodes -->
   <group ns="stereo">
     <!--Camera drivers (should work only in online mode)-->

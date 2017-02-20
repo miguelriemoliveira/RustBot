@@ -12,6 +12,7 @@
   </node>
 
   <node name="imu_republish_to_enu" pkg="rustbot_bringup" type="imu_republish" output="screen">
+	<param name="~/not_sim" value="true"/>
   </node>
   <!-- <node pkg="rosservice" type="rosservice" name="switch_onGPS" args="call -wait /mavros/set_stream_rate 0 20 1" respawn="false"/> -->
 </launch>

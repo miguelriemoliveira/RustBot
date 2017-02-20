@@ -1,5 +1,4 @@
 #include "imu_republisher_core.h"
-
 #include "mavros_msgs/StreamRate.h"
 
 /*--------------------------------------------------------------------
@@ -7,14 +6,14 @@
  * Main function to set up ROS node.
  *------------------------------------------------------------------*/
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
   // Set up ROS.
   ros::init(argc, argv, "IMU_republisher");
   ros::NodeHandle n;
 
   // Declare variables that can be modified by launch file or command line.
   int rate;
+  bool simulator;
   string topic;
 
   sleep(5);
@@ -26,6 +25,7 @@ int main(int argc, char **argv)
   // while using different parameters.
   ros::NodeHandle private_node_handle_("~");
   private_node_handle_.param("rate", rate, int(40));
+  private_node_handle_.param("not_sim", simulator , bool(true));
   private_node_handle_.param("topic", topic, string("/mavros/imu/data"));
  /* dynamic_reconfigure::Server<rustbot_bringup::imu_parameters> dr_srv;
   dynamic_reconfigure::Server<rustbot_bringup::imu_parameters>::CallbackType cb;
@@ -34,11 +34,12 @@ int main(int argc, char **argv)
 
 */
 
+ std::cout << "poiss      ssssssss " << simulator << std::endl;
   // Create a subscriber.
   // Name the topic, message queue, callback function with class name, and object containing callback function.
   ros::Subscriber sub_message = n.subscribe(topic.c_str(), 1000, &IMU_replublish::IMU_data_messageCallback, IMU_node_handler);
   ros::Subscriber sub_message1 = n.subscribe("/mavros/imu/mag", 1000, &IMU_replublish::IMU_MAG_data_messageCallback, IMU_node_handler);
-
+  ros::Subscriber sub_message2 = n.subscribe("/mavros/global_position/compass_hdg", 1000,&IMU_replublish::IMU_data_yawmag_messageCallback, IMU_node_handler);
   IMU_node_handler->pub_message_IMU = n.advertise<sensor_msgs::Imu>("imu_data_ENU", 40);
 
 
@@ -51,16 +52,19 @@ int main(int argc, char **argv)
   srv.request.stream_id=0;
   srv.request.on_off=1;
 
-  ros::service::waitForService("/mavros/set_stream_rate", -1);
+  if(simulator){
+    ros::service::waitForService("/mavros/set_stream_rate", -1);
+    ROS_INFO("MAVROS SERVICE is available..");
+    if (client.call(srv)){
+        ROS_INFO("Configure the MAVROS RATE");
+        std::cout << topic.c_str() << std::endl;
+    }else{
+        ROS_ERROR("Failed to call service /mavros/set_stream_rate");
+        return 1;
+      }
+  }
 
-  ROS_INFO("MAVROS SERVICE is available..");
-  if (client.call(srv)){
-      ROS_INFO("Configure the MAVROS RATE");
-      std::cout << topic.c_str() << std::endl;
-  }else{
-      ROS_ERROR("Failed to call service /mavros/set_stream_rate");
-      return 1;
-    }
+
    // Main loop.
   int n_call=0;
   while (n.ok()){
@@ -71,11 +75,13 @@ int main(int argc, char **argv)
         n_call++;
         if(n_call > 20){
             n_call=0;
-            if (client.call(srv)){
-                ROS_INFO("Configure the MAVROS RATE");
-            }else{
-                ROS_ERROR("Failed to call service /mavros/set_stream_rate");
-              }
+            if(simulator){
+                if (client.call(srv)){
+                    ROS_INFO("Configure the MAVROS RATE");
+                }else{
+                    ROS_ERROR("Failed to call service /mavros/set_stream_rate");
+                }
+            }
         }
     }
 
