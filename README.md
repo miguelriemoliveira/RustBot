@@ -65,6 +65,9 @@ roslaunch rustbot_bringup record_raw.launch only_raw_data:=true
 
 * Start the recording (using Windows [SEV-Visualizer.exe] (https://github.com/carlosmccosta/RustBotCSharp))
  * In Putty
+    ```bash
+    roslaunch rustbot_bringup all.launch do_stereo:=false do_slam:=true online_stereo:=true do_gps:=true do_accumulation:=false    do_fusion:=false do_zmq_publish:=true fps:=5
+    ```
  * In SEV-Visualizer.exe
     * To visualize the camera images 
       * Configure the Publisher IP ( NUC computer IP) 
