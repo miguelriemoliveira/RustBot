@@ -75,7 +75,7 @@ roslaunch rustbot_bringup record_raw.launch only_raw_data:=true
     * To record rosbag remotly
       * Configure Recording server host (NUC computer IP)
       * Insert username and password (see label on the Sensor Box)
-      * Click Start Recording
+      * Click Start Recording ( The bag will be recorded in the NUC computer in the Desktop SEV folder)
 
 
 ## <a name="installation"></a>Installation
