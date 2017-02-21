@@ -19,10 +19,11 @@
  <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0 -$(arg pi/2)"/>
  
  <node pkg="tf" type="static_transform_publisher" name="camera_base_link" args="$(arg optical_rotate) $(arg frameid_robot) $(arg frameid_camera) 30"/>
- <arg name="vehicle_rotate" value="0 0 0 0 0 0"/>   
+ 
  <node pkg="tf" type="static_transform_publisher" name="left_optical2stereo_camera" args="0 0 0 0 0 0 stereo_camera left_optical 30"/>
 <node pkg="tf" type="static_transform_publisher" name="map_odom_tf" args="0 0 0 0 0 0 map odom_vehicle 30"/>
 
+ <arg name="vehicle_rotate" value="0 0 0 0 0.13179938779906864 0"/>
 <node pkg="tf" type="static_transform_publisher" name="camera_odom_link_vehicle" args="$(arg vehicle_rotate) odom_vehicle odom 30"/>
 
 
