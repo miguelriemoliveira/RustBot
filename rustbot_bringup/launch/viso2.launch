@@ -2,9 +2,7 @@
 <launch>
   <!-- Arguments -->
   <arg name="camera" default="/stereo"/>
-  <arg name="frameid_robot" default="base_link"/>
-  <!--OR: base_footprint -->
-  <arg name="frameid_camera" default="stereo_camera"/>
+
   <!-- Viso2 -->
   <node pkg="viso2_ros" type="stereo_odometer" name="stereo_odometer" output="screen">
     <remap from="stereo" to="$(arg camera)"/>

@@ -26,48 +26,34 @@ IMU_replublish::~IMU_replublish(){
 void IMU_replublish::publishMessage(ros::Publisher *pub_message){
   //::node_example_data msg;
   //msg.message = message;
- /// msg.a = a;
-  //msg.b = b;
-    //td::cout << "Roll: " << roll << ", Pitch: " << pitch << ", Yaw: " << yaw << std::endl;
     pub_message->publish(IMU_data);
-} // end publishMessage()
+}
 
 /*--------------------------------------------------------------------
  * messageCallback()
  * Callback function for subscriber.
  *------------------------------------------------------------------*/
-
 void IMU_replublish::IMU_data_messageCallback(const sensor_msgs::Imu::ConstPtr& msg){
     if(n_msg <20){
         n_msg++;
     }
-
-   // IMU_data = *msg;
-
-    //publishMessage(&pub_message_IMU);
-
-  //message = msg->message;
- // a = msg->a;
-  // b = msg->b;
-
   // Note that these are only set to INFO so they will print to a terminal for example purposes.
   // Typically, they should be DEBUG.
- // ROS_INFO("message is %s", message.c_str());
-    // ROS_INFO("sum of a + b = %d", a + b);
+  // ROS_INFO("message is %s", message.c_str());
+  // ROS_INFO("sum of a + b = %d", a + b);
 }
-
-
-
-
-
+/*--------------------------------------------------------------------
+ * messageCallback()
+ * Callback function for subscriber.
+ *------------------------------------------------------------------*/
 void IMU_replublish::IMU_MAG_data_messageCallback(const sensor_msgs::MagneticFieldConstPtr &msg){
-
   //  std::cout << msg->magnetic_field.x << " | "<< msg->magnetic_field.y << " deu=" << atan2(msg->magnetic_field.y,msg->magnetic_field.x) << std::endl;
     tf::Matrix3x3 obs_mat;
     obs_mat.setRPY(0,0,atan2(msg->magnetic_field.y, msg->magnetic_field.x));
     tf::Quaternion qt_tf;
     obs_mat.getRotation(qt_tf);
 
+    //std::cout << atan2(msg->magnetic_field.y, msg->magnetic_field.x) * 180.0/ 3.14 << std::endl;
     IMU_data.orientation.x=qt_tf.getX();
     IMU_data.orientation.y=qt_tf.getY();
     IMU_data.orientation.z=qt_tf.getZ();
@@ -78,9 +64,12 @@ void IMU_replublish::IMU_MAG_data_messageCallback(const sensor_msgs::MagneticFie
     IMU_data.header.frame_id.assign("imu_frame");
     publishMessage(&pub_message_IMU);
     imu_deg=1;
-    //pub_message->publish(IMU_data);
 }
 
+/*--------------------------------------------------------------------
+ * messageCallback()
+ * Callback function for subscriber.
+ *------------------------------------------------------------------*/
 void IMU_replublish::IMU_data_yawmag_messageCallback(const std_msgs::Float64ConstPtr &msg){
   if( imu_deg==1 ) return;
   //  std::cout << msg->magnetic_field.x << " | "<< msg->magnetic_field.y << " deu=" << atan2(msg->magnetic_field.y,msg->magnetic_field.x) << std::endl;

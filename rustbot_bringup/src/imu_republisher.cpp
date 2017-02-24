@@ -27,14 +27,7 @@ int main(int argc, char **argv){
   private_node_handle_.param("rate", rate, int(40));
   private_node_handle_.param("not_sim", simulator , bool(true));
   private_node_handle_.param("topic", topic, string("/mavros/imu/data"));
- /* dynamic_reconfigure::Server<rustbot_bringup::imu_parameters> dr_srv;
-  dynamic_reconfigure::Server<rustbot_bringup::imu_parameters>::CallbackType cb;
-  cb = boost::bind(&rustbot_bringup::config, node_example, _1, _2);
-  dr_srv.setCallback(cb);
 
-*/
-
- std::cout << "poiss      ssssssss " << simulator << std::endl;
   // Create a subscriber.
   // Name the topic, message queue, callback function with class name, and object containing callback function.
   ros::Subscriber sub_message = n.subscribe(topic.c_str(), 1000, &IMU_replublish::IMU_data_messageCallback, IMU_node_handler);
@@ -42,16 +35,15 @@ int main(int argc, char **argv){
   ros::Subscriber sub_message2 = n.subscribe("/mavros/global_position/compass_hdg", 1000,&IMU_replublish::IMU_data_yawmag_messageCallback, IMU_node_handler);
   IMU_node_handler->pub_message_IMU = n.advertise<sensor_msgs::Imu>("imu_data_ENU", 40);
 
-
   // Tell ROS how fast to run this node.
   ros::Rate r(rate);
-
   ros::ServiceClient client = n.serviceClient<mavros_msgs::StreamRateRequest>("/mavros/set_stream_rate");
   mavros_msgs::StreamRate srv;
   srv.request.message_rate=20;
   srv.request.stream_id=0;
   srv.request.on_off=1;
 
+  // if the system is not running in simulation the service mavros is not used
   if(simulator){
     ros::service::waitForService("/mavros/set_stream_rate", -1);
     ROS_INFO("MAVROS SERVICE is available..");
@@ -70,7 +62,6 @@ int main(int argc, char **argv){
   while (n.ok()){
     ros::spinOnce();
     r.sleep();
-
     if(IMU_node_handler->n_msg < 20){
         n_call++;
         if(n_call > 20){
