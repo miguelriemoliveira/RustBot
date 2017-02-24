@@ -56,12 +56,24 @@ The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a pl
 * Start the recording (using SSH)
 
 ```bash
+sev_run_mode_1.sh
+```
+or 
+
+```bash
 roslaunch rustbot_bringup all.launch do_stereo:=false do_slam:=false online_stereo:=true do_gps:=true do_accumulation:=false do_fusion:=false do_zmq_publish:=false fps:=5
 ```
 
 ```bash
 roslaunch rustbot_bringup record_raw.launch only_raw_data:=true
 ```
+or 
+
+```bash
+sev_run_mode_6.sh
+```
+
+
 
 * Start the recording (using Windows [SEV-Visualizer.exe] (https://github.com/carlosmccosta/RustBotCSharp))
  * In Putty
