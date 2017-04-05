@@ -43,37 +43,42 @@
 ===============================================================
 --> 
 
-<!-- Arguments -->
- <arg name="camera" default="/stereo"/>
- <arg name="frameid_robot" default="base_link"/>
-<!--OR: base_footprint -->
- <arg name="frameid_camera" default="stereo_camera"/>
-<!-- yaw, pitch, rooll -->
+  <!-- Arguments -->
+  <arg name="camera" default="/stereo"/>
+  <arg name="frameid_robot" default="base_link"/>
+  <!--OR: base_footprint -->
+  <arg name="frameid_camera" default="stereo_camera"/>
 
-<!-- Transformada entre base_link e IMU -->
- <node pkg="tf" type="static_transform_publisher" name="base_link_to_imu" args="0 0 0 0 0 0 base_link imu_frame 30"/>
- 
-<!-- Transformada entre base_link e GPS -->
- <node pkg="tf" type="static_transform_publisher" name="base_link_to_gps" args="0 0 0 0 0 0 base_link gps 30"/>
+  <!-- yaw, pitch, rooll -->
+  <!-- Transformada entre base_link e IMU -->
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_imu" args="0 0 0 0 0 0 base_link imu_frame 30"/>
 
-<!-- TF: "base_link" to "camera_link" [Rotate the camera frame.] -->
- <arg name="pi/2" value="1.5707963267948966"/>
- <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0 -$(arg pi/2)"/>
- 
- <node pkg="tf" type="static_transform_publisher" name="camera_base_link" args="$(arg optical_rotate) $(arg frameid_robot) $(arg frameid_camera) 30"/>
- <arg name="vehicle_rotate" value="0 0 0 0 0 0"/>   
- <node pkg="tf" type="static_transform_publisher" name="left_optical2stereo_camera" args="0 0 0 0 0 0 stereo_camera left_optical 30"/>
-<!-- <node pkg="tf" type="static_transform_publisher" name="map_odom_tf" args="0 0 0 0 0 0 map odom 30"/>
+  <!-- Transformada entre base_link e GPS-->
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_gps" args="0 0 0 0 0 0 base_link gps 30"/>
 
-<node pkg="tf" type="static_transform_publisher" name="camera_odom_link_vehicle" args="$(arg vehicle_rotate) odom_vehicle odom 30"/>
+  <!-- TF: "base_link" to "camera_link" [Rotate the camera frame.] -->
+  <arg name="pi/2" value="1.5707963267948966"/>
+  <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0.0 -$(arg pi/2)"/>
+  <node pkg="tf" type="static_transform_publisher" name="camera_to_gimbal" args="$(arg optical_rotate) gimball $(arg frameid_camera) 30"/>
+
+  <!-- Tranformada entre o Gimbal e Base_link -->
+  <arg name="Gimbal_rotate" value="0 0 0 0 0.19 0"/>
+  <node pkg="tf" type="static_transform_publisher" name="Gimbal_baselink" args="$(arg Gimbal_rotate) $(arg frameid_robot) gimball 30"/>
+
+  <!-- Tranformada entre o Camera Frame e Leftoptical -->
+  <node pkg="tf" type="static_transform_publisher" name="left_optical2stereo_camera" args="0 0 0 0 0 0 stereo_camera left_optical 30"/>
+
+  <!-- Tranformada entre o Map e Odom
+  <node pkg="tf" type="static_transform_publisher" name="map_odom_tf" args="0 0 0 0 0 0 map odom 30"/>
 -->
-
 
 <!--
 ===============================================================
 
 ===============================================================
 -->
+
+
 <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization_GPS"  output="screen">
     <param name="frequency" value="80"/>
     <param name="sensor_timeout" value="0.1"/>
@@ -102,7 +107,7 @@
    <param name="odom0" value="/gps/odometry"/>
      <rosparam param="odom0_config">[true, true, false,
                                   false, false, false,
-                                  true, true, true,
+                                  false, false, false,
                                   false, false, false,
                                   false, false, false]</rosparam>
      <param name="odom0_differential" value="false"/>
@@ -150,11 +155,11 @@
 
   </node>
 
-<!--
+
 ===============================================================
 
 ===============================================================
---> 
+
 
 
 <!--
@@ -175,9 +180,9 @@
     <param name="transform_time_offset" value="0.0"/>
 
 
-    <param name="imu0" value="imu_data_ENU"/>
+    <param name="imu0" value="/imu_data_ENU"/>
     <rosparam param="imu0_config">[false, false, false,
-                                 true, true, true,
+                                 false, false, true,
                                  false, false, false,
                                  false, false, false,
                                 false, false, false]</rosparam>
@@ -188,8 +193,8 @@
 
     <param name="odom0" value="/stereo_odometer/odometry"/>
     <rosparam param="odom0_config">[true, true, true, 
+                                  false, false, false,
                                   false, false, false, 
-                                  true, true, true, 
                                   false, false, false,
                                   false, false, false]</rosparam>
     <param name="odom0_differential" value="false"/>

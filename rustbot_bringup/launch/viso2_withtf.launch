@@ -15,16 +15,19 @@
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_gps" args="0 0 0 0 0 0 base_link gps 30"/> 
 
   <!-- TF: "base_link" to "camera_link" [Rotate the camera frame.] -->
-   <arg name="pi/2" value="1.5707963267948966"/>
-  <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0 -$(arg pi/2)"/>
-  <node pkg="tf" type="static_transform_publisher" name="camera_base_link" args="$(arg optical_rotate) $(arg frameid_robot) $(arg frameid_camera) 30"/>
+  <arg name="pi/2" value="1.5707963267948966"/>
+  <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0.0 -$(arg pi/2)"/>
+  <node pkg="tf" type="static_transform_publisher" name="camera_to_gimbal" args="$(arg optical_rotate) gimball $(arg frameid_camera) 30"/>
 
+  <!-- Tranformada entre o Gimbal e Base_link -->
+  <arg name="Gimbal_rotate" value="0 0 0 0 0.19 0"/>
+  <node pkg="tf" type="static_transform_publisher" name="Gimbal_baselink" args="$(arg Gimbal_rotate) $(arg frameid_robot) gimball 30"/>
+
+  <!-- Tranformada entre o Camera Frame e Leftoptical -->
   <node pkg="tf" type="static_transform_publisher" name="left_optical2stereo_camera" args="0 0 0 0 0 0 stereo_camera left_optical 30"/>
- <!----> <node pkg="tf" type="static_transform_publisher" name="map_odom_tf" args="0 0 0 0 0 0 map odom_vehicle 30"/>
 
-  <arg name="vehicle_rotate" value="0 0 0 0 0.19 0"/>
-  <node pkg="tf" type="static_transform_publisher" name="camera_odom_link_vehicle" args="$(arg vehicle_rotate) odom_vehicle odom 30"/>
-
+  <!-- Tranformada entre o Map e Odom -->
+  <node pkg="tf" type="static_transform_publisher" name="map_odom_tf" args="0 0 0 0 0 0 map odom 30"/>
 
   <!-- Viso2 -->
   <node pkg="viso2_ros" type="stereo_odometer" name="stereo_odometer" output="screen">
@@ -36,5 +39,7 @@
     <param name="queue_size" value="5"/>
     <param name="ref_frame_change_method" value="1"/>
     <param name="inlier_threshold" value="5.5"/> 
+    <param name="odom_frame_id" value="odom"/>
+    <param name="base_link_frame_id" value="base_link"/>
   </node>
 </launch>
