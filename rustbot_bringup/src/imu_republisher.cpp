@@ -33,6 +33,8 @@ int main(int argc, char **argv){
   ros::Subscriber sub_message = n.subscribe(topic.c_str(), 1000, &IMU_replublish::IMU_data_messageCallback, IMU_node_handler);
   ros::Subscriber sub_message1 = n.subscribe("/mavros/imu/mag", 1000, &IMU_replublish::IMU_MAG_data_messageCallback, IMU_node_handler);
   ros::Subscriber sub_message2 = n.subscribe("/mavros/global_position/compass_hdg", 1000,&IMU_replublish::IMU_data_yawmag_messageCallback, IMU_node_handler);
+  ros::Subscriber sub_message3 = n.subscribe("/mavros/global_position/raw/gps_vel", 1000,&IMU_replublish::IMU_yawfromGPSVelocity_messageCallback, IMU_node_handler);
+
   IMU_node_handler->pub_message_IMU = n.advertise<sensor_msgs::Imu>("imu_data_ENU", 40);
 
   // Tell ROS how fast to run this node.

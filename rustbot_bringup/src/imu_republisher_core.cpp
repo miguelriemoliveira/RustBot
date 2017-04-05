@@ -49,11 +49,11 @@ void IMU_replublish::IMU_data_messageCallback(const sensor_msgs::Imu::ConstPtr& 
 void IMU_replublish::IMU_MAG_data_messageCallback(const sensor_msgs::MagneticFieldConstPtr &msg){
   //  std::cout << msg->magnetic_field.x << " | "<< msg->magnetic_field.y << " deu=" << atan2(msg->magnetic_field.y,msg->magnetic_field.x) << std::endl;
     tf::Matrix3x3 obs_mat;
-    obs_mat.setRPY(0,0,atan2(msg->magnetic_field.y, msg->magnetic_field.x));
+    obs_mat.setRPY(0,0, yaw_gps ); //atan2(msg->magnetic_field.y, msg->magnetic_field.x));
     tf::Quaternion qt_tf;
     obs_mat.getRotation(qt_tf);
 
-    //std::cout << atan2(msg->magnetic_field.y, msg->magnetic_field.x) * 180.0/ 3.14 << std::endl;
+    std::cout << "IMU" << atan2(msg->magnetic_field.y, msg->magnetic_field.x) * 180.0/ 3.14 << std::endl;
     IMU_data.orientation.x=qt_tf.getX();
     IMU_data.orientation.y=qt_tf.getY();
     IMU_data.orientation.z=qt_tf.getZ();
@@ -70,9 +70,20 @@ void IMU_replublish::IMU_MAG_data_messageCallback(const sensor_msgs::MagneticFie
  * messageCallback()
  * Callback function for subscriber.
  *------------------------------------------------------------------*/
+void IMU_replublish::IMU_yawfromGPSVelocity_messageCallback(const geometry_msgs::TwistStampedConstPtr &msg){
+
+     std::cout << "GPS "<< msg->twist.linear.x << " | "<< msg->twist.linear.y << " deu=" << atan2(msg->twist.linear.x,msg->twist.linear.y) * 180.0/3.14  << std::endl;
+
+     yaw_gps=atan2(msg->twist.linear.y,msg->twist.linear.x);
+}
+
+/*--------------------------------------------------------------------
+ * messageCallback()
+ * Callback function for subscriber.
+ *------------------------------------------------------------------*/
 void IMU_replublish::IMU_data_yawmag_messageCallback(const std_msgs::Float64ConstPtr &msg){
   if( imu_deg==1 ) return;
-  //  std::cout << msg->magnetic_field.x << " | "<< msg->magnetic_field.y << " deu=" << atan2(msg->magnetic_field.y,msg->magnetic_field.x) << std::endl;
+   std::cout << " deu=" << msg->data  << std::endl;
   tf::Matrix3x3 obs_mat;
   obs_mat.setRPY(0,0,msg->data * 3.14/180.0);
   tf::Quaternion qt_tf;

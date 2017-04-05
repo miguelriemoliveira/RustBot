@@ -6,6 +6,7 @@
 #include "ros/time.h"
 #include  "std_msgs/Float64.h"
 #include "sensor_msgs/Imu.h"
+#include "geometry_msgs/TwistStamped.h"
 #include "sensor_msgs/MagneticField.h"
 // Dynamic reconfigure includes.
 #include <dynamic_reconfigure/server.h>
@@ -20,6 +21,7 @@ public:
     int n_msg;
     sensor_msgs::Imu IMU_data;
     ros::Publisher pub_message_IMU;
+    double yaw_gps;
   //! Constructor.
   IMU_replublish();
 
@@ -36,6 +38,7 @@ public:
   void IMU_data_messageCallback(const sensor_msgs::Imu::ConstPtr& msg);
   void IMU_MAG_data_messageCallback(const  sensor_msgs::MagneticFieldConstPtr & msg);
   void IMU_data_yawmag_messageCallback(const std_msgs::Float64ConstPtr &msg);
+  void IMU_yawfromGPSVelocity_messageCallback(const geometry_msgs::TwistStampedConstPtr &msg);
 
   //! The actual message.
   string message;

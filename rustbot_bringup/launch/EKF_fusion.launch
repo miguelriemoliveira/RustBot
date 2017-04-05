@@ -11,7 +11,7 @@
      <remap from="odom" to="/gps/odometry"/>
      <remap from="fix" to="/mavros/global_position/raw/fix"/> 
      <param name="rot_covariance" value="99999"/> 
-     <param name="frame_id" value="utm"/>
+     <param name="frame_id" value="map"/>
 </node> 
 
 <!--
@@ -28,12 +28,12 @@
       zero_altitude: true
       broadcast_utm_transform: true
       publish_filtered_gps: true
-      use_odometry_yaw: false
+      use_odometry_yaw: true
     </rosparam>
     <remap from="/imu/data" to="imu_data_ENU" />
     <remap from="/gps/fix" to="/mavros/global_position/raw/fix" />
-     <param name="wait_for_datum" value="false"/>
-    <rosparam param="datum">[41.1786204, -8.5962586, 0.0, map, base_link]</rosparam>
+    <param name="wait_for_datum" value="true"/>
+    <!-- <rosparam param="datum">[41.1786204, -8.5962586, 0.0, map, base_link]</rosparam>-->
   </node>
 
 
@@ -94,7 +94,7 @@
    
     <param name="imu0" value="imu_data_ENU"/>
     <rosparam param="imu0_config">[false, false, false,
-                                   true ,  true,  true,
+                                   false , false, true,
                                    false, false, false,
                                    false, false, false,
                                    false, false, false]</rosparam>
@@ -105,7 +105,7 @@
 
 
    <param name="odom0" value="/gps/odometry"/>
-     <rosparam param="odom0_config">[true, true, false,
+     <rosparam param="odom0_config">[true, true, true,
                                   false, false, false,
                                   false, false, false,
                                   false, false, false,
@@ -114,16 +114,14 @@
      <param name="odom0_relative" value="false"/>
      <param name="odom0_queue_size" value="10"/> 
 
-  
-
      <param name="print_diagnostics" value="true"/>
 
      <param name="debug"           value="true"/>
      <param name="debug_out_file"  value="/home/sev/debug_ekf_localization.txt"/>
 
-     <rosparam param="process_noise_covariance">[40, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                                                     0,   40, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                                                     0,    0,    20, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+     <rosparam param="process_noise_covariance">[50, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                                                     0,   50, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                                                     0,    0,    2, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                                                      0,    0,    0,    0.03, 0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                                                      0,    0,    0,    0,    0.03, 0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                                                      0,    0,    0,    0,    0,    0.06, 0,     0,     0,    0,    0,    0,    0,    0,    0,
@@ -207,15 +205,15 @@
      <param name="debug"           value="false"/>
      <param name="debug_out_file"  value="/home/sev/debug_ekf_localization.txt"/>
 
-     <rosparam param="process_noise_covariance">[4, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                                                     0,   4, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                                                     0,    0,    20, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+     <rosparam param="process_noise_covariance">[8, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                                                     0,   8, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
+                                                     0,    0,    0.4, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                                                      0,    0,    0,    0.3, 0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                                                      0,    0,    0,    0,    0.3, 0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
                                                      0,    0,    0,    0,    0,    0.6, 0,     0,     0,    0,    0,    0,    0,    0,    0,
-                                                     0,    0,    0,    0,    0,    0,    4, 0,     0,    0,    0,    0,    0,    0,    0,
-                                                     0,    0,    0,    0,    0,    0,    0,     4, 0,    0,    0,    0,    0,    0,    0,
-                                                     0,    0,    0,    0,    0,    0,    0,     0,     4, 0,    0,    0,    0,    0,    0,
+                                                     0,    0,    0,    0,    0,    0,    0.1, 0,     0,    0,    0,    0,    0,    0,    0,
+                                                     0,    0,    0,    0,    0,    0,    0,     0.1, 0,    0,    0,    0,    0,    0,    0,
+                                                     0,    0,    0,    0,    0,    0,    0,     0,     .2, 0,    0,    0,    0,    0,    0,
                                                      0,    0,    0,    0,    0,    0,    0,     0,     0,    0.01, 0,    0,    0,    0,    0,
                                                      0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0.01, 0,    0,    0,    0,
                                                      0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0.02, 0,    0,    0,
