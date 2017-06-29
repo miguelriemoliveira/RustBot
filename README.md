@@ -42,7 +42,7 @@ The RustyBot is a stereo vision system with two AVT Mako cameras mounted on a pl
  * Option 1, connection with wifi hotspot
    * Connect the WiFi access point (TP-LINK), if there is available internet by ethernet connect the ethernet cable and then the the power transformer. 
     * Connect your PC to the WiFi Hot-spot with SEVsys name
-    * The  processing unit box (NUC pc) has the IP 192.168.0.150 on the SEVsys
+    * The  processing unit box (NUC pc) has the IP 192.168.10.150 on the SEVsys
  * Option 2, connection with ethernet cable
    * Connect an Ethernet cable from your laptop to the processing unit box (Pay attentio there are two POE ethernet and only one normal ethernet)
     * Set a static IP address (the NUC computer has ip 169.254.4.50, so use 169.254.4.51 for example)
@@ -422,7 +422,7 @@ Then, select Places -- Connect to Server.
 Then, add 
 
 ```bash
-sftp://192.168.0.150/home/sev/Desktop
+sftp://192.168.10.150/home/sev/Desktop
 ```
 
 Drag and drop the bag file to the place you want on your local computer.
