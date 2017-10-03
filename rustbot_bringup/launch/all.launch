@@ -5,12 +5,12 @@
   <arg name="do_stereo" default="true"/>
   <arg name="do_fusion" default="false"/>
   <arg name="do_slam" default="true"/>
-  <arg name="do_gps" default="true"/>
-  <arg name="do_accumulation" default="false"/>
+  <arg name="do_gps" default="false"/>
+  <arg name="do_accumulation" default="true"/>
   <arg name="do_zmq_publish" default="true"/>
 
   <!--This is for running the system computing the stereo (and the slam) from played back offline data-->
-  <arg name="online_stereo" default="true"/>
+  <arg name="online_stereo" default="false"/>
   <!--To launch a gui for tunning the stereo parameters-->
   <arg name="config_stereo" default="false"/>
   <!--The desired frames per second-->
