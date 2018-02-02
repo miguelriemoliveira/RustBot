@@ -8,6 +8,9 @@
   <arg name="do_gps" default="false"/>
   <arg name="do_accumulation" default="true"/>
   <arg name="do_zmq_publish" default="true"/>
+  <arg name="do_gimbal_motors" default="true"/>
+  <arg name="do_auto_track" default="true"/>
+  <arg name="do_supercooljoy_gimbal" default="false"/>
 
   <!--This is for running the system computing the stereo (and the slam) from played back offline data-->
   <arg name="online_stereo" default="false"/>
@@ -87,5 +90,38 @@
     <node name="sev_publisher" pkg="rustbot_translation" type="sev_publisher.py" output="screen">
     </node>
   </group>
+
+  <!--  UFJF SECTION -->
+
+<!--start the gimbal-->
+  <group if="$(arg do_gimbal_motors)">
+    <include file="$(find dynamixel_workbench_controllers)/launch/multi_port.launch">
+    </include>
+  </group>
+
+<!--  here start at any cost the automatic tracking node, if necessary-->
+<!--the gps.launch could do the trick, but if it is not lanched yet we come with a new mavros node-->
+  <group unless="($arg do_gps)">
+    <group unless="$(arg online_stereo)">
+      <group if="$(arg do_auto_track)">
+        <include file="$(find mavros)/launch/px4.launch"> <!--so we dont launch again the same driver-->
+        </include>
+        <node name="controle_automatico" pkg="automatico_mrs" type="controle_automatico" output="screen">
+        </node>
+      </group>
+    </group>
+  </group>
+
+<!--if it is not automatic, use the joystick to control gimbal if thats the case -->
+  <!--parameters for likely Joy-->
+  <arg name="nome_stick" default="Logitech Logitech Attack 3"/>
+  <arg name="porta" default="/dev/input/js0"/>
+  <group unless="$(arg do_auto_track)">
+    <group if="$(arg do_supercooljoy_gimbal)">
+      <node name="joy_supercool" pkg="joy" type="joy_node" output="screen">
+      </node>
+    </group>
+  </group>
+
 
 </launch>

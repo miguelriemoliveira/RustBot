@@ -114,6 +114,20 @@ git clone https://github.com/srv/avt_vimba_camera.git
 catkin_make
 ```
 
+Another necessary sdk is the Ebus sdk, which can be downloaded from the link [https://supportcenter.pleora.com/s/article/eBUS-SDK-5-0-Software-and-Release-Notes-Dwnload](https://supportcenter.pleora.com/s/article/eBUS-SDK-5-0-Software-and-Release-Notes-Dwnload). Follow the installation instructions as well, and you should find a folder in "/opt/pleora" folder.
+
+Clone the repository for the MRS drivers developed in UFJF from the online repository:
+```bash
+cd src
+git clone https://github.com/viniciusvidal2/MRS.git
+```
+
+Add some sources to initialize the sdk correctly
+```bash
+echo source /opt/pleora/ebus_sdk/Ubuntu-x86_64/bin/set_puregev_env >> ~/.bashrc
+echo source <your workspace dir>/src/MRS/flir_gige/install/set_puregev_gen >> ~/.bashrc
+```
+
 Install ZMQ Python
 
 ```bash
@@ -160,6 +174,15 @@ Install ekf filter
 sudo apt-get install ros-indigo-robot-pose-ekf ros-indigo-gps-common ros-indigo-robot-localization
 ```
 
+Install mavros
+```bash
+sudo apt-get install ros-kinetic-mavros
+```
+
+Install the dynamixel motors toolbox
+```bash
+sudo apt-get install ros-kinetic-dynamixel-sdk
+```
 
 ## <a name="usage"></a>Usage
 
