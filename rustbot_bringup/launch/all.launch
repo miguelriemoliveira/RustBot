@@ -101,7 +101,7 @@
 
 <!--  here start at any cost the automatic tracking node, if necessary-->
 <!--the gps.launch could do the trick, but if it is not lanched yet we come with a new mavros node-->
-  <group unless="($arg do_gps)">
+  <group unless="$(arg do_gps)">
     <group unless="$(arg online_stereo)">
       <group if="$(arg do_auto_track)">
         <include file="$(find mavros)/launch/px4.launch"> <!--so we dont launch again the same driver-->

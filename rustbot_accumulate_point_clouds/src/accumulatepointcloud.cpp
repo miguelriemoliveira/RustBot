@@ -18,8 +18,8 @@ typedef pcl::PointXYZRGB PointT;
 
 //Global vars
 std::string filename  = "/tmp/output.pcd";
-std::string filename2 = "/home/mrs/Desktop/output.ply";
-std::string filename3 = "/home/mrs/Desktop/output_plus_normals.ply";
+std::string filename2 = "/tmp/output.ply";
+std::string filename3 = "/tmp/output_plus_normals.ply";
 pcl::PointCloud<PointT>::Ptr accumulated_cloud;
 tf::TransformListener *p_listener;
 boost::shared_ptr<ros::Publisher> pub;
@@ -108,8 +108,9 @@ int main (int argc, char** argv)
     accumulated_cloud = (pcl::PointCloud<PointT>::Ptr) new pcl::PointCloud<PointT>;
     accumulated_cloud->header.frame_id = ros::names::remap("/map");
 
-    //Initialize temp. cloud
-    pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud;
+    //Initialize temp. clouds
+    pcl::PointCloud<pcl::PointXYZ> temp_cloud1;
+    pcl::PointCloud<PointT> temp_cloud2;
 
     //Initialize the point cloud publisher
     pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
@@ -133,13 +134,17 @@ int main (int argc, char** argv)
 
 
     // Lets try to compute normals
-    *temp_cloud.width = *accumulated_cloud.width;
-    *temp_cloud.height = *accumulated_cloud.height;
-
-    pcl::copyPointCloud(*accumulated_cloud, *temp_cloud);
+    temp_cloud2 = *accumulated_cloud;
+    temp_cloud1.points.resize(temp_cloud2.size());
+    for(int i=0; i < temp_cloud1.points.size(); i++){
+      temp_cloud1.points[i].x = temp_cloud2.points[i].x;
+      temp_cloud1.points[i].y = temp_cloud2.points[i].y;
+      temp_cloud1.points[i].z = temp_cloud2.points[i].z;
+    } // NOw just xyz to compute normals
     printf("Aqui1\n");
     pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
-    ne.setInputCloud (temp_cloud);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud1_ptr(&temp_cloud1);
+    ne.setInputCloud (temp_cloud1_ptr);
     printf("Aqui2\n");
     pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
     ne.setSearchMethod (tree);
@@ -148,9 +153,22 @@ int main (int argc, char** argv)
     ne.compute(*cloud_normals);
     printf("Aqui3\n");
     printf("Saving with normals to file %s\n", filename3.c_str());
-    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr output;
-    pcl::concatenateFields(*accumulated_cloud, *cloud_normals, *output);
-    pcl::io::savePLYFileBinary(filename3, *output);
+
+    pcl::PointCloud<pcl::PointXYZRGBNormal> output;
+    pcl::PointCloud<pcl::Normal> temp_normal(*cloud_normals);
+    output.points.resize(temp_cloud2.size());
+    for(int i=0; i < output.points.size(); i++){
+      output.points[i].x = temp_cloud2.points[i].x;
+      output.points[i].y = temp_cloud2.points[i].y;
+      output.points[i].z = temp_cloud2.points[i].z;
+      output.points[i].r = temp_cloud2.points[i].r;
+      output.points[i].g = temp_cloud2.points[i].g;
+      output.points[i].b = temp_cloud2.points[i].b;
+      output.points[i].normal_x = temp_normal.points[i].normal_x;
+      output.points[i].normal_y = temp_normal.points[i].normal_y;
+      output.points[i].normal_z = temp_normal.points[i].normal_z;
+    }
+    pcl::io::savePLYFileBinary(filename3, output);
     printf("All safe and sound!");
 
 }
