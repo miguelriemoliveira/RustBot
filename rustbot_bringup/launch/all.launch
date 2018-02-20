@@ -7,9 +7,9 @@
   <arg name="do_slam" default="true"/>
   <arg name="do_gps" default="false"/>
   <arg name="do_accumulation" default="true"/>
-  <arg name="do_zmq_publish" default="true"/>
-  <arg name="do_gimbal_motors" default="true"/>
-  <arg name="do_auto_track" default="true"/>
+  <arg name="do_zmq_publish" default="false"/>
+  <arg name="do_gimbal_motors" default="false"/>
+  <arg name="do_auto_track" default="false"/>
   <arg name="do_supercooljoy_gimbal" default="false"/>
 
   <!--This is for running the system computing the stereo (and the slam) from played back offline data-->

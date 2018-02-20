@@ -29,7 +29,7 @@
 
   <!-- Run a VoxelGrid filter to clean NaNs and downsample the data -->
   <node pkg="rustbot_accumulate_point_clouds" type="accumulatepointcloud" name="accumulatepointcloud" output="screen">
-    <remap from="input" to="/stereo/points2_voxelgrid"/>
+    <remap from="input" to="/stereo/points2"/>
     <remap from="map" to="map"/>
   </node>
 </launch>

@@ -8,14 +8,18 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/io/ply_io.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl_ros/transforms.h>
+#include <pcl/features/normal_3d.h> // add normals to render in MART.exe
 
 //Definitions
 typedef pcl::PointXYZRGB PointT;
 
 //Global vars
-std::string filename = "/tmp/output.pcd";
+std::string filename  = "/tmp/output.pcd";
+std::string filename2 = "/home/mrs/Desktop/output.ply";
+std::string filename3 = "/home/mrs/Desktop/output_plus_normals.ply";
 pcl::PointCloud<PointT>::Ptr accumulated_cloud;
 tf::TransformListener *p_listener;
 boost::shared_ptr<ros::Publisher> pub;
@@ -73,8 +77,8 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
     //Voxel grid filter the accumulated cloud
     *tmp_cloud = *accumulated_cloud;
     grid.setInputCloud(tmp_cloud);
-    //grid.setLeafSize (0.5f, 0.5f, 0.5f);
-    grid.setLeafSize (0.05f, 0.05f, 0.05f);
+    grid.setLeafSize (0.2f, 0.2f, 0.2f);
+//    grid.setLeafSize (0.05f, 0.05f, 0.05f);
     grid.filter (*accumulated_cloud);
     ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
 
@@ -104,6 +108,9 @@ int main (int argc, char** argv)
     accumulated_cloud = (pcl::PointCloud<PointT>::Ptr) new pcl::PointCloud<PointT>;
     accumulated_cloud->header.frame_id = ros::names::remap("/map");
 
+    //Initialize temp. cloud
+    pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud;
+
     //Initialize the point cloud publisher
     pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
     *pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 1);
@@ -119,6 +126,31 @@ int main (int argc, char** argv)
     }
 
     //Save accumulated point cloud to a file
-    printf("Saving to file %s\n", filename.c_str());;
+    printf("Saving to file %s\n", filename.c_str());
     pcl::io::savePCDFileASCII (filename, *accumulated_cloud);
+    printf("Saving to file %s\n", filename2.c_str());
+    pcl::io::savePLYFileBinary(filename2, *accumulated_cloud);
+
+
+    // Lets try to compute normals
+    *temp_cloud.width = *accumulated_cloud.width;
+    *temp_cloud.height = *accumulated_cloud.height;
+
+    pcl::copyPointCloud(*accumulated_cloud, *temp_cloud);
+    printf("Aqui1\n");
+    pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+    ne.setInputCloud (temp_cloud);
+    printf("Aqui2\n");
+    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
+    ne.setSearchMethod (tree);
+    pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+    ne.setRadiusSearch (0.05);
+    ne.compute(*cloud_normals);
+    printf("Aqui3\n");
+    printf("Saving with normals to file %s\n", filename3.c_str());
+    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr output;
+    pcl::concatenateFields(*accumulated_cloud, *cloud_normals, *output);
+    pcl::io::savePLYFileBinary(filename3, *output);
+    printf("All safe and sound!");
+
 }
