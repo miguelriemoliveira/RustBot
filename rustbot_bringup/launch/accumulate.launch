@@ -9,19 +9,30 @@
     <remap from="~output" to="/stereo/points2b"/>
     <rosparam>
             filter_field_name: z
-            filter_limit_min: 2.0
-            filter_limit_max: 10
+            filter_limit_min: 4.0
+            filter_limit_max: 20.0
+            filter_limit_negative: False
+            leaf_size: 0.05
+          </rosparam>
+  </node>
+	<node pkg="nodelet" type="nodelet" name="voxel_grid_x" args="load pcl/VoxelGrid pcl_manager" output="screen">
+    <remap from="~input" to="/stereo/points2b"/>
+    <remap from="~output" to="/stereo/points2c"/>
+    <rosparam>
+            filter_field_name: x
+            filter_limit_min: -4.0
+            filter_limit_max: 4.0
             filter_limit_negative: False
             leaf_size: 0.05
           </rosparam>
   </node>
   <node pkg="nodelet" type="nodelet" name="voxel_grid_y" args="load pcl/VoxelGrid pcl_manager" output="screen">
-    <remap from="~input" to="/stereo/points2b"/>
+    <remap from="~input" to="/stereo/points2c"/>
     <remap from="~output" to="/stereo/points2_voxelgrid"/>
     <rosparam>
             filter_field_name: y
-            filter_limit_min: 0.0
-            filter_limit_max: 10
+            filter_limit_min: -3.0
+            filter_limit_max: 1.0
             filter_limit_negative: False
             leaf_size: 0.05
       </rosparam>
@@ -29,7 +40,7 @@
 
   <!-- Run a VoxelGrid filter to clean NaNs and downsample the data -->
   <node pkg="rustbot_accumulate_point_clouds" type="accumulatepointcloud" name="accumulatepointcloud" output="screen">
-    <remap from="input" to="/stereo/points2"/>
+    <remap from="input" to="/stereo/points2_voxelgrid"/>
     <remap from="map" to="map"/>
   </node>
 </launch>
