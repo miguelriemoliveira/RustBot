@@ -60,6 +60,9 @@ void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
   pcl::io::savePLYFileASCII(filename, *output_cloud_ptr);
   ROS_INFO("All safe and sound !!");
 
+  // Kill the node after saving the ptcloud
+  ros::shutdown();
+
 }
 
 int main(int argc, char **argv)
@@ -67,7 +70,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "save_cloud");
   ros::NodeHandle nh;
 
-  ROS_INFO("We will save the data! DOnt worry");
+  ROS_INFO("We will save the data! DOnt worry...");
 
   ros::Subscriber sub = nh.subscribe("/accumulated_point_cloud", 1000, savecloud_plus_normal_ply);
 

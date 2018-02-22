@@ -14,6 +14,7 @@
 #include <pcl_ros/SegmentDifferencesConfig.h>
 #include <pcl_ros/surface/moving_least_squares.h>
 #include <pcl/cloud_iterator.h>
+pcl::getAllNeighborCellIndices()
 
 //Definitions
 typedef pcl::PointXYZRGB PointT;
