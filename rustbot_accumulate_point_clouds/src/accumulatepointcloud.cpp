@@ -15,18 +15,18 @@
 
 //Definitions
 typedef pcl::PointXYZRGB PointT;
-typedef pcl::PointNormal PS;
+//typedef pcl::PointNormal PS;
 
 //Global vars
 std::string filename  = "/tmp/output.pcd";
-std::string filename2 = "/tmp/output.ply";
-std::string filename3 = "/tmp/output_plus_normals.ply";
+//std::string filename2 = "/tmp/output.ply";
+//std::string filename3 = "/tmp/output_plus_normals.ply";
 pcl::PointCloud<PointT>::Ptr accumulated_cloud;
 tf::TransformListener *p_listener;
 boost::shared_ptr<ros::Publisher> pub;
 
 // Para gravar em PLY
-pcl::PointCloud<PS> output;
+//pcl::PointCloud<PS> output;
 
 void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
@@ -119,67 +119,78 @@ int main (int argc, char** argv)
   // Create a ROS subscriber for the input point cloud
   ros::Subscriber sub_target = nh.subscribe ("input", 1, cloud_open_target);
 
-  int contador = 0;
+  ////// Parte do Vinicius para salvar .ply //////
+//  int contador = 0;
+  //Initialize temp. clouds
+//  pcl::PointCloud<pcl::PointXYZ> temp_cloud1;
+//  pcl::PointCloud<PointT> temp_cloud2;
+//  pcl::PointCloud<PointT> acc_cloud_test(*accumulated_cloud);
+//  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+//  pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud1_ptr(&temp_cloud1);
+//  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
+//  ne.setSearchMethod (tree);
+//  ne.setRadiusSearch (1);
+//  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+//  pcl::PointCloud<pcl::Normal> temp_normal;
+//  //////
 
   //Loop infinitly
   while (ros::ok())
   {
-    // Lets try to save it once in a while
-    contador++;
-    if(contador>600000){
-      pcl::PointCloud<PointT> acc_cloud_test(*accumulated_cloud);
-      if(acc_cloud_test.points.size() > 0){
-        //Save accumulated point cloud to a file
-//        printf("Saving to file %s\n", filename.c_str());
-//        pcl::io::savePCDFileASCII (filename, *accumulated_cloud);
+//    // Lets try to save it once in a while
+//    contador++;
+//    if(contador>600000){
+//      acc_cloud_test.clear();
+//      acc_cloud_test = *accumulated_cloud;
+//      if(acc_cloud_test.points.size() > 0){
+//        //Save accumulated point cloud to a file
+////        printf("Saving to file %s\n", filename.c_str());
+////        pcl::io::savePCDFileASCII (filename, *accumulated_cloud);
 
-        // Lets try to compute normals
-        //Initialize temp. clouds
-        pcl::PointCloud<pcl::PointXYZ> temp_cloud1;
-        pcl::PointCloud<PointT> temp_cloud2;
-        temp_cloud2 = *accumulated_cloud;
-        temp_cloud1.points.resize(temp_cloud2.size());
-        for(int i=0; i < temp_cloud1.points.size(); i++){
-          temp_cloud1.points[i].x = temp_cloud2.points[i].x;
-          temp_cloud1.points[i].y = temp_cloud2.points[i].y;
-          temp_cloud1.points[i].z = temp_cloud2.points[i].z;
-        } // NOw just xyz to compute normals
-        pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
-        pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud1_ptr(&temp_cloud1);
-        ne.setInputCloud (temp_cloud1_ptr);
-        pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
-        ne.setSearchMethod (tree);
-        pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
-        ne.setRadiusSearch (1);
-        ne.compute(*cloud_normals);
-        printf("Saving with normals to file %s\n", filename3.c_str());
+//        // Lets try to compute normals
+//        temp_cloud2 = *accumulated_cloud;
+//        temp_cloud1.points.resize(temp_cloud2.size());
+//        for(int i=0; i < temp_cloud1.points.size(); i++){
+//          temp_cloud1.points[i].x = temp_cloud2.points[i].x;
+//          temp_cloud1.points[i].y = temp_cloud2.points[i].y;
+//          temp_cloud1.points[i].z = temp_cloud2.points[i].z;
+//        } // NOw just xyz to compute normals
+//        ne.setInputCloud (temp_cloud1_ptr);
+//        ne.compute(*cloud_normals);
+//        printf("Saving with normals to file %s\n", filename3.c_str());
 
-        output.clear();
-        pcl::PointCloud<pcl::Normal> temp_normal(*cloud_normals);
-        output.points.resize(temp_cloud2.size());
-        for(int i=0; i < output.points.size(); i++){
-          output.points[i].x = temp_cloud2.points[i].x;
-          output.points[i].y = temp_cloud2.points[i].y;
-          output.points[i].z = temp_cloud2.points[i].z;
-          output.points[i].normal_x = temp_normal.points[i].normal_x;
-          output.points[i].normal_y = temp_normal.points[i].normal_y;
-          output.points[i].normal_z = temp_normal.points[i].normal_z;
-        }
-        pcl::PointCloud<PS>::Ptr output_ptr(&output);
-        pcl::io::savePLYFileASCII(filename3, *output_ptr);
-        printf("All safe and sound!");
+//        output.clear();
+//        temp_normal = *cloud_normals;
+//        output.points.resize(temp_cloud2.size());
+//        for(int i=0; i < output.points.size(); i++){
+//          output.points[i].x = temp_cloud2.points[i].x;
+//          output.points[i].y = temp_cloud2.points[i].y;
+//          output.points[i].z = temp_cloud2.points[i].z;
+//          output.points[i].normal_x = temp_normal.points[i].normal_x;
+//          output.points[i].normal_y = temp_normal.points[i].normal_y;
+//          output.points[i].normal_z = temp_normal.points[i].normal_z;
+//        }
+//        printf("Tamanho da nuvem a salvar: %d\n\n", output.points.size());
+//        pcl::PointCloud<PS>::Ptr output_ptr(&output);
+//        printf("Primeiro ponto, com o ponteiro:\n");
+//        printf("X:   %.2f   Y:   %.2f   Z:   %.2f\n\n%", output.points[1].x, output.points[1].y, output.points[1].z);
+//        //pcl::io::savePLYFileASCII(filename3, *output_ptr);
+//        printf("All safe and sound!\n\n\n");
 
-        temp_cloud1.clear();
-        temp_cloud2.clear();
-        temp_cloud1_ptr.reset();
-        temp_normal.clear();
-        output.clear();
-        output_ptr.reset();
-      }
-    }
+//        temp_cloud1.clear();
+//        temp_cloud2.clear();
+//        temp_cloud1_ptr.reset();
+//        temp_normal.clear();
+//        output.clear();
+//        output_ptr.reset();
+//        contador = 0;
+//      }
+//    }
     // Spin
     ros::spinOnce();
   }
+
+  return 0;
 
 }
 

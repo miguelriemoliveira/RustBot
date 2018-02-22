@@ -141,6 +141,8 @@ include_directories(
 
 add_executable(accumulatepointcloud src/accumulatepointcloud.cpp)
 target_link_libraries (accumulatepointcloud ${PCL_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(save_cloud src/save_cloud.cpp)
+target_link_libraries (save_cloud ${PCL_LIBRARIES} ${catkin_LIBRARIES} )
 
 
 ## Add cmake target dependencies of the executable
