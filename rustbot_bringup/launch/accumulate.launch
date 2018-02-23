@@ -11,9 +11,9 @@
     <rosparam>
             filter_field_name: z
             filter_limit_min: 4.0
-            filter_limit_max: 25.0
+            filter_limit_max: 15.0
             filter_limit_negative: False
-            leaf_size: 0.3
+            leaf_size: 0.2
           </rosparam>
   </node>
 	<node pkg="nodelet" type="nodelet" name="voxel_grid_x" args="load pcl/VoxelGrid pcl_manager" output="screen">
@@ -21,10 +21,10 @@
     <remap from="~output" to="/stereo/points2c"/>
     <rosparam>
             filter_field_name: x
-            filter_limit_min: -2.0
-            filter_limit_max: 15.0
-            filter_limit_negative: True
-            leaf_size: 0.3
+            filter_limit_min: -3.0
+            filter_limit_max: 3.0
+            filter_limit_negative: False
+            leaf_size: 0.2
           </rosparam>
   </node>
   <node pkg="nodelet" type="nodelet" name="voxel_grid_y" args="load pcl/VoxelGrid pcl_manager" output="screen">
@@ -35,7 +35,7 @@
             filter_limit_min: -4.0
             filter_limit_max: 1.0
             filter_limit_negative: False
-            leaf_size: 0.3
+            leaf_size: 0.2
       </rosparam>
   </node>
 
@@ -44,7 +44,7 @@
     <remap from="~input" to="/stereo/points2_voxelgrid"/>
     <remap from="~output" to="/stereo/points2d"/>
     <rosparam>
-            mean_k: 10
+            mean_k: 200
             stddev: 0.01
             negative: False
       </rosparam>

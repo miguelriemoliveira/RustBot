@@ -3,7 +3,7 @@
 <launch>
   <!--arguments-->
   <arg name="do_stereo" default="true"/>
-  <arg name="do_fusion" default="false"/>
+  <arg name="do_fusion" default="true"/>
   <arg name="do_slam" default="true"/>
   <arg name="do_gps" default="false"/>
   <arg name="do_accumulation" default="true"/>
@@ -54,11 +54,13 @@
         <param name="approximate_sync" value="true"/>
         <param name="queue_size" value="$(arg queue_size)"/>
 	<!--Melhorar visao stereo -->
+	<param name="prefilter_size" value="85"/>
 	<param name="disparity_range" value="32"/>
-	<param name="correlation_window_size" value="15"/>
-	<param name="speckle_size" value="1000"/>
+	<param name="correlation_window_size" value="5"/>
+        <param name="speckle_size" value="1000"/>
 	<param name="speckle_range" value="31"/>
 	<param name="fullDP" value="true"/>
+	<param name="uniqueness_ratio" value="10.0"/>
 
         <rosparam command="load" file="$(find rustbot_calibration)/calibration/stereo_image_proc.yaml"/>
       </node>
@@ -71,13 +73,13 @@
   </group>
   <!--SLAM launch files (several options to do slam. Andry's rtab, Miguel's rtab and Miguel's viso2)-->
   <group if="$(arg do_slam)">
-    <!--<include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_play_aux.launch">-->
-    <!--</include>-->
+    <!--<include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_play_aux.launch">
+    </include>-->
     <!--<include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_slam_rtabmapOdometryMapping.launch">-->
     <!--</include>-->
     <!--<include file="$(find rustbot_bringup)/launch/rtab.launch">-->
     <!--</include>-->
-	<group if="$(arg do_fusion)">
+        <group if="$(arg do_fusion)">
 	    <include file="$(find rustbot_bringup)/launch/viso2.launch">
 		</include>
         </group>
@@ -98,7 +100,7 @@
     </node>
   </group>
 
-  <!--  UFJF SECTION -->
+  <!-- UFJF SECTION -->
 
 <!--start the gimbal-->
   <group if="$(arg do_gimbal_motors)">
