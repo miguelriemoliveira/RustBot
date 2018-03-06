@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--Plays back a system bag file-->
+<launch>
+  <!--full path to the bag file-->
+  <arg name="bag" default="sev"/>
+  <arg name="local" default="~/Desktop"/>
+  <!--Parameters-->
+  <param name="/use_sim_time" value="true"/>
+  <!--uncompress images-->
+  <node pkg="image_transport" type="republish" name="republish_left" output="screen" args="compressed in:=/stereo/left/image_raw raw out:=/stereo/left/image_raw"/>
+  <node pkg="image_transport" type="republish" name="republish_right" output="screen" args="compressed in:=/stereo/right/image_raw raw out:=/stereo/right/image_raw"/>
+  <node pkg="image_transport" type="republish" name="republish_left_color" output="screen" args="compressed in:=/stereo/left/image_color raw out:=/stereo/left/image_color"/>
+  <node pkg="image_transport" type="republish" name="republish_right_color" output="screen" args="compressed in:=/stereo/right/image_color raw out:=/stereo/right/image_color"/>
+  <!--playback a bag file in visual mode
+  <node pkg="rqt_bag" type="rqt_bag" name="rqt_bag" output="screen" args=" $(arg bag)"/> -->
+  <!--playback a bag file-->
+  <!--<node pkg="rosbag" type="play" name="rosbag_play" output="screen" args=" $(arg bag) -l -s 30 -clock -r 1 -duration 12"/>-->
+  <node pkg="rosbag" type="play" name="rosbag_play" output="screen" args=" $(arg local)/$(arg bag).bag --clock -r 0.22"/>
+      
+</launch>
