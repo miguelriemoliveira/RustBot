@@ -13,7 +13,7 @@
 #include <pcl/features/normal_3d.h> // add normals to render in MART.exe
 
 // FIle to save
-std::string filename = "/tmp/output.ply";
+std::string filename = "~/Desktop/output.ply";
 // Define to simplify matters
 typedef pcl::PointXYZRGB PointT;
 typedef pcl::PointXYZRGBNormal Out;
