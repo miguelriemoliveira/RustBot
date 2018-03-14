@@ -13,14 +13,14 @@
 #include <pcl/features/normal_3d.h> // add normals to render in MART.exe
 
 // FIle to save
-std::string filename = "~/Desktop/output.ply";
+std::string filename;
 // Define to simplify matters
 typedef pcl::PointXYZRGB PointT;
 typedef pcl::PointXYZRGBNormal Out;
 
 void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
-  ROS_INFO("Receiving data to save......");
+  ROS_INFO("Recebendo dados para salvar......");
   // Declare the pointer to the received cloud
   pcl::PointCloud<PointT>::Ptr recv_cloud_ptr(new pcl::PointCloud<PointT>); // Allocate memory
 
@@ -38,7 +38,7 @@ void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
   // Output cloud to save
   pcl::PointCloud<Out>::Ptr output_cloud_ptr (new pcl::PointCloud<Out> ());
 
-  ROS_INFO("Computing normals......");
+  ROS_INFO("Calculando normais, aguarde um instante (o processo pode demorar)......");
   // Grab only coordinates from income cloud
   cloud_xyz_ptr->resize(recv_cloud_ptr->points.size()); // allocate memory space
   for(int i=0; i < recv_cloud_ptr->points.size(); i++){
@@ -53,12 +53,23 @@ void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
 
   // Concatenate both data from income cloud plus normals and save a ply file
   output_cloud_ptr->resize(recv_cloud_ptr->points.size()); // allocate memory
-  ROS_INFO("Concatenate the fields......");
+  ROS_INFO("Concatenando os campos......");
   pcl::concatenateFields(*recv_cloud_ptr, *normals_cloud_ptr, *output_cloud_ptr);
 
-  ROS_INFO("Now saving to file output.ply......");
+  ROS_INFO("Salvando o arquivo .ply na area de trabalho......");
+  // Ver o tempo para diferenciar bags gravadas automaticamente
+  time_t t = time(0);
+  struct tm * now = localtime( & t );
+  std::string year, month, day, hour, minutes;
+  year    = boost::lexical_cast<std::string>(now->tm_year + 1900);
+  month   = boost::lexical_cast<std::string>(now->tm_mon );
+  day     = boost::lexical_cast<std::string>(now->tm_mday);
+  hour    = boost::lexical_cast<std::string>(now->tm_hour);
+  minutes = boost::lexical_cast<std::string>(now->tm_min );
+  std::string date = "_" + year + "_" + month + "_" + day + "_" + hour + "h_" + minutes + "m";
+  filename = "/home/mrs/Desktop/pos_processo_em_"+date+".ply";
   pcl::io::savePLYFileASCII(filename, *output_cloud_ptr);
-  ROS_INFO("All safe and sound !!");
+  ROS_INFO("Tudo correto, conferir pelo arquivo na area de trabalho !!");
 
   // Kill the node after saving the ptcloud
   ros::shutdown();
@@ -70,7 +81,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "save_cloud");
   ros::NodeHandle nh;
 
-  ROS_INFO("We will save the data! DOnt worry...");
+  ROS_INFO("Iniciando o processo de salvar dados pos processados...");
 
   ros::Subscriber sub = nh.subscribe("/accumulated_point_cloud", 1000, savecloud_plus_normal_ply);
 
