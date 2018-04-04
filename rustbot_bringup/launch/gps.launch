@@ -5,7 +5,7 @@
   <arg name="gcs_url" default="udp://@localhost"/>
   <node name="mavros" pkg="mavros" type="mavros_node" output="screen">
     <param name="fcu_url" value="$(arg fcu_url)"/>
-    <param name="gcs_url" default="$(arg gcs_url)"/>
+    <param name="gcs_url" value="$(arg gcs_url)"/>
     <param name="~/global_position/tf/child_frame_id" value="odom_vehicle"/>
     <param name="~/imu/frame_id" value="imu_frame"/>
     <param name="~/global_position/tf/send" value="false"/>
