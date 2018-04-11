@@ -17,7 +17,7 @@
   <!--To launch a gui for tunning the stereo parameters-->
   <arg name="config_stereo" default="false"/>
   <!--The desired frames per second-->
-  <arg name="fps" default="6"/>
+  <arg name="fps" default="10"/>
   <!--Queue size for the stereo images. More queue size better the possibilities to sync, but more memory required-->
   <arg name="queue_size" default="50"/>
   <!--data fusion-->
