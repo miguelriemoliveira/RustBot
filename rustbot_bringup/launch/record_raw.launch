@@ -4,7 +4,7 @@
 <!--arguments-->
     <arg name="only_raw_data" default="false"/> <!--Whether or not to record only raw data-->
     <arg name="bag" default="sev"/>
-    <arg name="folder" default="/home/$(env USER)/Desktop">
+    <arg name="folder" default="/home/$(env USER)/Desktop"/>
 
     <param name="/use_sim_time" value="false"/>
 
