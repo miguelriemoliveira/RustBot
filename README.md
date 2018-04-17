@@ -214,7 +214,7 @@ Note that whenever your ssh tunnel will execute some visual interface applicatio
 Start the system without the stero processing
 
 ```bash
-roslaunch rustbot_bringup all.launch do_stereo:=false do_slam:=false do_gps:=false do_zmq_publish:=false
+roslaunch rustbot_bringup all.launch do_stereo:=false do_slam:=false do_gps:=false online_stereo:=true do_zmq_publish:=false
 ```
 
 then startup de calibration

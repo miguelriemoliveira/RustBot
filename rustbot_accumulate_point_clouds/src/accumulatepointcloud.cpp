@@ -13,8 +13,7 @@
 #include <pcl_ros/transforms.h>
 #include <pcl/filters/conditional_removal.h>
 
-#include <pcl/keypoints/harris_3d.h>
-#include <pcl/keypoints/harris_6d.h>
+#include <pcl/keypoints/iss_3d.h>
 #include <pcl/keypoints/sift_keypoint.h>
 #include <pcl/registration/correspondence_estimation.h>
 #include <pcl/registration/correspondence_rejection.h>
@@ -26,22 +25,24 @@
 #include <pcl/registration/transformation_validation.h>
 #include <pcl/features/fpfh.h>
 #include <pcl/features/pfh.h>
-
+#include <pcl/sample_consensus/ransac.h>
+#include <pcl/registration/correspondence_rejection_sample_consensus.h>
+#include <pcl/registration/correspondence_rejection_one_to_one.h>
+#include <pcl/registration/transformation_estimation_svd.h>
+#include <pcl/registration/transformation_estimation_svd_scale.h>
 
 //Definitions
 typedef pcl::PointXYZRGB PointT;
-//typedef pcl::PointNormal PS;
+typedef pcl::PFHSignature125 algorithm;
 
 //Global vars
 std::string filename  = "/tmp/output.pcd";
-//std::string filename2 = "/tmp/output.ply";
-//std::string filename3 = "/tmp/output_plus_normals.ply";
 pcl::PointCloud<PointT>::Ptr accumulated_cloud;
+pcl::PointCloud<PointT>::Ptr backup_compare; // compare features from last cloud
+pcl::PointCloud<PointT>::Ptr second;
+
 tf::TransformListener *p_listener;
 boost::shared_ptr<ros::Publisher> pub;
-
-// Para gravar em PLY
-//pcl::PointCloud<PS> output;
 
 pcl::PointCloud<PointT>::Ptr filter_color(pcl::PointCloud<PointT>::Ptr cloud_in){
 
@@ -90,7 +91,7 @@ pcl::PointCloud<pcl::PointNormal>::Ptr calculate_pointnormals(pcl::PointCloud<Po
 
   ne.setInputCloud(cloud_xyz_ptr);
   ne.setSearchMethod(tree_n);
-  ne.setRadiusSearch(0.9);
+  ne.setRadiusSearch(2);
   ne.compute(*cloud_normals);
   ROS_INFO("Retornando nuvem com normais calculadas!");
 
@@ -151,7 +152,7 @@ pcl::PointCloud<pcl::PointWithScale> calculate_sift(pcl::PointCloud<pcl::PointNo
 
 }
 
-pcl::PointCloud<pcl::PointWithScale> calculate_sift_from_rgb(pcl::PointCloud<PointT>::Ptr cloud_in){
+pcl::PointCloud<pcl::PointWithScale>::Ptr calculate_sift_from_rgb(pcl::PointCloud<PointT>::Ptr cloud_in){
 
   // Parameters for sift computation
   const float min_scale = 0.01f;
@@ -168,25 +169,58 @@ pcl::PointCloud<pcl::PointWithScale> calculate_sift_from_rgb(pcl::PointCloud<Poi
   sift.setMinimumContrast(min_contrast);
   sift.setInputCloud(cloud_in);
   sift.compute(result);
+  pcl::PointCloud<pcl::PointWithScale>::Ptr result_ptr (new pcl::PointCloud<pcl::PointWithScale>());
+  *result_ptr = result;
 
-  ROS_INFO("SIFT calculado com %d pontos!", result.points.size());
+  ROS_INFO("SIFT calculado com %d pontos!", result_ptr->points.size());
 
-  return result;
+  return result_ptr;
 
 }
 
-pcl::PointCloud<pcl::PFHSignature125>::Ptr calculate_descriptors(pcl::PointCloud<PointT>::Ptr cloud_in, pcl::PointCloud<pcl::Normal>::Ptr normals, pcl::PointCloud<pcl::PointWithScale>::Ptr kp, float feature_radius){
+pcl::PointCloud<pcl::PointXYZ>::Ptr calculate_keypoints(pcl::PointCloud<PointT>::Ptr cloud_in){
 
-  pcl::PointCloud<pcl::PFHSignature125>::Ptr descriptors(new pcl::PointCloud<pcl::PFHSignature125>);
-  pcl::PFHEstimation<PointT, pcl::Normal, pcl::PFHSignature125> pfh_est;
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>());
+  pcl::ISSKeypoint3D<pcl::PointXYZ, pcl::PointXYZ> iss;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr target_keypoints(new pcl::PointCloud<pcl::PointXYZ>());
+
+  iss.setSearchMethod(tree);
+  //iss.setSalientRadius(10 * model_resolution_1);
+  //iss.setNonMaxRadius(8 * model_resolution_1);
+  iss.setThreshold21(0.2);
+  iss.setThreshold32(0.2);
+  iss.setMinNeighbors(10);
+  iss.setNumberOfThreads(10);
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr temp(new pcl::PointCloud<pcl::PointXYZ>());
+  temp->resize(cloud_in->points.size());
+  for(int i=0; i<temp->size(); i++){
+    temp->points[i].x = cloud_in->points[i].x;
+    temp->points[i].y = cloud_in->points[i].y;
+    temp->points[i].z = cloud_in->points[i].z;
+  }
+
+  iss.setInputCloud(temp);
+  iss.compute((*target_keypoints));
+
+  return target_keypoints;
+
+}
+
+pcl::PointCloud<algorithm>::Ptr calculate_descriptors(pcl::PointCloud<PointT>::Ptr cloud_in, pcl::PointCloud<pcl::Normal>::Ptr normals, pcl::PointCloud<pcl::PointWithScale>::Ptr kp, float feature_radius){
+
+  pcl::PointCloud<algorithm>::Ptr descriptors(new pcl::PointCloud<algorithm>);
+  pcl::PFHEstimation<PointT, pcl::Normal, algorithm> pfh_est;
 
   pfh_est.setSearchMethod(pcl::search::KdTree<PointT>::Ptr(new pcl::search::KdTree<PointT>));
   pfh_est.setRadiusSearch(feature_radius);
 
   ROS_INFO("Extraindo features...");
-  pcl::PointCloud<PointT>::Ptr kp_rgb(new pcl::PointCloud<PointT>);
+  pcl::PointCloud<PointT>::Ptr kp_rgb(new pcl::PointCloud<PointT>());
   // Copy data to retain the keypoints
+//  ROS_INFO("111111111111111111111111111");
   pcl::copyPointCloud(*kp, *kp_rgb);
+//  ROS_INFO("222222222222222222222222222");
   // we set the surface to be searched as the whole cloud, but only search at the kp defines
   pfh_est.setSearchSurface(cloud_in);
   pfh_est.setInputNormals(normals);
@@ -194,40 +228,68 @@ pcl::PointCloud<pcl::PFHSignature125>::Ptr calculate_descriptors(pcl::PointCloud
   // Compute results
   pfh_est.compute(*descriptors);
 
+  ROS_INFO("Pontos no descritor: %d", descriptors->size());
+
   return descriptors;
 
 }
 
-pcl::CorrespondencesPtr correspondences_between_ptclouds(pcl::PointCloud<pcl::PFHSignature125>::Ptr src, pcl::PointCloud<pcl::PFHSignature125>::Ptr tgt){
+Eigen::Matrix4f tf_from_correspondences_between_ptclouds(pcl::PointCloud<algorithm>::Ptr src,
+                                                         pcl::PointCloud<algorithm>::Ptr tgt,
+                                                         pcl::PointCloud<pcl::PointWithScale>::Ptr src_kp,
+                                                         pcl::PointCloud<pcl::PointWithScale>::Ptr tgt_kp)
+{
 
   // Calculating correspondences
-  pcl::registration::CorrespondenceEstimation<pcl::PFHSignature125, pcl::PFHSignature125> est;
+  pcl::registration::CorrespondenceEstimation<algorithm, algorithm> est;
   pcl::CorrespondencesPtr cor(new pcl::Correspondences());
 
   est.setInputSource(src);
   est.setInputTarget(tgt);
   est.determineCorrespondences(*cor);
+  ROS_INFO("Obtendo melhor transformacao...");
+//  // Reject duplicates
+//  pcl::CorrespondencesPtr cor_no_dup (new pcl::Correspondences());
+//  pcl::registration::CorrespondenceRejectorOneToOne rej;
 
-  // Rejecting duplicates
+//  rej.setInputCorrespondences(cor);
+//  rej.getCorrespondences(*cor_no_dup);
 
+  // Rejecting outliers via ransac algorithm
+  pcl::registration::CorrespondenceRejectorSampleConsensus<pcl::PointWithScale> corr_rej_sac;
+  pcl::CorrespondencesPtr cor_ransac(new pcl::Correspondences());
+  corr_rej_sac.setInputSource(src_kp);
+  corr_rej_sac.setInputTarget(tgt_kp);
+  corr_rej_sac.setInlierThreshold(2.5);
+  corr_rej_sac.setMaximumIterations(1000);
+  corr_rej_sac.setRefineModel(false);
+  corr_rej_sac.setInputCorrespondences(cor);
+  corr_rej_sac.getCorrespondences(*cor_ransac);
+  Eigen::Matrix4f transf;
+  transf = corr_rej_sac.getBestTransformation();
+
+  //  pcl::registration::TransformationEstimationSVDScale<pcl::PointWithScale, pcl::PointWithScale> te;
+  //  te.estimateRigidTransformation(*src_kp, *tgt_kp, *cor_no_dup, transf);
+
+  ROS_INFO("Melhor transformacao obtida...");
+  return transf;
 
 }
-
-
 
 void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
   //declare variables
   pcl::PointCloud<PointT>::Ptr cloud;
   pcl::PointCloud<PointT>::Ptr cloud_transformed;
+  pcl::PointCloud<PointT>::Ptr cloud_adjust;
   pcl::PointCloud<PointT>::Ptr tmp_cloud;
   pcl::VoxelGrid<PointT> grid;
   sensor_msgs::PointCloud2 msg_out;
-
   //allocate objects for pointers
   cloud = (pcl::PointCloud<PointT>::Ptr) (new pcl::PointCloud<PointT>);
   cloud_transformed = (pcl::PointCloud<PointT>::Ptr) (new pcl::PointCloud<PointT>);
   tmp_cloud = (pcl::PointCloud<PointT>::Ptr) (new pcl::PointCloud<PointT>);
+  cloud_adjust = (pcl::PointCloud<PointT>::Ptr) (new pcl::PointCloud<PointT>);
 
   //Convert the ros message to pcl point cloud
   pcl::fromROSMsg (*msg, *cloud);
@@ -235,7 +297,6 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
   //Remove any NAN points in the cloud
   std::vector<int> indicesNAN;
   pcl::removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
-
   // Filter for color
 //  cloud = filter_color(cloud);
 
@@ -254,7 +315,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
     ROS_WARN("Cannot accumulate");
     return;
   }
-  ROS_INFO("Collected transforms (%0.3f secs)", (ros::Time::now() - tic).toSec());
+//  ROS_INFO("Collected transforms (%0.3f secs)", (ros::Time::now() - tic).toSec());
 
 
   //Transform point cloud using the transform obtained
@@ -262,24 +323,47 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
   tf::transformTFToEigen (trans, eigen_trf);
   pcl::transformPointCloud<PointT>(*cloud, *cloud_transformed, eigen_trf);
 
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /// From here on we have the pipeline to accumulate from cloud registrarion using features obtained, so we have better result ///
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  if(accumulated_cloud->points.size() < 3)
+  { // Here we have no cloud yet, first round
+    (*accumulated_cloud) += (*cloud_transformed);
+    backup_compare = cloud_transformed;
+  } else { // Now the actual pipeline
+    // Normals
+    pcl::PointCloud<pcl::Normal>::Ptr src_nor(new pcl::PointCloud<pcl::Normal>());
+    pcl::PointCloud<pcl::Normal>::Ptr tgt_nor(new pcl::PointCloud<pcl::Normal>());
+    src_nor = calculate_normals(cloud_transformed);
+    tgt_nor = calculate_normals(backup_compare);
+    // Keypoints
+    pcl::PointCloud<pcl::PointWithScale>::Ptr src_kp_sift (new pcl::PointCloud<pcl::PointWithScale>());
+    pcl::PointCloud<pcl::PointWithScale>::Ptr tgt_kp_sift (new pcl::PointCloud<pcl::PointWithScale>());
+    src_kp_sift = calculate_sift_from_rgb(cloud_transformed);
+    tgt_kp_sift = calculate_sift_from_rgb(backup_compare);
+    // Features (descriptors)
+    pcl::PointCloud<algorithm>::Ptr src_features (new pcl::PointCloud<algorithm>());
+    pcl::PointCloud<algorithm>::Ptr tgt_features (new pcl::PointCloud<algorithm>());
+    src_features = calculate_descriptors(cloud_transformed, src_nor, src_kp_sift, 0.05);
+    tgt_features = calculate_descriptors(backup_compare, tgt_nor, tgt_kp_sift, 0.05);
+    // Compare features and transform cloud
+    Eigen::Matrix4f transf = tf_from_correspondences_between_ptclouds(src_features, tgt_features, src_kp_sift, tgt_kp_sift);
+    // Transform cloud, accumulate it and renew backup
+    pcl::transformPointCloud<PointT>(*cloud_transformed, *cloud_adjust, transf);
+    (*accumulated_cloud) += (*cloud_adjust);
+    backup_compare = cloud_adjust;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   //Filter the transformed cloud before accumulate with voxel grid
   //    *tmp_cloud = *cloud_transformed;
   //    grid.setInputCloud(tmp_cloud);
   //    grid.setLeafSize(0.05f, 0.05f, 0.05f);
   //    grid.filter(*cloud_transformed);
   //Accumulate the point cloud using the += operator
-  pcl::PointCloud<pcl::Normal>::Ptr nor(new pcl::PointCloud<pcl::Normal>);
-  nor = calculate_normals(cloud_transformed);
   ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
-  (*accumulated_cloud) += (*cloud_transformed);
-
-  //Voxel grid filter the accumulated cloud
-  //    *tmp_cloud = *accumulated_cloud;
-  //    grid.setInputCloud(tmp_cloud);
-  //    grid.setLeafSize (0.2f, 0.2f, 0.2f);
-  //    grid.setLeafSize (0.05f, 0.05f, 0.05f);
-  //    grid.filter (*accumulated_cloud);
-  ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
+//  (*accumulated_cloud) += (*cloud_transformed);
 
   //Conver the pcl point cloud to ros msg and publish
   pcl::toROSMsg (*accumulated_cloud, msg_out);
@@ -289,6 +373,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
   cloud.reset();
   tmp_cloud.reset();
   cloud_transformed.reset();
+  cloud_adjust.reset();
 }
 
 
