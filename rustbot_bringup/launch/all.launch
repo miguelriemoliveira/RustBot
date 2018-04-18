@@ -11,9 +11,10 @@
   <arg name="do_gimbal_motors" default="false"/>
   <arg name="do_auto_track" default="false"/>
   <arg name="do_supercooljoy_gimbal" default="false"/>
+  <arg name="mac_address_termica" default="00:11:1c:01:7c:80"/>
 
   <!--This is for running the system computing the stereo (and the slam) from played back offline data-->
-  <arg name="online_stereo" default="false"/>
+  <arg name="online_stereo" default="true"/>
   <!--To launch a gui for tunning the stereo parameters-->
   <arg name="config_stereo" default="false"/>
   <!--The desired frames per second-->
@@ -101,6 +102,13 @@
     <!--SEV zmq+protobuf publisher-->
     <node name="sev_publisher" pkg="rustbot_translation" type="sev_publisher.py" output="screen">
     </node>
+  </group>
+
+<!-- TERMICA -->
+  <group ns="termica">
+      <include file="$(find rustbot_bringup)/launch/termica.launch">
+        <arg name="mac_address" value="$(arg mac_address_termica)"/>
+      </include>
   </group>
 
   <!-- UFJF SECTION -->
