@@ -36,9 +36,9 @@
     <param name="base_link_frame_id" value="base_link"/>
     <param name="approximate_sync" value="true"/>
     <param name="publish_tf" value="true"/>
-    <param name="queue_size" value="5"/>
+    <param name="queue_size" value="15"/>
     <param name="ref_frame_change_method" value="1"/>
-    <param name="inlier_threshold" value="5.5"/> 
+    <param name="inlier_threshold" value="4.5"/>
     <param name="odom_frame_id" value="odom"/>
     <param name="base_link_frame_id" value="base_link"/>
   </node>
