@@ -123,7 +123,7 @@ pcl::PointCloud<pcl::Normal>::Ptr calculate_normals(pcl::PointCloud<PointT>::Ptr
 
   ne.setInputCloud(cloud_xyz_ptr);
   ne.setSearchMethod(tree_n);
-  ne.setRadiusSearch(2);
+  ne.setRadiusSearch(100);
   ne.compute(*cloud_normals);
 //  ROS_INFO("Retornando nuvem com normais calculadas!");
 
@@ -149,7 +149,7 @@ pcl::PointCloud<pcl::PointWithScale> calculate_sift(pcl::PointCloud<pcl::PointNo
   sift.setInputCloud(normals);
   sift.compute(result);
 
-  ROS_INFO("SIFT calculado com %d pontos!", result.points.size());
+//  ROS_INFO("SIFT calculado com %d pontos!", result.points.size());
 
   return result;
 
@@ -175,7 +175,7 @@ pcl::PointCloud<pcl::PointWithScale>::Ptr calculate_sift_from_rgb(pcl::PointClou
   pcl::PointCloud<pcl::PointWithScale>::Ptr result_ptr (new pcl::PointCloud<pcl::PointWithScale>());
   *result_ptr = result;
 
-  ROS_INFO("SIFT calculado com %d pontos!", result_ptr->points.size());
+//  ROS_INFO("SIFT calculado com %d pontos!", result_ptr->points.size());
 
   return result_ptr;
 
@@ -229,7 +229,7 @@ pcl::PointCloud<algorithm>::Ptr calculate_descriptors(pcl::PointCloud<PointT>::P
   // Compute results
   pfh_est.compute(*descriptors);
 
-  ROS_INFO("Pontos no descritor: %d", descriptors->size());
+//  ROS_INFO("Pontos no descritor: %d", descriptors->size());
 
   return descriptors;
 
@@ -273,6 +273,36 @@ Eigen::Matrix4f tf_from_correspondences_between_ptclouds(pcl::PointCloud<algorit
 
   ROS_INFO("Melhor transformacao obtida...");
   return transf;
+
+}
+
+bool hasnan(const Eigen::Matrix4f& mat)
+{
+
+  bool flag = false;
+  for(int i=0; i<4; i++){
+    for(int j=0; j<4; j++){
+      if(std::isnan(mat(i, j)) || std::isinf(mat(i, j)) || !std::isfinite(mat(i, j))){
+        ROS_INFO("matriz: %.2f", mat(i,j));
+        flag = true;
+      }
+    }
+  }
+
+  return flag;
+
+}
+
+pcl::PointCloud<pcl::PointXYZ>::Ptr simplify_cloud_xyz(pcl::PointCloud<PointT>::Ptr cloud_in){
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out (new pcl::PointCloud<pcl::PointXYZ>());
+  cloud_out->resize(cloud_in->size());
+  for(int i=0; i<cloud_in->points.size(); i++){
+    cloud_out->points[i].x = cloud_in->points[i].x;
+    cloud_out->points[i].y = cloud_in->points[i].y;
+    cloud_out->points[i].z = cloud_in->points[i].z;
+  }
+  return cloud_out;
 
 }
 
@@ -349,19 +379,18 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
       pcl::removeNaNNormalsFromPointCloud(*tgt_rgb_nor, *tgt_rgb_nor, indicesNAN);
       // Calculate transform after alignment
       pcl::IterativeClosestPointWithNormals<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal> icp;
+      icp.setMaximumIterations(1); // So it doesnt take too long
       icp.setInputSource(src_rgb_nor);
       icp.setInputTarget(tgt_rgb_nor);
       // Final result, passing eigen_trf as first guess, which seems to be actually close enough
       pcl::PointCloud<pcl::PointXYZRGBNormal> cloud_aligned;
       icp.align(cloud_aligned, temp_trans);
-      if(cloud_aligned.is_dense){
-        Eigen::Matrix4f transf_icp = icp.getFinalTransformation();
-        ROS_INFO("Convergimos no metodo? %d", icp.hasConverged());
-        // Transform the source cloud so we add afterwards and renew backup
+      Eigen::Matrix4f transf_icp = icp.getFinalTransformation();
+      // Transform the source cloud so we add afterwards and renew backup
+      if(icp.hasConverged())
         pcl::transformPointCloud<PointT>(*cloud_transformed, *cloud_adjust, transf_icp);
-      } else {
+      else
         cloud_adjust = cloud_transformed;
-      }
       (*accumulated_cloud) += (*cloud_adjust);
       backup_compare = cloud_adjust;
     } else {
@@ -430,10 +459,10 @@ int main (int argc, char** argv)
 
   //Initialize the point cloud publisher
   pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
-  *pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 1);
+  *pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 100);
 
   // Create a ROS subscriber for the input point cloud
-  ros::Subscriber sub_target = nh.subscribe ("input", 10, cloud_open_target);
+  ros::Subscriber sub_target = nh.subscribe ("input", 500, cloud_open_target);
 
   //Loop infinitly
   while (ros::ok())
