@@ -349,74 +349,76 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
 //  ROS_INFO("Collected transforms (%0.3f secs)", (ros::Time::now() - tic).toSec());
 
 
-  //Transform point cloud using the transform obtained
+//  Transform point cloud using the transform obtained
   Eigen::Affine3d eigen_trf;
   tf::transformTFToEigen (trans, eigen_trf);
   pcl::transformPointCloud<PointT>(*cloud, *cloud_transformed, eigen_trf);
   Eigen::Matrix4f temp_trans = eigen_trf.cast<float>().matrix();
 
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /// From here on we have the pipeline to accumulate from cloud registrarion using features obtained, so we have better result ///
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  if(accumulated_cloud->points.size() < 3)
-  { // Here we have no cloud yet, first round
-    (*accumulated_cloud) += (*cloud_transformed);
-    backup_compare = cloud_transformed;
-  } else { // Now the actual pipeline
-    if(use_icp){ // Try to use icp
-      // Get normals and concatenate
-      pcl::PointCloud<pcl::Normal>::Ptr src_nor(new pcl::PointCloud<pcl::Normal>());
-      pcl::PointCloud<pcl::Normal>::Ptr tgt_nor(new pcl::PointCloud<pcl::Normal>());
-      src_nor = calculate_normals(cloud_transformed);
-      tgt_nor = calculate_normals(backup_compare);
-      pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr src_rgb_nor(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
-      pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr tgt_rgb_nor(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
-      pcl::concatenateFields(*cloud_transformed, *src_nor, *src_rgb_nor);
-      pcl::concatenateFields(*backup_compare, *tgt_nor, *tgt_rgb_nor);
-      pcl::removeNaNFromPointCloud(*src_rgb_nor, *src_rgb_nor, indicesNAN);
-      pcl::removeNaNFromPointCloud(*tgt_rgb_nor, *tgt_rgb_nor, indicesNAN);
-      pcl::removeNaNNormalsFromPointCloud(*src_rgb_nor, *src_rgb_nor, indicesNAN);
-      pcl::removeNaNNormalsFromPointCloud(*tgt_rgb_nor, *tgt_rgb_nor, indicesNAN);
-      // Calculate transform after alignment
-      pcl::IterativeClosestPointWithNormals<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal> icp;
-      icp.setMaximumIterations(1); // So it doesnt take too long
-      icp.setInputSource(src_rgb_nor);
-      icp.setInputTarget(tgt_rgb_nor);
-      // Final result, passing eigen_trf as first guess, which seems to be actually close enough
-      pcl::PointCloud<pcl::PointXYZRGBNormal> cloud_aligned;
-      icp.align(cloud_aligned, temp_trans);
-      Eigen::Matrix4f transf_icp = icp.getFinalTransformation();
-      // Transform the source cloud so we add afterwards and renew backup
-      if(icp.hasConverged())
-        pcl::transformPointCloud<PointT>(*cloud_transformed, *cloud_adjust, transf_icp);
-      else
-        cloud_adjust = cloud_transformed;
-      (*accumulated_cloud) += (*cloud_adjust);
-      backup_compare = cloud_adjust;
-    } else {
-      // Normals
-      pcl::PointCloud<pcl::Normal>::Ptr src_nor(new pcl::PointCloud<pcl::Normal>());
-      pcl::PointCloud<pcl::Normal>::Ptr tgt_nor(new pcl::PointCloud<pcl::Normal>());
-      src_nor = calculate_normals(cloud_transformed);
-      tgt_nor = calculate_normals(backup_compare);
-      // Keypoints
-      pcl::PointCloud<pcl::PointWithScale>::Ptr src_kp_sift (new pcl::PointCloud<pcl::PointWithScale>());
-      pcl::PointCloud<pcl::PointWithScale>::Ptr tgt_kp_sift (new pcl::PointCloud<pcl::PointWithScale>());
-      src_kp_sift = calculate_sift_from_rgb(cloud_transformed);
-      tgt_kp_sift = calculate_sift_from_rgb(backup_compare);
-      // Features (descriptors)
-      pcl::PointCloud<algorithm>::Ptr src_features (new pcl::PointCloud<algorithm>());
-      pcl::PointCloud<algorithm>::Ptr tgt_features (new pcl::PointCloud<algorithm>());
-      src_features = calculate_descriptors(cloud_transformed, src_nor, src_kp_sift, 0.05);
-      tgt_features = calculate_descriptors(backup_compare, tgt_nor, tgt_kp_sift, 0.05);
-      // Compare features and transform cloud
-      Eigen::Matrix4f transf = tf_from_correspondences_between_ptclouds(src_features, tgt_features, src_kp_sift, tgt_kp_sift);
-      // Transform cloud, accumulate it and renew backup
-      pcl::transformPointCloud<PointT>(*cloud_transformed, *cloud_adjust, transf);
-      (*accumulated_cloud) += (*cloud_adjust);
-      backup_compare = cloud_adjust;
-    }
-  }
+//  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  /// From here on we have the pipeline to accumulate from cloud registrarion using features obtained, so we have better result ///
+//  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  if(accumulated_cloud->points.size() < 3)
+//  { // Here we have no cloud yet, first round
+//    (*accumulated_cloud) += (*cloud_transformed);
+//    backup_compare = cloud_transformed;
+//  } else { // Now the actual pipeline
+//    if(use_icp){ // Try to use icp
+//      // Get normals and concatenate
+//      pcl::PointCloud<pcl::Normal>::Ptr src_nor(new pcl::PointCloud<pcl::Normal>());
+//      pcl::PointCloud<pcl::Normal>::Ptr tgt_nor(new pcl::PointCloud<pcl::Normal>());
+//      src_nor = calculate_normals(cloud_transformed);
+//      tgt_nor = calculate_normals(backup_compare);
+//      pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr src_rgb_nor(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+//      pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr tgt_rgb_nor(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+//      pcl::concatenateFields(*cloud_transformed, *src_nor, *src_rgb_nor);
+//      pcl::concatenateFields(*backup_compare, *tgt_nor, *tgt_rgb_nor);
+//      pcl::removeNaNFromPointCloud(*src_rgb_nor, *src_rgb_nor, indicesNAN);
+//      pcl::removeNaNFromPointCloud(*tgt_rgb_nor, *tgt_rgb_nor, indicesNAN);
+//      pcl::removeNaNNormalsFromPointCloud(*src_rgb_nor, *src_rgb_nor, indicesNAN);
+//      pcl::removeNaNNormalsFromPointCloud(*tgt_rgb_nor, *tgt_rgb_nor, indicesNAN);
+//      // Calculate transform after alignment
+//      pcl::IterativeClosestPointWithNormals<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal> icp;
+//      icp.setMaximumIterations(100); // So it doesnt take too long
+//      icp.setMaxCorrespondenceDistance(0.5); // So it doesnt go looking all around
+//      icp.setInputSource(src_rgb_nor);
+//      icp.setInputTarget(tgt_rgb_nor);
+//      // Final result, passing eigen_trf as first guess, which seems to be actually close enough
+//      pcl::PointCloud<pcl::PointXYZRGBNormal> cloud_aligned;
+//      icp.align(cloud_aligned);
+//      ROS_INFO("Fitness score: %.2f", icp.getFitnessScore());
+//      Eigen::Matrix4f transf_icp = icp.getFinalTransformation();
+//      // Transform the source cloud so we add afterwards and renew backup
+//      if(icp.hasConverged())
+//        pcl::transformPointCloud<PointT>(*cloud, *cloud_adjust, transf_icp);
+//      else
+//        cloud_adjust = cloud_transformed;
+//      (*accumulated_cloud) += (*cloud_adjust);
+//      backup_compare = cloud_adjust;
+//    } else {
+//      // Normals
+//      pcl::PointCloud<pcl::Normal>::Ptr src_nor(new pcl::PointCloud<pcl::Normal>());
+//      pcl::PointCloud<pcl::Normal>::Ptr tgt_nor(new pcl::PointCloud<pcl::Normal>());
+//      src_nor = calculate_normals(cloud_transformed);
+//      tgt_nor = calculate_normals(backup_compare);
+//      // Keypoints
+//      pcl::PointCloud<pcl::PointWithScale>::Ptr src_kp_sift (new pcl::PointCloud<pcl::PointWithScale>());
+//      pcl::PointCloud<pcl::PointWithScale>::Ptr tgt_kp_sift (new pcl::PointCloud<pcl::PointWithScale>());
+//      src_kp_sift = calculate_sift_from_rgb(cloud_transformed);
+//      tgt_kp_sift = calculate_sift_from_rgb(backup_compare);
+//      // Features (descriptors)
+//      pcl::PointCloud<algorithm>::Ptr src_features (new pcl::PointCloud<algorithm>());
+//      pcl::PointCloud<algorithm>::Ptr tgt_features (new pcl::PointCloud<algorithm>());
+//      src_features = calculate_descriptors(cloud_transformed, src_nor, src_kp_sift, 0.05);
+//      tgt_features = calculate_descriptors(backup_compare, tgt_nor, tgt_kp_sift, 0.05);
+//      // Compare features and transform cloud
+//      Eigen::Matrix4f transf = tf_from_correspondences_between_ptclouds(src_features, tgt_features, src_kp_sift, tgt_kp_sift);
+//      // Transform cloud, accumulate it and renew backup
+//      pcl::transformPointCloud<PointT>(*cloud_transformed, *cloud_adjust, transf);
+//      (*accumulated_cloud) += (*cloud_adjust);
+//      backup_compare = cloud_adjust;
+//    }
+//  }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -428,7 +430,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
   //Accumulate the point cloud using the += operator
   ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
   ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
-//  (*accumulated_cloud) += (*cloud_transformed);
+  (*accumulated_cloud) += (*cloud_transformed);
 
   //Conver the pcl point cloud to ros msg and publish
   pcl::toROSMsg (*accumulated_cloud, msg_out);

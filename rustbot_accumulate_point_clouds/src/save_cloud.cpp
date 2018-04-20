@@ -67,7 +67,7 @@ void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
   hour    = boost::lexical_cast<std::string>(now->tm_hour);
   minutes = boost::lexical_cast<std::string>(now->tm_min );
   std::string date = "_" + year + "_" + month + "_" + day + "_" + hour + "h_" + minutes + "m";
-  filename = "$HOME/Desktop/pos_processo_em_"+date;
+  filename = "/home/mrs/Desktop/pos_processo_em"+date+".ply";
   pcl::io::savePLYFileASCII(filename, *output_cloud_ptr);
   ROS_INFO("Tudo correto, conferir pelo arquivo na area de trabalho !!");
 
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 
   ROS_INFO("Iniciando o processo de salvar dados pos processados...");
 
-  ros::Subscriber sub = nh.subscribe("/accumulated_point_cloud", 1000, savecloud_plus_normal_ply);
+  ros::Subscriber sub = nh.subscribe("/accumulated_point_cloud", 100, savecloud_plus_normal_ply);
 
   ros::spin();
 
