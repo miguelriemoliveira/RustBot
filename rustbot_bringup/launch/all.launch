@@ -12,6 +12,7 @@
   <arg name="do_auto_track" default="false"/>
   <arg name="do_supercooljoy_gimbal" default="false"/>
   <arg name="mac_address_termica" default="00:11:1c:01:7c:80"/>
+  <arg name="termica_url" default="file:///home/mrs/mrs_ws/src/RUST/RustBot/rustbot_calibration/calibration/termica.yaml"/>
 
   <!--This is for running the system computing the stereo (and the slam) from played back offline data-->
   <arg name="online_stereo" default="true"/>
@@ -108,6 +109,7 @@
   <group ns="termica">
       <include file="$(find rustbot_bringup)/launch/termica.launch">
         <arg name="mac_address" value="$(arg mac_address_termica)"/>
+	<arg name="calib_url"   value="$(arg termica_url)"/>
       </include>
   </group>
 
