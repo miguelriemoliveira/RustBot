@@ -18,8 +18,10 @@
 #include <pcl/keypoints/iss_3d.h>
 #include <pcl/keypoints/sift_keypoint.h>
 #include <pcl/registration/correspondence_estimation.h>
+#include <pcl/registration/correspondence_estimation_backprojection.h>
 #include <pcl/registration/correspondence_rejection.h>
 #include <pcl/registration/correspondence_rejection_surface_normal.h>
+#include <pcl/registration/correspondence_rejection_median_distance.h>
 #include <pcl/registration/registration.h>
 #include <pcl/registration/sample_consensus_prerejective.h>
 #include <pcl/registration/transformation_estimation.h>
@@ -35,6 +37,8 @@
 #include <pcl/registration/icp.h>
 #include <pcl/registration/icp_nl.h>
 
+#include <pcl/visualization/pcl_visualizer.h>
+
 //Definitions
 typedef pcl::PointXYZRGB PointT;
 
@@ -43,6 +47,10 @@ pcl::PointCloud<PointT>::Ptr accumulated_cloud (new pcl::PointCloud<PointT>());
 pcl::PointCloud<PointT>::Ptr backup_compare (new pcl::PointCloud<PointT>()); // compare features from last cloud
 
 boost::shared_ptr<ros::Publisher> pub;
+
+boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_all (new pcl::visualization::PCLVisualizer ("all correspondences"));
+boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_rej (new pcl::visualization::PCLVisualizer ("filter correspondences"));
+boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_fim (new pcl::visualization::PCLVisualizer ("matched"));
 
 bool use_icp = false; // Here to try simple icp instead of whole feature process
 float lf = 0.05f; // Leaf size for voxel grid
@@ -101,6 +109,134 @@ void remove_outlier(pcl::PointCloud<PointT>::Ptr in, float mean, float deviation
   sor.filter(*in);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void calculate_pointnormals(pcl::PointCloud<PointT>::Ptr cloud_in, int k, pcl::PointCloud<pcl::PointNormal>::Ptr cloud_pointnormals){
+
+  ROS_INFO("Extraindo coordenadas...");
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz_ptr (new pcl::PointCloud<pcl::PointXYZ>() ); // Gather only pose so can compute normals
+  for(int i=0; i < cloud_in->points.size(); i++){
+    cloud_xyz_ptr->points[i].x = cloud_in->points[i].x;
+    cloud_xyz_ptr->points[i].y = cloud_in->points[i].y;
+    cloud_xyz_ptr->points[i].z = cloud_in->points[i].z;
+  }
+  ROS_INFO("Calculando normais.......");
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree_n(new pcl::search::KdTree<pcl::PointXYZ>());
+
+  ne.setInputCloud(cloud_xyz_ptr);
+  ne.setSearchMethod(tree_n);
+  ne.setKSearch(k);
+  ne.compute(*cloud_normals);
+
+  pcl::concatenateFields(*cloud_xyz_ptr, *cloud_normals, *cloud_pointnormals);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void calculate_normals(pcl::PointCloud<PointT>::Ptr cloud_in, int k, pcl::PointCloud<pcl::Normal>::Ptr cloud_normals){
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz_ptr (new pcl::PointCloud<pcl::PointXYZ>()); // Gather only pose so can compute normals
+  cloud_xyz_ptr->resize(cloud_in->points.size()); // allocate memory space
+  ROS_INFO("a");
+  ROS_INFO("size: %d", cloud_in->points.size());
+  for(int i=0; i < cloud_in->points.size(); i++){
+    cloud_xyz_ptr->points[i].x = cloud_in->points[i].x;
+    cloud_xyz_ptr->points[i].y = cloud_in->points[i].y;
+    cloud_xyz_ptr->points[i].z = cloud_in->points[i].z;
+  }
+  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree_n(new pcl::search::KdTree<pcl::PointXYZ>());
+ROS_INFO("b");
+  ne.setInputCloud(cloud_xyz_ptr);
+  ne.setSearchMethod(tree_n);
+  ne.setKSearch(k);
+  ROS_INFO("c");
+  ne.compute(*cloud_normals);
+  ROS_INFO("d");
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void calculate_xyzrgbnormals(pcl::PointCloud<PointT>::Ptr cloud_in, int k, pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud_xyzrgbnormals){
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz_ptr (new pcl::PointCloud<pcl::PointXYZ>()); // Gather only pose so can compute normals
+  cloud_xyz_ptr->resize(cloud_in->points.size()); // allocate memory space
+  for(int i=0; i < cloud_in->points.size(); i++){
+    cloud_xyz_ptr->points[i].x = cloud_in->points[i].x;
+    cloud_xyz_ptr->points[i].y = cloud_in->points[i].y;
+    cloud_xyz_ptr->points[i].z = cloud_in->points[i].z;
+  }
+  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree_n(new pcl::search::KdTree<pcl::PointXYZ>());
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>());
+  cloud_normals->resize(cloud_in->points.size()); // allocate memory space
+
+  ne.setInputCloud(cloud_xyz_ptr);
+  ne.setSearchMethod(tree_n);
+  ne.setKSearch(k);
+  ne.compute(*cloud_normals);
+
+  pcl::concatenateFields(*cloud_in, *cloud_normals, *cloud_xyzrgbnormals);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void findCorrespondences (const pcl::PointCloud<PointT>::Ptr src,
+                          const pcl::PointCloud<PointT>::Ptr tgt,
+                          const pcl::PointCloud<pcl::Normal>::Ptr src_normal,
+                          const pcl::PointCloud<pcl::Normal>::Ptr tgt_normal,
+                          pcl::CorrespondencesPtr all_correspondences)
+{
+  //CorrespondenceEstimationNormalShooting<PointT, PointT, PointT> est;
+  //CorrespondenceEstimation<PointT, PointT> est;
+  pcl::registration::CorrespondenceEstimationBackProjection<PointT, PointT, pcl::Normal> est;
+  est.setInputSource(src);
+  est.setInputTarget(tgt);
+
+  est.setSourceNormals(src_normal);
+  est.setTargetNormals(tgt_normal);
+  est.setKSearch(50);
+  est.determineCorrespondences(*all_correspondences);
+  //est.determineReciprocalCorrespondences (all_correspondences);
+  ROS_INFO("correspondencias: [%d]", all_correspondences->size());
+
+  pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_src(src);
+  pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_tgt(tgt);
+  vis_all->removePointCloud("src");
+  vis_all->addPointCloud<PointT>(src, rgb_src, "src");
+  vis_all->removePointCloud("tgt");
+  vis_all->addPointCloud<PointT>(tgt, rgb_tgt, "tgt");
+//  if(!vis_all->updatePointCloud<PointT>(src, "src")) vis_all->addPointCloud<PointT>(src, rgb_src, "src");
+//  vis_all->resetCameraViewpoint("src");
+//  if(!vis_all->updatePointCloud<PointT>(tgt, "tgt")) vis_all->addPointCloud<PointT>(tgt, rgb_tgt, "tgt");
+  if(!vis_all->updateCorrespondences<PointT>(src, tgt, *all_correspondences, 0))
+    vis_all->addCorrespondences<PointT>(src, tgt, *all_correspondences, 0, "correspondences");
+  vis_all->spinOnce();
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void
+rejectBadCorrespondences (const pcl::CorrespondencesPtr all_correspondences,
+                          const pcl::PointCloud<PointT>::Ptr src,
+                          const pcl::PointCloud<PointT>::Ptr tgt,
+                          pcl::CorrespondencesPtr remaining_correspondences)
+{
+  pcl::registration::CorrespondenceRejectorMedianDistance rej;
+  rej.setMedianFactor (8.79241104);
+  rej.setInputCorrespondences (*all_correspondences);
+
+  rej.getCorrespondences (*remaining_correspondences);
+  return;
+
+  CorrespondencesPtr remaining_correspondences_temp (new Correspondences);
+  rej.getCorrespondences (*remaining_correspondences_temp);
+  PCL_DEBUG ("[rejectBadCorrespondences] Number of correspondences remaining after rejection: %d\n", remaining_correspondences_temp->size ());
+
+  // Reject if the angle between the normals is really off
+  CorrespondenceRejectorSurfaceNormal rej_normals;
+  rej_normals.setThreshold (acos (deg2rad (45.0)));
+  rej_normals.initializeDataContainer<PointT, PointT> ();
+  rej_normals.setInputCloud<PointT> (src);
+  rej_normals.setInputNormals<PointT, PointT> (src);
+  rej_normals.setInputTarget<PointT> (tgt);
+  rej_normals.setTargetNormals<PointT, PointT> (tgt);
+  rej_normals.setInputCorrespondences (remaining_correspondences_temp);
+  rej_normals.getCorrespondences (remaining_correspondences);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief Here we have the function where we accumulate using the best technique to our knowledge
 ///
 void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -121,16 +257,16 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
   pcl::removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
 
   // Filter for outliers
-  remove_outlier(cloud, 30, 0.1);
+  remove_outlier(cloud, 20, 0.1);
 
   // Filter for color
-//  cloud = filter_color(cloud);
+  //  cloud = filter_color(cloud);
 
   // Filter for region - PassThrough
-//  passthrough(cloud, "z",  0, 30);
-//  passthrough(cloud, "x", -3,  3);
-//  passthrough(cloud, "y", -4,  4);
-
+  passthrough(cloud, "z",  0, 20);
+  //  passthrough(cloud, "x", -3,  3);
+  //  passthrough(cloud, "y", -4,  4);
+ROS_INFO("2");
   ros::Time t = msg->header.stamp;
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,11 +277,36 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
     *backup_compare = *cloud;
     *tmp_cloud = *cloud;
     grid.setInputCloud(tmp_cloud);
-    grid.setLeafSize(0.2f, 0.2f, 0.2f);
+    grid.setLeafSize(lf, lf, lf);
     grid.filter(*tmp_cloud);
     (*accumulated_cloud) = (*tmp_cloud);
+    ROS_INFO("3");
   } else { // Now the actual pipeline
-     ROS_INFO("Implement");
+    ROS_INFO("4");
+    // Calculate all possible clouds with normals - avoid pointnormal so dont lose data
+    pcl::PointCloud<pcl::Normal>::Ptr src_normal (new pcl::PointCloud<pcl::Normal>());
+    pcl::PointCloud<pcl::Normal>::Ptr tgt_normal (new pcl::PointCloud<pcl::Normal>());
+    ROS_INFO("5");
+    calculate_normals(cloud, 5, src_normal);
+    ROS_INFO("6");
+    calculate_normals(backup_compare, 5, tgt_normal);
+    ROS_INFO("7");
+//    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr src_xyzrgbnormal (new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+//    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr tgt_xyzrgbnormal (new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+//    ROS_INFO("8");
+//    calculate_xyzrgbnormals(cloud, 5, src_xyzrgbnormal);
+//    ROS_INFO("9");
+//    calculate_xyzrgbnormals(backup_compare, 5, tgt_xyzrgbnormal);
+    // Determine correspondences and visualize
+    pcl::CorrespondencesPtr correspondences_raw (new pcl::Correspondences());
+    findCorrespondences(cloud, backup_compare, src_normal, tgt_normal, correspondences_raw);
+    // Pass the entities to the next iteration
+    *backup_compare = *cloud;
+    *tmp_cloud = *cloud;
+    grid.setInputCloud(tmp_cloud);
+    grid.setLeafSize(lf, lf, lf);
+    grid.filter(*tmp_cloud);
+    (*accumulated_cloud) += (*tmp_cloud);
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,34 +320,45 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
 
   cloud.reset();
   tmp_cloud.reset();
-  cloud_transformed.reset();
-  cloud_adjust.reset();
 }
 
 int main(int argc, char **argv)
 {
   // Initialize ROS
-    ros::init (argc, argv, "accumulatepointcloud");
-    ros::NodeHandle nh;
+  ros::init (argc, argv, "accumulatepointcloud");
+  ros::NodeHandle nh;
 
-    //Initialize accumulated cloud variable
-    accumulated_cloud = (pcl::PointCloud<PointT>::Ptr) new pcl::PointCloud<PointT>();
-    accumulated_cloud->header.frame_id = ros::names::remap("/map");
+  //Initialize accumulated cloud variable
+  accumulated_cloud = (pcl::PointCloud<PointT>::Ptr) new pcl::PointCloud<PointT>();
+  accumulated_cloud->header.frame_id = ros::names::remap("/map");
 
-    //Initialize the point cloud publisher
-    pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
-    *pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 100);
+  //Initialize the point cloud publisher
+  pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
+  *pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 100);
 
-    // Create a ROS subscriber for the input point cloud
-    ros::Subscriber sub_target = nh.subscribe ("input", 500, cloud_accumulate);
+  // Create a ROS subscriber for the input point cloud
+  ros::Subscriber sub_target = nh.subscribe ("input", 500, cloud_accumulate);
+  ROS_INFO("1");
+  // Adjust visualizers
+  vis_all->setBackgroundColor(0, 0, 0);
+//  vis_rej->setBackgroundColor(0, 0, 0);
+//  vis_fim->setBackgroundColor(0, 0, 0);
 
-    //Loop infinitly
-    while (ros::ok())
-    {
-      // Spin
-      ros::spinOnce();
-    }
+  vis_all->addCoordinateSystem (1.0);
+//  vis_rej->addCoordinateSystem (1.0);
+//  vis_fim->addCoordinateSystem (1.0);
 
-    return 0;
+  vis_all->initCameraParameters ();
+//  vis_rej->initCameraParameters ();
+//  vis_fim->initCameraParameters ();
+
+  //Loop infinitly
+  while (ros::ok())
+  {
+    // Spin
+    ros::spinOnce();
+  }
+
+  return 0;
 
 }
