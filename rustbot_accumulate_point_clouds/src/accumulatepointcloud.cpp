@@ -39,8 +39,14 @@
 
 #include <pcl/visualization/pcl_visualizer.h>
 
+#include <pcl/common/angles.h>
+#include <math.h>
+
+using namespace std;
+
 //Definitions
 typedef pcl::PointXYZRGB PointT;
+
 
 //Global vars
 pcl::PointCloud<PointT>::Ptr accumulated_cloud (new pcl::PointCloud<PointT>());
@@ -194,47 +200,85 @@ void findCorrespondences (const pcl::PointCloud<PointT>::Ptr src,
   //est.determineReciprocalCorrespondences (all_correspondences);
   ROS_INFO("correspondencias: [%d]", all_correspondences->size());
 
-  pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_src(src);
-  pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_tgt(tgt);
-  vis_all->removePointCloud("src");
-  vis_all->addPointCloud<PointT>(src, rgb_src, "src");
-  vis_all->removePointCloud("tgt");
-  vis_all->addPointCloud<PointT>(tgt, rgb_tgt, "tgt");
+//  pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_src(src);
+//  pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_tgt(tgt);
+//  vis_all->removePointCloud("src");
+//  vis_all->addPointCloud<PointT>(src, rgb_src, "src");
+//  vis_all->removePointCloud("tgt");
+//  vis_all->addPointCloud<PointT>(tgt, rgb_tgt, "tgt");
 //  if(!vis_all->updatePointCloud<PointT>(src, "src")) vis_all->addPointCloud<PointT>(src, rgb_src, "src");
 //  vis_all->resetCameraViewpoint("src");
 //  if(!vis_all->updatePointCloud<PointT>(tgt, "tgt")) vis_all->addPointCloud<PointT>(tgt, rgb_tgt, "tgt");
-  if(!vis_all->updateCorrespondences<PointT>(src, tgt, *all_correspondences, 0))
-    vis_all->addCorrespondences<PointT>(src, tgt, *all_correspondences, 0, "correspondences");
-  vis_all->spinOnce();
+//  if(!vis_all->updateCorrespondences<PointT>(src, tgt, *all_correspondences, 0))
+//    vis_all->addCorrespondences<PointT>(src, tgt, *all_correspondences, 0, "correspondences");
+//  vis_all->spinOnce();
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void
-rejectBadCorrespondences (const pcl::CorrespondencesPtr all_correspondences,
-                          const pcl::PointCloud<PointT>::Ptr src,
-                          const pcl::PointCloud<PointT>::Ptr tgt,
-                          pcl::CorrespondencesPtr remaining_correspondences)
+void rejectBadCorrespondences (const pcl::CorrespondencesPtr all_correspondences,
+                               const pcl::PointCloud<PointT>::Ptr src,
+                               const pcl::PointCloud<PointT>::Ptr tgt,
+                               const pcl::PointCloud<pcl::Normal>::Ptr src_normal,
+                               const pcl::PointCloud<pcl::Normal>::Ptr tgt_normal,
+                               pcl::CorrespondencesPtr remaining_correspondences,
+                               Eigen::Matrix4f &transf)
 {
   pcl::registration::CorrespondenceRejectorMedianDistance rej;
-  rej.setMedianFactor (8.79241104);
-  rej.setInputCorrespondences (*all_correspondences);
+  rej.setMedianFactor (1);
+  rej.setInputCorrespondences (all_correspondences);
 
-  rej.getCorrespondences (*remaining_correspondences);
-  return;
-
-  CorrespondencesPtr remaining_correspondences_temp (new Correspondences);
+  pcl::CorrespondencesPtr remaining_correspondences_temp (new pcl::Correspondences() );
   rej.getCorrespondences (*remaining_correspondences_temp);
-  PCL_DEBUG ("[rejectBadCorrespondences] Number of correspondences remaining after rejection: %d\n", remaining_correspondences_temp->size ());
+  ROS_INFO("Number of correspondences remaining after rejection median: %d\n", remaining_correspondences_temp->size ());
 
   // Reject if the angle between the normals is really off
-  CorrespondenceRejectorSurfaceNormal rej_normals;
-  rej_normals.setThreshold (acos (deg2rad (45.0)));
-  rej_normals.initializeDataContainer<PointT, PointT> ();
-  rej_normals.setInputCloud<PointT> (src);
-  rej_normals.setInputNormals<PointT, PointT> (src);
+  pcl::registration::CorrespondenceRejectorSurfaceNormal rej_normals;
+  rej_normals.setThreshold (acos (DEG2RAD(35.0)));
+  rej_normals.initializeDataContainer<PointT, pcl::Normal> ();
+  rej_normals.setInputSource<PointT> (src);
+  rej_normals.setInputNormals<PointT, pcl::Normal> (src_normal);
   rej_normals.setInputTarget<PointT> (tgt);
-  rej_normals.setTargetNormals<PointT, PointT> (tgt);
+  rej_normals.setTargetNormals<PointT, pcl::Normal> (tgt_normal);
   rej_normals.setInputCorrespondences (remaining_correspondences_temp);
-  rej_normals.getCorrespondences (remaining_correspondences);
+  pcl::CorrespondencesPtr remaining_correspondences_temp2 (new pcl::Correspondences() );
+  rej_normals.getCorrespondences (*remaining_correspondences_temp2);
+  ROS_INFO("Number of correspondences remaining after rejection normals: %d\n", remaining_correspondences_temp2->size ());
+
+  pcl::registration::CorrespondenceRejectorSampleConsensus<PointT> corr_rej_sac;
+  corr_rej_sac.setInputSource(src);
+  corr_rej_sac.setInputTarget(tgt);
+  corr_rej_sac.setInlierThreshold(0.0025);
+//  corr_rej_sac.setSaveInliers(true);
+  corr_rej_sac.setMaximumIterations(100);
+  corr_rej_sac.setRefineModel(false);
+  corr_rej_sac.setInputCorrespondences(remaining_correspondences_temp2);
+  corr_rej_sac.getCorrespondences(*remaining_correspondences);
+  ROS_INFO("Number of correspondences remaining after rejection ransac: %d\n", remaining_correspondences->size ());
+
+  transf = corr_rej_sac.getBestTransformation();
+  ROS_INFO("DENTRO DA MATRIZ: %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f", transf(0, 0), transf(0, 1), transf(0, 2), transf(0, 3), transf(1, 0), transf(1, 1), transf(1, 2), transf(1, 3), transf(2, 0), transf(2, 1), transf(2, 2), transf(2, 3));
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void findTransformation (const pcl::PointCloud<PointT>::Ptr src,
+                         const pcl::PointCloud<PointT>::Ptr tgt,
+                         const pcl::PointCloud<pcl::Normal>::Ptr src_normal,
+                         const pcl::PointCloud<pcl::Normal>::Ptr tgt_normal,
+                         const pcl::CorrespondencesPtr &correspondences,
+                         Eigen::Matrix4f &transf)
+{
+  pcl::PointCloud<pcl::PointXYZ>::Ptr src_xyz (new pcl::PointCloud<pcl::PointXYZ> ());
+  pcl::PointCloud<pcl::PointXYZ>::Ptr tgt_xyz (new pcl::PointCloud<pcl::PointXYZ> ());
+  simplify_cloud_xyz(src, src_xyz);
+  simplify_cloud_xyz(tgt, tgt_xyz);
+  pcl::PointCloud<pcl::PointNormal>::Ptr src_xyzn (new pcl::PointCloud<pcl::PointNormal> ());
+  pcl::PointCloud<pcl::PointNormal>::Ptr tgt_xyzn (new pcl::PointCloud<pcl::PointNormal> ());
+  src_xyzn->resize(src->points.size());
+  tgt_xyzn->resize(tgt->points.size());
+  pcl::concatenateFields(*src_xyz, *src_normal, *src_xyzn);
+  pcl::concatenateFields(*tgt_xyz, *tgt_normal, *tgt_xyzn);
+
+  pcl::registration::TransformationEstimationPointToPlaneLLS<pcl::PointNormal, pcl::PointNormal, double> trans_est;
+  trans_est.estimateRigidTransformation(*src_xyzn, *tgt_xyzn, *correspondences, transf);
+  ROS_INFO("DENTRO DA MATRIZ 2: %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f", transf(0, 0), transf(0, 1), transf(0, 2), transf(0, 3), transf(1, 0), transf(1, 1), transf(1, 2), transf(1, 3), transf(2, 0), transf(2, 1), transf(2, 2), transf(2, 3));
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief Here we have the function where we accumulate using the best technique to our knowledge
@@ -291,15 +335,18 @@ ROS_INFO("2");
     ROS_INFO("6");
     calculate_normals(backup_compare, 5, tgt_normal);
     ROS_INFO("7");
-//    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr src_xyzrgbnormal (new pcl::PointCloud<pcl::PointXYZRGBNormal>());
-//    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr tgt_xyzrgbnormal (new pcl::PointCloud<pcl::PointXYZRGBNormal>());
-//    ROS_INFO("8");
-//    calculate_xyzrgbnormals(cloud, 5, src_xyzrgbnormal);
-//    ROS_INFO("9");
-//    calculate_xyzrgbnormals(backup_compare, 5, tgt_xyzrgbnormal);
     // Determine correspondences and visualize
     pcl::CorrespondencesPtr correspondences_raw (new pcl::Correspondences());
     findCorrespondences(cloud, backup_compare, src_normal, tgt_normal, correspondences_raw);
+    // Reject correspondences, get first transform and visualize
+    pcl::CorrespondencesPtr correspondences_filt (new pcl::Correspondences());
+    Eigen::Matrix4f transformation_ransac;
+    rejectBadCorrespondences(correspondences_raw, cloud, backup_compare, src_normal, tgt_normal, correspondences_filt, transformation_ransac);
+    ROS_INFO("First number in matrix from ransac: %.2f", transformation_ransac(1, 1));
+    // Get best transformation from the correspondences
+    Eigen::Matrix4f transformation_fim;
+    findTransformation(cloud, backup_compare, src_normal, tgt_normal, correspondences_filt, transformation_fim);
+    // Find the best transformation iteratively, visualize each iteration
     // Pass the entities to the next iteration
     *backup_compare = *cloud;
     *tmp_cloud = *cloud;
@@ -313,7 +360,7 @@ ROS_INFO("2");
   /// End of pipeline, send the result to ROS message                                                                           ///
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //Conver the pcl point cloud to ros msg and publish
+  // Convert the pcl point cloud to ros msg and publish
   pcl::toROSMsg (*accumulated_cloud, msg_out);
   msg_out.header.stamp = t;
   pub->publish(msg_out);
