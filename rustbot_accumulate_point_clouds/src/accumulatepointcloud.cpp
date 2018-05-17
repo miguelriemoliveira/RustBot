@@ -17,7 +17,7 @@
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/keypoints/uniform_sampling.h>
-#include <pcl/keypoints/harris_6d.h>
+#include <pcl/keypoints/harris_3d.h>
 
 #include <pcl/keypoints/iss_3d.h>
 #include <pcl/keypoints/sift_keypoint.h>
@@ -65,7 +65,7 @@ boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_all (new pcl::visualiza
 boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_rej (new pcl::visualization::PCLVisualizer ("filter correspondences"));
 boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_fim (new pcl::visualization::PCLVisualizer ("matched"));
 
-float lf = 0.05f; // Leaf size for voxel grid
+float lf = 0.2f; // Leaf size for voxel grid
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void filter_color(pcl::PointCloud<PointT>::Ptr cloud_in){
@@ -297,34 +297,39 @@ void findTransformation2 (const pcl::PointCloud<PointT>::Ptr src,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void estimateKeypoints (const PointCloud<PointT>::Ptr src,
                         const PointCloud<PointT>::Ptr tgt,
-                        const PointCloud<Normal>::Ptr src_normal,
-                        const PointCloud<Normal>::Ptr tgt_normal,
+                        const PointCloud<Normal>::Ptr normals_src,
+                        const PointCloud<Normal>::Ptr normals_tgt,
                         PointCloud<PointXYZI>::Ptr keypoints_src,
                         PointCloud<PointXYZI>::Ptr keypoints_tgt,
+                        const PointCloud<Normal>::Ptr normals_src_filt,
+                        const PointCloud<Normal>::Ptr normals_tgt_filt,
+                        PointIndicesConstPtr src_ind,
+                        PointIndicesConstPtr tgt_ind,
                         int k)
 {
-  HarrisKeypoint6D<PointXYZRGB, PointXYZI> harris;
-  harris.setRadius(0.01);
-//  harris.setKSearch(k);
+  HarrisKeypoint3D<PointXYZRGB, PointXYZI> harris;
+  harris.setRadius(1);
   harris.setNumberOfThreads(8);
-  harris.setThreshold(2); // Test
+  harris.setThreshold(1e-6); // Test
 
   harris.setInputCloud(src);
   harris.compute(*keypoints_src);
+  src_ind = harris.getKeypointsIndices();
   harris.setInputCloud(tgt);
   harris.compute(*keypoints_tgt);
+  tgt_ind = harris.getKeypointsIndices();
 
   ROS_INFO("Quantos keypoints: %d", keypoints_tgt->size());
+  ROS_INFO("Quantos indices: %d", tgt_ind->indices.size());
 
-//  UniformSampling<PointT> uniform;
-//  uniform.setRadiusSearch (1);  // 1m
-////  uniform.setKSearch(k);
-
-//  uniform.setInputCloud (src);
-//  uniform.compute(*keypoints_src);
-
-//  uniform.setInputCloud (tgt);
-//  uniform.compute(*keypoints_tgt);
+  ExtractIndices<Normal> extract;
+  extract.setNegative(false);
+  extract.setInputCloud(normals_src);
+  extract.setIndices(src_ind);
+  extract.filter(*normals_src_filt);
+  extract.setInputCloud(normals_tgt);
+  extract.setIndices(tgt_ind);
+  extract.filter(*normals_tgt_filt);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void estimateFPFH (const PointCloud<PointT>::Ptr src,
@@ -336,10 +341,14 @@ void estimateFPFH (const PointCloud<PointT>::Ptr src,
                    PointCloud<FPFHSignature33>::Ptr fpfhs_src,
                    PointCloud<FPFHSignature33>::Ptr fpfhs_tgt)
 {
+  ROS_INFO("Quantos indices normal: %d", normals_tgt->size());
   FPFHEstimation<PointXYZI, Normal, FPFHSignature33> fpfh_est;
+  pcl::search::KdTree<PointXYZI>::Ptr tree (new pcl::search::KdTree<PointXYZI>);
+  fpfh_est.setSearchMethod(tree);
   fpfh_est.setInputCloud(keypoints_src);
   fpfh_est.setInputNormals(normals_src);
-  fpfh_est.setRadiusSearch(1); // 1m
+//  fpfh_est.setRadiusSearch(1); // 1m
+  fpfh_est.setKSearch(20);
   PointCloud<PointXYZI>::Ptr src_xyzi (new PointCloud<PointXYZI> ());
   PointCloudXYZRGBtoXYZI(*src, *src_xyzi);
   fpfh_est.setSearchSurface(src_xyzi);
@@ -351,17 +360,18 @@ void estimateFPFH (const PointCloud<PointT>::Ptr src,
   PointCloudXYZRGBtoXYZI(*tgt, *tgt_xyzi);
   fpfh_est.setSearchSurface(tgt_xyzi);
   fpfh_est.compute(*fpfhs_tgt);
-}
 
+  ROS_INFO("Tamanho das features: %d", fpfhs_tgt->size());
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void findCorrespondences (const PointCloud<FPFHSignature33>::Ptr fpfhs_src,
                           const PointCloud<FPFHSignature33>::Ptr fpfhs_tgt,
                           CorrespondencesPtr all_correspondences)
 {
   CorrespondenceEstimation<FPFHSignature33, FPFHSignature33> est;
-  est.setInputCloud (fpfhs_src);
-  est.setInputTarget (fpfhs_tgt);
-  est.determineReciprocalCorrespondences (*all_correspondences);
+  est.setInputSource(fpfhs_src);
+  est.setInputTarget(fpfhs_tgt);
+  est.determineReciprocalCorrespondences(*all_correspondences);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -419,6 +429,11 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
   std::vector<int> indicesNAN;
   pcl::removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
 
+  // SImplify here to voxel because its too big
+  grid.setInputCloud(cloud);
+  grid.setLeafSize(lf, lf, lf);
+  grid.filter(*cloud);
+
   // Filter for outliers
   remove_outlier(cloud, 20, 0.1);
 
@@ -429,7 +444,7 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
   passthrough(cloud, "z",  0, 20);
   passthrough(cloud, "x", -3,  3);
   passthrough(cloud, "y", -4,  4);
-ROS_INFO("2");
+
   ros::Time t = msg->header.stamp;
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -439,12 +454,12 @@ ROS_INFO("2");
   { // Here we have no cloud yet, first round
     *backup_compare = *cloud;
     *tmp_cloud = *cloud;
-    grid.setInputCloud(tmp_cloud);
-    grid.setLeafSize(lf, lf, lf);
-    grid.filter(*tmp_cloud);
+//    grid.setInputCloud(tmp_cloud);
+//    grid.setLeafSize(lf, lf, lf);
+//    grid.filter(*tmp_cloud);
     (*accumulated_cloud) = (*tmp_cloud);
   } else { // Now the actual pipeline
-    // Calculate all possible clouds with normals - avoid pointnormal so dont lose data
+    // Calculate all possible clouds with normals
     pcl::PointCloud<pcl::Normal>::Ptr src_normal (new pcl::PointCloud<pcl::Normal>());
     pcl::PointCloud<pcl::Normal>::Ptr tgt_normal (new pcl::PointCloud<pcl::Normal>());
     calculate_normals(cloud, 5, src_normal);
@@ -452,7 +467,11 @@ ROS_INFO("2");
     // Calculate keypoints using the harris algorihtm
     PointCloud<PointXYZI>::Ptr src_kp (new PointCloud<PointXYZI> ());
     PointCloud<PointXYZI>::Ptr tgt_kp (new PointCloud<PointXYZI> ());
-    estimateKeypoints(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, 10);
+    PointIndicesConstPtr src_ind (new PointIndices ());
+    PointIndicesConstPtr tgt_ind (new PointIndices ());
+    pcl::PointCloud<pcl::Normal>::Ptr src_normal_filt (new pcl::PointCloud<pcl::Normal>());
+    pcl::PointCloud<pcl::Normal>::Ptr tgt_normal_filt (new pcl::PointCloud<pcl::Normal>());
+    estimateKeypoints(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, src_normal_filt, tgt_normal_filt, src_ind, tgt_ind, 10);
     // Calculate features with FPFH algorithm
     PointCloud<FPFHSignature33>::Ptr src_fpfh (new PointCloud<FPFHSignature33> ());
     PointCloud<FPFHSignature33>::Ptr tgt_fpfh (new PointCloud<FPFHSignature33> ());
