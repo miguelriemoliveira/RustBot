@@ -50,6 +50,7 @@
 using namespace std;
 using namespace pcl;
 using namespace pcl::registration;
+using namespace pcl::visualization;
 
 //Definitions
 typedef pcl::PointXYZRGB PointT;
@@ -61,11 +62,11 @@ pcl::PointCloud<PointT>::Ptr backup_compare (new pcl::PointCloud<PointT>()); // 
 
 boost::shared_ptr<ros::Publisher> pub;
 
-boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_all (new pcl::visualization::PCLVisualizer ("all correspondences"));
-boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_rej (new pcl::visualization::PCLVisualizer ("filter correspondences"));
+//boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_all (new pcl::visualization::PCLVisualizer ("all correspondences"));
+//boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_rej (new pcl::visualization::PCLVisualizer ("filter correspondences"));
 boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_fim (new pcl::visualization::PCLVisualizer ("matched"));
 
-float lf = 0.2f; // Leaf size for voxel grid
+float lf = 0.15f; // Leaf size for voxel grid
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void filter_color(pcl::PointCloud<PointT>::Ptr cloud_in){
@@ -297,39 +298,28 @@ void findTransformation2 (const pcl::PointCloud<PointT>::Ptr src,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void estimateKeypoints (const PointCloud<PointT>::Ptr src,
                         const PointCloud<PointT>::Ptr tgt,
-                        const PointCloud<Normal>::Ptr normals_src,
-                        const PointCloud<Normal>::Ptr normals_tgt,
                         PointCloud<PointXYZI>::Ptr keypoints_src,
                         PointCloud<PointXYZI>::Ptr keypoints_tgt,
-                        const PointCloud<Normal>::Ptr normals_src_filt,
-                        const PointCloud<Normal>::Ptr normals_tgt_filt,
                         PointIndicesConstPtr src_ind,
                         PointIndicesConstPtr tgt_ind,
                         int k)
 {
   HarrisKeypoint3D<PointXYZRGB, PointXYZI> harris;
-  harris.setRadius(1);
+  harris.setRadius(0.1);
+//  harris.setKSearch(k);
   harris.setNumberOfThreads(8);
   harris.setThreshold(1e-6); // Test
+//  harris.setNonMaxSupression(true);
 
   harris.setInputCloud(src);
   harris.compute(*keypoints_src);
-  src_ind = harris.getKeypointsIndices();
+//  src_ind = harris.getKeypointsIndices();
   harris.setInputCloud(tgt);
   harris.compute(*keypoints_tgt);
-  tgt_ind = harris.getKeypointsIndices();
+//  tgt_ind = harris.getKeypointsIndices();
 
   ROS_INFO("Quantos keypoints: %d", keypoints_tgt->size());
-  ROS_INFO("Quantos indices: %d", tgt_ind->indices.size());
-
-  ExtractIndices<Normal> extract;
-  extract.setNegative(false);
-  extract.setInputCloud(normals_src);
-  extract.setIndices(src_ind);
-  extract.filter(*normals_src_filt);
-  extract.setInputCloud(normals_tgt);
-  extract.setIndices(tgt_ind);
-  extract.filter(*normals_tgt_filt);
+//  ROS_INFO("Quantos indices: %d", tgt_ind->indices.size());
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void estimateFPFH (const PointCloud<PointT>::Ptr src,
@@ -339,7 +329,8 @@ void estimateFPFH (const PointCloud<PointT>::Ptr src,
                    const PointCloud<PointXYZI>::Ptr keypoints_src,
                    const PointCloud<PointXYZI>::Ptr keypoints_tgt,
                    PointCloud<FPFHSignature33>::Ptr fpfhs_src,
-                   PointCloud<FPFHSignature33>::Ptr fpfhs_tgt)
+                   PointCloud<FPFHSignature33>::Ptr fpfhs_tgt,
+                   int k)
 {
   ROS_INFO("Quantos indices normal: %d", normals_tgt->size());
   FPFHEstimation<PointXYZI, Normal, FPFHSignature33> fpfh_est;
@@ -347,8 +338,8 @@ void estimateFPFH (const PointCloud<PointT>::Ptr src,
   fpfh_est.setSearchMethod(tree);
   fpfh_est.setInputCloud(keypoints_src);
   fpfh_est.setInputNormals(normals_src);
-//  fpfh_est.setRadiusSearch(1); // 1m
-  fpfh_est.setKSearch(20);
+  fpfh_est.setRadiusSearch(10);
+//  fpfh_est.setKSearch(k);
   PointCloud<PointXYZI>::Ptr src_xyzi (new PointCloud<PointXYZI> ());
   PointCloudXYZRGBtoXYZI(*src, *src_xyzi);
   fpfh_est.setSearchSurface(src_xyzi);
@@ -380,10 +371,11 @@ void rejectBadCorrespondences (const CorrespondencesPtr all_correspondences,
                                const PointCloud<PointXYZI>::Ptr keypoints_tgt,
                                CorrespondencesPtr remaining_correspondences)
 {
+  if(all_correspondences->size() > 10){
   CorrespondenceRejectorDistance rej;
   rej.setInputSource<PointXYZI>(keypoints_src);
   rej.setInputTarget<PointXYZI>(keypoints_tgt);
-  rej.setMaximumDistance(0.5);
+  rej.setMaximumDistance(5);
   rej.setInputCorrespondences(all_correspondences);
   rej.getCorrespondences(*remaining_correspondences);
   ROS_INFO("Number of correspondences remaining after rejection distance: %d\n", remaining_correspondences->size ());
@@ -391,12 +383,16 @@ void rejectBadCorrespondences (const CorrespondencesPtr all_correspondences,
   pcl::registration::CorrespondenceRejectorSampleConsensus<PointXYZI> corr_rej_sac;
   corr_rej_sac.setInputSource(keypoints_src);
   corr_rej_sac.setInputTarget(keypoints_tgt);
-  corr_rej_sac.setInlierThreshold(0.00005);
+  corr_rej_sac.setInlierThreshold(0.0025);
   corr_rej_sac.setMaximumIterations(100);
   corr_rej_sac.setRefineModel(false);
   corr_rej_sac.setInputCorrespondences(remaining_correspondences);
   corr_rej_sac.getCorrespondences(*remaining_correspondences);
   ROS_INFO("Number of correspondences remaining after rejection ransac: %d\n", remaining_correspondences->size ());
+  } else {
+    *remaining_correspondences = *all_correspondences;
+    ROS_INFO("Number of correspondences no rejection: %d\n", remaining_correspondences->size ());
+  }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void computeTransformation (const PointCloud<PointXYZI>::Ptr keypoints_src,
@@ -410,14 +406,42 @@ void computeTransformation (const PointCloud<PointXYZI>::Ptr keypoints_src,
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void view (const PointCloud<PointT>::Ptr src,
+           const PointCloud<PointT>::Ptr tgt,
+           const PointCloud<PointXYZI>::Ptr src_kp,
+           const PointCloud<PointXYZI>::Ptr tgt_kp,
+           const CorrespondencesPtr correspondences)
+{
+  PointCloudColorHandlerRGBField<PointT> rgb_src(src);
+  PointCloudColorHandlerRGBField<PointT> rgb_tgt(tgt);
+  if (!vis_fim->updatePointCloud<PointT>(src, rgb_src, "source"))
+  {
+    vis_fim->addPointCloud<PointT>(src, rgb_src, "source");
+    vis_fim->resetCameraViewpoint("source");
+  }
+  if (!vis_fim->updatePointCloud<PointT>(tgt, rgb_tgt, "target")) vis_fim->addPointCloud<PointT>(tgt, rgb_tgt, "target");
+//  vis->setPointCloudRenderingProperties (PCL_VISUALIZER_OPACITY, 0.5, "source");
+//  vis->setPointCloudRenderingProperties (PCL_VISUALIZER_OPACITY, 0.7, "target");
+//  vis->setPointCloudRenderingProperties (PCL_VISUALIZER_POINT_SIZE, 6, "source");
+  if (!vis_fim->updatePointCloud<PointXYZI>(src_kp, PointCloudColorHandlerCustom<PointXYZI>(src_kp, 0.0, 0.0, 255.0), "source_keypoints"))
+    vis_fim->addPointCloud<PointXYZI> (src_kp, PointCloudColorHandlerCustom<PointXYZI>(src_kp, 0.0, 0.0, 255.0), "source_keypoints");
+  if (!vis_fim->updatePointCloud<PointXYZI>(tgt_kp, PointCloudColorHandlerCustom<PointXYZI>(tgt_kp, 255.0, 0.0, 0.0), "target_keypoints"))
+    vis_fim->addPointCloud<PointXYZI> (tgt_kp, PointCloudColorHandlerCustom<PointXYZI>(tgt_kp, 255.0, 0.0, 0.0), "target_keypoints");
+  if (!vis_fim->updateCorrespondences<PointXYZI>(src_kp, tgt_kp, *correspondences, 1))
+    vis_fim->addCorrespondences<PointXYZI>(src_kp, tgt_kp, *correspondences, 1, "correspondences");
+  vis_fim->setPointCloudRenderingProperties (PCL_VISUALIZER_POINT_SIZE, 6, "source_keypoints");
+  vis_fim->setPointCloudRenderingProperties (PCL_VISUALIZER_POINT_SIZE, 6, "target_keypoints");
+  vis_fim->setShapeRenderingProperties(PCL_VISUALIZER_LINE_WIDTH, 15, "correspondences");
+  //vis->setShapeRenderingProperties (PCL_VISUALIZER_COLOR, 1.0, 0.0, 0.0, "correspondences");
+  vis_fim->spin();
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief Here we have the function where we accumulate using the best technique to our knowledge
 ///
 void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
   //declare variables
   PointCloud<PointT>::Ptr cloud (new pcl::PointCloud<PointT>());
-  PointCloud<PointT>::Ptr cloud_transformed (new pcl::PointCloud<PointT>());
-  PointCloud<PointT>::Ptr cloud_adjust (new pcl::PointCloud<PointT>());
   PointCloud<PointT>::Ptr tmp_cloud (new pcl::PointCloud<PointT>());
   VoxelGrid<PointT> grid;
   sensor_msgs::PointCloud2 msg_out;
@@ -435,15 +459,15 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
   grid.filter(*cloud);
 
   // Filter for outliers
-  remove_outlier(cloud, 20, 0.1);
+  remove_outlier(cloud, 25, 0.1);
 
   // Filter for color
   //  cloud = filter_color(cloud);
 
   // Filter for region - PassThrough
   passthrough(cloud, "z",  0, 20);
-  passthrough(cloud, "x", -3,  3);
-  passthrough(cloud, "y", -4,  4);
+//  passthrough(cloud, "x", -3,  3);
+//  passthrough(cloud, "y", -4,  4);
 
   ros::Time t = msg->header.stamp;
 
@@ -471,11 +495,11 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
     PointIndicesConstPtr tgt_ind (new PointIndices ());
     pcl::PointCloud<pcl::Normal>::Ptr src_normal_filt (new pcl::PointCloud<pcl::Normal>());
     pcl::PointCloud<pcl::Normal>::Ptr tgt_normal_filt (new pcl::PointCloud<pcl::Normal>());
-    estimateKeypoints(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, src_normal_filt, tgt_normal_filt, src_ind, tgt_ind, 10);
+    estimateKeypoints(cloud, backup_compare, src_kp, tgt_kp, src_ind, tgt_ind, 10);
     // Calculate features with FPFH algorithm
     PointCloud<FPFHSignature33>::Ptr src_fpfh (new PointCloud<FPFHSignature33> ());
     PointCloud<FPFHSignature33>::Ptr tgt_fpfh (new PointCloud<FPFHSignature33> ());
-    estimateFPFH(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, src_fpfh, tgt_fpfh);
+    estimateFPFH(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, src_fpfh, tgt_fpfh, 10);
     // Match the features
     CorrespondencesPtr all_correspondences (new Correspondences ());
     findCorrespondences(src_fpfh, tgt_fpfh, all_correspondences);
@@ -485,6 +509,7 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
     // Compute the transformation from the resultant correspondences
     Eigen::Matrix4f transformation;
     computeTransformation(src_kp, tgt_kp, good_correspondences, transformation);
+    view(cloud, backup_compare, src_kp, tgt_kp, all_correspondences);
 
 
 
@@ -513,9 +538,9 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
     // Pass the entities to the next iteration
     *backup_compare = *cloud;
     *tmp_cloud = *cloud;
-    grid.setInputCloud(tmp_cloud);
-    grid.setLeafSize(lf, lf, lf);
-    grid.filter(*tmp_cloud);
+//    grid.setInputCloud(tmp_cloud);
+//    grid.setLeafSize(lf, lf, lf);
+//    grid.filter(*tmp_cloud);
     (*accumulated_cloud) += (*tmp_cloud);
   }
 
@@ -524,7 +549,7 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Convert the pcl point cloud to ros msg and publish
-  pcl::toROSMsg (*accumulated_cloud, msg_out);
+  pcl::toROSMsg(*accumulated_cloud, msg_out);
   msg_out.header.stamp = t;
   pub->publish(msg_out);
 
@@ -550,16 +575,16 @@ int main(int argc, char **argv)
   ros::Subscriber sub_target = nh.subscribe ("input", 500, cloud_accumulate);
   ROS_INFO("1");
   // Adjust visualizers
-  vis_all->setBackgroundColor(0, 0, 0);
-  vis_rej->setBackgroundColor(0, 0, 0);
-  vis_fim->setBackgroundColor(0, 0, 0);
+//  vis_all->setBackgroundColor(0, 0, 0);
+//  vis_rej->setBackgroundColor(0, 0, 0);
+  vis_fim->setBackgroundColor(50, 50, 50);
 
-  vis_all->addCoordinateSystem (1.0);
-  vis_rej->addCoordinateSystem (1.0);
+//  vis_all->addCoordinateSystem (1.0);
+//  vis_rej->addCoordinateSystem (1.0);
   vis_fim->addCoordinateSystem (1.0);
 
-  vis_all->initCameraParameters ();
-  vis_rej->initCameraParameters ();
+//  vis_all->initCameraParameters ();
+//  vis_rej->initCameraParameters ();
   vis_fim->initCameraParameters ();
 
   //Loop infinitly
