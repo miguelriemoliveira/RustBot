@@ -66,7 +66,7 @@ boost::shared_ptr<ros::Publisher> pub;
 //boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_rej (new pcl::visualization::PCLVisualizer ("filter correspondences"));
 boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_fim (new pcl::visualization::PCLVisualizer ("matched"));
 
-float lf = 0.15f; // Leaf size for voxel grid
+float lf = 0.1f; // Leaf size for voxel grid
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void filter_color(pcl::PointCloud<PointT>::Ptr cloud_in){
@@ -298,6 +298,8 @@ void findTransformation2 (const pcl::PointCloud<PointT>::Ptr src,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void estimateKeypoints (const PointCloud<PointT>::Ptr src,
                         const PointCloud<PointT>::Ptr tgt,
+                        const PointCloud<Normal>::Ptr src_normal,
+                        const PointCloud<Normal>::Ptr tgt_normal,
                         PointCloud<PointXYZI>::Ptr keypoints_src,
                         PointCloud<PointXYZI>::Ptr keypoints_tgt,
                         PointIndicesConstPtr src_ind,
@@ -305,16 +307,19 @@ void estimateKeypoints (const PointCloud<PointT>::Ptr src,
                         int k)
 {
   HarrisKeypoint3D<PointXYZRGB, PointXYZI> harris;
-  harris.setRadius(0.1);
 //  harris.setKSearch(k);
+  harris.setRadius(0.5);
   harris.setNumberOfThreads(8);
-  harris.setThreshold(1e-6); // Test
+  harris.setRefine(false);
+  harris.setThreshold(1e-5); // Test
 //  harris.setNonMaxSupression(true);
 
   harris.setInputCloud(src);
+  harris.setNormals(src_normal);
   harris.compute(*keypoints_src);
 //  src_ind = harris.getKeypointsIndices();
   harris.setInputCloud(tgt);
+  harris.setNormals(tgt_normal);
   harris.compute(*keypoints_tgt);
 //  tgt_ind = harris.getKeypointsIndices();
 
@@ -332,14 +337,13 @@ void estimateFPFH (const PointCloud<PointT>::Ptr src,
                    PointCloud<FPFHSignature33>::Ptr fpfhs_tgt,
                    int k)
 {
-  ROS_INFO("Quantos indices normal: %d", normals_tgt->size());
   FPFHEstimation<PointXYZI, Normal, FPFHSignature33> fpfh_est;
   pcl::search::KdTree<PointXYZI>::Ptr tree (new pcl::search::KdTree<PointXYZI>);
   fpfh_est.setSearchMethod(tree);
   fpfh_est.setInputCloud(keypoints_src);
   fpfh_est.setInputNormals(normals_src);
-  fpfh_est.setRadiusSearch(10);
-//  fpfh_est.setKSearch(k);
+  fpfh_est.setRadiusSearch(0);
+  fpfh_est.setKSearch(k);
   PointCloud<PointXYZI>::Ptr src_xyzi (new PointCloud<PointXYZI> ());
   PointCloudXYZRGBtoXYZI(*src, *src_xyzi);
   fpfh_est.setSearchSurface(src_xyzi);
@@ -486,8 +490,8 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
     // Calculate all possible clouds with normals
     pcl::PointCloud<pcl::Normal>::Ptr src_normal (new pcl::PointCloud<pcl::Normal>());
     pcl::PointCloud<pcl::Normal>::Ptr tgt_normal (new pcl::PointCloud<pcl::Normal>());
-    calculate_normals(cloud, 5, src_normal);
-    calculate_normals(backup_compare, 5, tgt_normal);
+    calculate_normals(cloud, 4, src_normal);
+    calculate_normals(backup_compare, 4, tgt_normal);
     // Calculate keypoints using the harris algorihtm
     PointCloud<PointXYZI>::Ptr src_kp (new PointCloud<PointXYZI> ());
     PointCloud<PointXYZI>::Ptr tgt_kp (new PointCloud<PointXYZI> ());
@@ -495,11 +499,11 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
     PointIndicesConstPtr tgt_ind (new PointIndices ());
     pcl::PointCloud<pcl::Normal>::Ptr src_normal_filt (new pcl::PointCloud<pcl::Normal>());
     pcl::PointCloud<pcl::Normal>::Ptr tgt_normal_filt (new pcl::PointCloud<pcl::Normal>());
-    estimateKeypoints(cloud, backup_compare, src_kp, tgt_kp, src_ind, tgt_ind, 10);
+    estimateKeypoints(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, src_ind, tgt_ind, 1);
     // Calculate features with FPFH algorithm
     PointCloud<FPFHSignature33>::Ptr src_fpfh (new PointCloud<FPFHSignature33> ());
     PointCloud<FPFHSignature33>::Ptr tgt_fpfh (new PointCloud<FPFHSignature33> ());
-    estimateFPFH(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, src_fpfh, tgt_fpfh, 10);
+    estimateFPFH(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, src_fpfh, tgt_fpfh, 35);
     // Match the features
     CorrespondencesPtr all_correspondences (new Correspondences ());
     findCorrespondences(src_fpfh, tgt_fpfh, all_correspondences);
