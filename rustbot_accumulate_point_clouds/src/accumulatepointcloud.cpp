@@ -62,8 +62,9 @@ typedef pcl::PointXYZRGB PointT;
 
 //Global vars
 pcl::PointCloud<PointT>::Ptr accumulated_cloud (new pcl::PointCloud<PointT>());
+pcl::PointCloud<PointT>::Ptr cloud_sum (new pcl::PointCloud<PointT>());
 pcl::PointCloud<PointT>::Ptr backup_compare (new pcl::PointCloud<PointT>()); // compare features from last cloud
-
+Eigen::Matrix4f backup_transformation;
 
 boost::shared_ptr<ros::Publisher> pub;
 
@@ -71,7 +72,8 @@ boost::shared_ptr<ros::Publisher> pub;
 //boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_rej (new pcl::visualization::PCLVisualizer ("filter correspondences"));
 boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_fim (new pcl::visualization::PCLVisualizer ("matched"));
 
-float lf = 0.15f; // Leaf size for voxel grid
+float lf = 0.05f; // Leaf size for voxel grid
+bool use_icp = true;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void filter_color(pcl::PointCloud<PointT>::Ptr cloud_in){
@@ -325,8 +327,8 @@ void estimateKeypoints (const PointCloud<PointT>::Ptr src,
   switch (method){
   case 1: // Harris
     //  harris.setKSearch(k);
-    harris.setRadius(0.05);
-    harris.setNumberOfThreads(8);
+    harris.setRadius(lf);
+    harris.setNumberOfThreads(4);
     harris.setRefine(false);
     harris.setThreshold(1e-6); // Test
     //  harris.setNonMaxSupression(true);
@@ -379,13 +381,14 @@ void estimateFPFH (const PointCloud<PointT>::Ptr src,
   FPFHEstimation<PointXYZI, Normal, FPFHSignature33> fpfh_est;
   pcl::search::KdTree<PointXYZI>::Ptr tree (new pcl::search::KdTree<PointXYZI>);
   fpfh_est.setSearchMethod(tree);
-  fpfh_est.setInputCloud(keypoints_src);
-  fpfh_est.setInputNormals(normals_src);
   fpfh_est.setRadiusSearch(0);
   fpfh_est.setKSearch(k);
+  fpfh_est.setInputCloud(keypoints_src);
+  fpfh_est.setInputNormals(normals_src);
   PointCloud<PointXYZI>::Ptr src_xyzi (new PointCloud<PointXYZI> ());
   PointCloudXYZRGBtoXYZI(*src, *src_xyzi);
   fpfh_est.setSearchSurface(src_xyzi);
+  ROS_INFO("Calculando KEYPOINTS.......");
   fpfh_est.compute(*fpfhs_src);
 
   fpfh_est.setInputCloud(keypoints_tgt);
@@ -418,7 +421,7 @@ void rejectBadCorrespondences (const CorrespondencesPtr all_correspondences,
   CorrespondenceRejectorDistance rej;
   rej.setInputSource<PointXYZI>(keypoints_src);
   rej.setInputTarget<PointXYZI>(keypoints_tgt);
-  rej.setMaximumDistance(0.5);
+  rej.setMaximumDistance(10*lf);
   rej.setInputCorrespondences(all_correspondences);
   rej.getCorrespondences(*remaining_correspondences);
   ROS_INFO("Number of correspondences remaining after rejection distance: %d\n", remaining_correspondences->size ());
@@ -463,9 +466,9 @@ void view (const PointCloud<PointT>::Ptr src,
     vis_fim->resetCameraViewpoint("source");
   }
   if (!vis_fim->updatePointCloud<PointT>(tgt, rgb_tgt, "target")) vis_fim->addPointCloud<PointT>(tgt, rgb_tgt, "target");
-//  vis->setPointCloudRenderingProperties (PCL_VISUALIZER_OPACITY, 0.5, "source");
-//  vis->setPointCloudRenderingProperties (PCL_VISUALIZER_OPACITY, 0.7, "target");
-//  vis->setPointCloudRenderingProperties (PCL_VISUALIZER_POINT_SIZE, 6, "source");
+  //  vis->setPointCloudRenderingProperties (PCL_VISUALIZER_OPACITY, 0.5, "source");
+  //  vis->setPointCloudRenderingProperties (PCL_VISUALIZER_OPACITY, 0.7, "target");
+  //  vis->setPointCloudRenderingProperties (PCL_VISUALIZER_POINT_SIZE, 6, "source");
   if (!vis_fim->updatePointCloud<PointXYZI>(src_kp, PointCloudColorHandlerCustom<PointXYZI>(src_kp, 0.0, 0.0, 255.0), "source_keypoints"))
     vis_fim->addPointCloud<PointXYZI> (src_kp, PointCloudColorHandlerCustom<PointXYZI>(src_kp, 0.0, 0.0, 255.0), "source_keypoints");
   if (!vis_fim->updatePointCloud<PointXYZI>(tgt_kp, PointCloudColorHandlerCustom<PointXYZI>(tgt_kp, 255.0, 0.0, 0.0), "target_keypoints"))
@@ -480,7 +483,7 @@ void view (const PointCloud<PointT>::Ptr src,
   vis_fim->setPointCloudRenderingProperties (PCL_VISUALIZER_POINT_SIZE, 6, "target_keypoints");
   vis_fim->setShapeRenderingProperties(PCL_VISUALIZER_LINE_WIDTH, 15, "correspondences");
   //vis->setShapeRenderingProperties (PCL_VISUALIZER_COLOR, 1.0, 0.0, 0.0, "correspondences");
-  vis_fim->spinOnce();
+  vis_fim->spin();
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \brief Here we have the function where we accumulate using the best technique to our knowledge
@@ -503,24 +506,25 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
   // SImplify here to voxel because its too big
   grid.setInputCloud(cloud);
   grid.setLeafSize(lf, lf, lf);
-  grid.setMinimumPointsNumberPerVoxel(5);
+  grid.filter(*cloud_sum);
+  grid.setLeafSize(2*lf, 2*lf, 2*lf);
   grid.filter(*cloud);
 
   // Filter for outliers
-//  remove_outlier(cloud, 15, lf*3);
+  //  remove_outlier(cloud, 15, lf*3);
 
   // Filter for color
   //  cloud = filter_color(cloud);
 
   // Filter for region - PassThrough
-  passthrough(cloud, "z",  0, 10);
-//  passthrough(cloud, "x", -3,  3);
-//  passthrough(cloud, "y", -4,  4);
+  passthrough(cloud, "z",  0, 6);
+  passthrough(cloud, "x", -2, 2);
+  passthrough(cloud, "y", -2, 2);
 
   ros::Time t = msg->header.stamp;
 
   // Place the incoming cloud next to the last one
-//  transformPointCloud(*cloud, *cloud, backup_transf);
+  //  transformPointCloud(*cloud, *cloud, backup_transf);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /// From here on we have the pipeline to accumulate from cloud registrarion using features obtained, so we have better result ///
@@ -528,73 +532,78 @@ void cloud_accumulate(const sensor_msgs::PointCloud2ConstPtr& msg)
   if(accumulated_cloud->points.size() < 3)
   { // Here we have no cloud yet, first round
     *backup_compare = *cloud;
-    *tmp_cloud = *cloud;
-//    grid.setInputCloud(tmp_cloud);
-//    grid.setLeafSize(lf, lf, lf);
-//    grid.filter(*tmp_cloud);
-    (*accumulated_cloud) = (*tmp_cloud);
+    *accumulated_cloud = *cloud_sum;
   } else { // Now the actual pipeline
-    // Calculate all possible clouds with normals
-    pcl::PointCloud<pcl::Normal>::Ptr src_normal (new pcl::PointCloud<pcl::Normal>());
-    pcl::PointCloud<pcl::Normal>::Ptr tgt_normal (new pcl::PointCloud<pcl::Normal>());
-    calculate_normals(cloud, 7, src_normal);
-    calculate_normals(backup_compare, 7, tgt_normal);
-    // Calculate keypoints using the harris algorihtm
-    PointCloud<PointXYZI>::Ptr src_kp (new PointCloud<PointXYZI> ());
-    PointCloud<PointXYZI>::Ptr tgt_kp (new PointCloud<PointXYZI> ());
-    PointIndicesConstPtr src_ind (new PointIndices ());
-    PointIndicesConstPtr tgt_ind (new PointIndices ());
-    pcl::PointCloud<pcl::Normal>::Ptr src_normal_filt (new pcl::PointCloud<pcl::Normal>());
-    pcl::PointCloud<pcl::Normal>::Ptr tgt_normal_filt (new pcl::PointCloud<pcl::Normal>());
-    estimateKeypoints(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, src_ind, tgt_ind, 10, 1);
-    // Calculate features with FPFH algorithm
-    PointCloud<FPFHSignature33>::Ptr src_fpfh (new PointCloud<FPFHSignature33> ());
-    PointCloud<FPFHSignature33>::Ptr tgt_fpfh (new PointCloud<FPFHSignature33> ());
-    estimateFPFH(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, src_fpfh, tgt_fpfh, 10);
-    // Match the features
-    CorrespondencesPtr all_correspondences (new Correspondences ());
-    findCorrespondences(src_fpfh, tgt_fpfh, all_correspondences);
-    // Reject bad ones
-    CorrespondencesPtr good_correspondences (new Correspondences ());
-    rejectBadCorrespondences(all_correspondences, src_kp, tgt_kp, good_correspondences);
-    // Compute the transformation from the resultant correspondences
-    Eigen::Matrix4f transformation;
-    computeTransformation(src_kp, tgt_kp, good_correspondences, transformation);
-    view(cloud, backup_compare, src_kp, tgt_kp, good_correspondences);
-    // Transform the cloud with the resultant transformation and accumulate it
-    pcl::transformPointCloud(*cloud, *cloud, transformation);
 
+    if(use_icp){ // Use ICP, resize clouds
+      if(cloud->points.size() >= backup_compare->points.size())
+        cloud->resize(backup_compare->points.size());
+      else
+        backup_compare->resize(cloud->points.size());
+      // Now that clouds have same size, try to compare
+      pcl::IterativeClosestPointNonLinear<PointT, PointT> icp;
+      icp.setMaximumIterations(2000); // So it doesnt take too long
+      icp.setMaxCorrespondenceDistance(10*lf); // So it doesnt go looking all around
+      icp.setRANSACOutlierRejectionThreshold(1.5*lf);
+      icp.setTransformationEpsilon(1e-9);
+      icp.setEuclideanFitnessEpsilon(1e-5);
+      icp.setInputSource(cloud);
+      icp.setInputTarget(backup_compare);
+      icp.setUseReciprocalCorrespondences(true);
+      // Final result, passing eigen_trf as first guess, which seems to be actually close enough
+      ROS_INFO("COMECANDO A ALINHAR....");
+      ROS_INFO("NUVEM SRC %d", cloud->points.size());
+      ROS_INFO("NUVEM TGT %d", backup_compare->points.size());
 
+      pcl::PointCloud<PointT> cloud_aligned;
+      icp.align(cloud_aligned);
+      Eigen::Matrix4f transf_icp = icp.getFinalTransformation();
+      ROS_INFO("DENTRO DA MATRIZ 2: %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f", transf_icp(0, 0), transf_icp(0, 1), transf_icp(0, 2), transf_icp(0, 3), transf_icp(1, 0), transf_icp(1, 1), transf_icp(1, 2), transf_icp(1, 3), transf_icp(2, 0), transf_icp(2, 1), transf_icp(2, 2), transf_icp(2, 3));
+      transformPointCloud(*cloud_sum, *cloud_sum, transf_icp);
+      ROS_INFO("ICP convergiu? %d", icp.hasConverged());
+      ROS_INFO("Dados do ICP:\nDistancia euclidiana: %.2f\nEpsilon da transformacao: %.2f\nIteracao: %d\nFitness score: %.2f", icp.getEuclideanFitnessEpsilon(), icp.getTransformationEpsilon(), icp.getRANSACIterations(), icp.getFitnessScore());
 
+      backup_transformation = transf_icp;
+      *backup_compare = *cloud;
+//      (*accumulated_cloud) += (*cloud_sum);
+      *accumulated_cloud = *cloud;
 
+    } else { // Go with keypoints
 
+      // Calculate all possible clouds with normals
+      pcl::PointCloud<pcl::Normal>::Ptr src_normal (new pcl::PointCloud<pcl::Normal>());
+      pcl::PointCloud<pcl::Normal>::Ptr tgt_normal (new pcl::PointCloud<pcl::Normal>());
+      calculate_normals(cloud, 7, src_normal);
+      calculate_normals(backup_compare, 7, tgt_normal);
+      // Calculate keypoints using the harris algorihtm
+      PointCloud<PointXYZI>::Ptr src_kp (new PointCloud<PointXYZI> ());
+      PointCloud<PointXYZI>::Ptr tgt_kp (new PointCloud<PointXYZI> ());
+      PointIndicesConstPtr src_ind (new PointIndices ());
+      PointIndicesConstPtr tgt_ind (new PointIndices ());
+      pcl::PointCloud<pcl::Normal>::Ptr src_normal_filt (new pcl::PointCloud<pcl::Normal>());
+      pcl::PointCloud<pcl::Normal>::Ptr tgt_normal_filt (new pcl::PointCloud<pcl::Normal>());
+      estimateKeypoints(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, src_ind, tgt_ind, 10, 1);
+      // Calculate features with FPFH algorithm
+      PointCloud<FPFHSignature33>::Ptr src_fpfh (new PointCloud<FPFHSignature33> ());
+      PointCloud<FPFHSignature33>::Ptr tgt_fpfh (new PointCloud<FPFHSignature33> ());
+      estimateFPFH(cloud, backup_compare, src_normal, tgt_normal, src_kp, tgt_kp, src_fpfh, tgt_fpfh, 20);
+      // Match the features
+      CorrespondencesPtr all_correspondences (new Correspondences ());
+      findCorrespondences(src_fpfh, tgt_fpfh, all_correspondences);
+      // Reject bad ones
+      CorrespondencesPtr good_correspondences (new Correspondences ());
+      rejectBadCorrespondences(all_correspondences, src_kp, tgt_kp, good_correspondences);
+      // Compute the transformation from the resultant correspondences
+      Eigen::Matrix4f transformation;
+      computeTransformation(src_kp, tgt_kp, good_correspondences, transformation);
+      view(cloud, backup_compare, src_kp, tgt_kp, good_correspondences);
+      // Transform the cloud with the resultant transformation and accumulate it
+      pcl::transformPointCloud(*cloud_sum, *cloud_sum, transformation);
 
+      *backup_compare = *cloud;
+      (*accumulated_cloud) += (*cloud_sum);
 
-
-
-
-
-
-//    // Determine correspondences and visualize
-//    pcl::CorrespondencesPtr correspondences_raw (new pcl::Correspondences());
-//    findCorrespondences(cloud, backup_compare, src_normal, tgt_normal, correspondences_raw);
-//    // Reject correspondences, get first transform and visualize
-//    pcl::CorrespondencesPtr correspondences_filt (new pcl::Correspondences());
-//    Eigen::Matrix4f transformation_ransac;
-//    rejectBadCorrespondences(correspondences_raw, cloud, backup_compare, src_normal, tgt_normal, correspondences_filt, transformation_ransac);
-//    ROS_INFO("First number in matrix from ransac: %.2f", transformation_ransac(1, 1));
-//    // Get best transformation from the correspondences
-//    Eigen::Matrix4f transformation_fim;
-//    findTransformation(cloud, backup_compare, src_normal, tgt_normal, correspondences_filt, transformation_fim);
-    // Find the best transformation iteratively, visualize each iteration
-    // Pass the entities to the next iteration
-    backup_transf = transformation;
-    *backup_compare = *cloud;
-    *tmp_cloud = *cloud;
-//    grid.setInputCloud(tmp_cloud);
-//    grid.setLeafSize(lf, lf, lf);
-//    grid.filter(*tmp_cloud);
-    (*accumulated_cloud) += (*tmp_cloud);
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
