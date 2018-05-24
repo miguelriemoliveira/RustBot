@@ -1,0 +1,20 @@
+image_width: 640
+image_height: 512
+camera_name: flir_ax5
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [1502.8, 0, -231.7442, 0, 1484.45, -287.6337, 0, 0, 1]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [-0.5291, 2.2406, 0, 0, 0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.00001, 0.00001, 0, 0, 1.00001, 0, 0, 0, 1.00001]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [1502.8, 0, 231.7442, -75.14, 0, 1484.45, 287.6337, -8.1645, 0, 0, 1, 0]

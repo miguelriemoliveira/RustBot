@@ -25,6 +25,8 @@ pcl::PointCloud<PointT>::Ptr accumulated_cloud;
 tf::TransformListener *p_listener;
 boost::shared_ptr<ros::Publisher> pub;
 
+float lf = 0.05f; // leaf size for voxel grid
+
 // Para gravar em PLY
 //pcl::PointCloud<PS> output;
 
@@ -103,7 +105,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
   //Filter the transformed cloud before accumulate with voxel grid
   *tmp_cloud = *cloud_transformed;
   grid.setInputCloud(tmp_cloud);
-  grid.setLeafSize(0.1f, 0.1f, 0.1f);
+  grid.setLeafSize(lf, lf, lf);
   grid.filter(*cloud_transformed);
   //Accumulate the point cloud using the += operator
   ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
