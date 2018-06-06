@@ -11,15 +11,13 @@
   <arg name="do_gimbal_motors" default="false"/>
   <arg name="do_auto_track" default="false"/>
   <arg name="do_supercooljoy_gimbal" default="false"/>
-  <arg name="mac_address_termica" default="00:11:1c:01:7c:80"/>
-  <arg name="termica_url" default="file:///home/mrs/mrs_ws/src/RUST/RustBot/rustbot_calibration/calibration/termica.yaml"/>
 
   <!--This is for running the system computing the stereo (and the slam) from played back offline data-->
   <arg name="online_stereo" default="false"/>
   <!--To launch a gui for tunning the stereo parameters-->
   <arg name="config_stereo" default="false"/>
   <!--The desired frames per second-->
-  <arg name="fps" default="3"/>
+  <arg name="fps" default="4"/>
   <!--Queue size for the stereo images. More queue size better the possibilities to sync, but more memory required-->
   <arg name="queue_size" default="500"/>
   <!--data fusion-->
@@ -59,13 +57,15 @@
         <param name="approximate_sync" value="true"/>
         <param name="queue_size" value="$(arg queue_size)"/>
 	<!--Melhorar visao stereo -->
-	<param name="prefilter_size" value="85"/>
-        <param name="disparity_range" value="170"/>
+        <param name="prefilter_size" value="10"/>
+        <param name="disparity_range" value="40"/>
+        <param name="min_disparity" value="50"/>
 	<param name="correlation_window_size" value="5"/>
-        <param name="speckle_size" value="1000"/>
-	<param name="speckle_range" value="31"/>
+        <param name="speckle_size" value="500"/>
+        <param name="speckle_range" value="4"/>
 	<param name="fullDP" value="true"/>
-        <param name="uniqueness_ratio" value="25.0"/>
+        <param name="uniqueness_ratio" value="15.0"/>
+        <param name="texture_threshold" value="10"/>
 
         <rosparam command="load" file="$(find rustbot_calibration)/calibration/stereo_image_proc.yaml"/>
       </node>
@@ -106,14 +106,6 @@
   </group>
 
   <!-- UFJF SECTION -->
-
-<!-- TERMICA -->
-  <group ns="termica">
-      <include file="$(find rustbot_bringup)/launch/termica.launch">
-        <arg name="mac_address" value="$(arg mac_address_termica)"/>
-	<arg name="calib_url"   value="$(arg termica_url)"/>
-      </include>
-  </group>
 
 <!--start the gimbal-->
   <group if="$(arg do_gimbal_motors)">

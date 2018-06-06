@@ -25,8 +25,6 @@ pcl::PointCloud<PointT>::Ptr accumulated_cloud;
 tf::TransformListener *p_listener;
 boost::shared_ptr<ros::Publisher> pub;
 
-float lf = 0.05f; // leaf size for voxel grid
-
 // Para gravar em PLY
 //pcl::PointCloud<PS> output;
 
@@ -53,8 +51,6 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
   pcl::removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
   //pcl::removeNaNFromPointCloud(*accumulated_cloud, *accumulated_cloud, indicesNAN);
 
-
-
   // Try to clear white and blue points from sky, and green ones from the grass, or something close to it
   int rMax = 200;
   int rMin = 0;
@@ -63,70 +59,79 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
   int bMax = 120;
   int bMin = 0;
 
-  pcl::ConditionAnd<PointT>::Ptr color_cond (new pcl::ConditionAnd<PointT> ());
-  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("r", pcl::ComparisonOps::LT, rMax)));
-  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("r", pcl::ComparisonOps::GT, rMin)));
-  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("g", pcl::ComparisonOps::LT, gMax)));
-  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("g", pcl::ComparisonOps::GT, gMin)));
-  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("b", pcl::ComparisonOps::LT, bMax)));
-  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("b", pcl::ComparisonOps::GT, bMin)));
+//  pcl::ConditionAnd<PointT>::Ptr color_cond (new pcl::ConditionAnd<PointT> ());
+//  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("r", pcl::ComparisonOps::LT, rMax)));
+//  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("r", pcl::ComparisonOps::GT, rMin)));
+//  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("g", pcl::ComparisonOps::LT, gMax)));
+//  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("g", pcl::ComparisonOps::GT, gMin)));
+//  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("b", pcl::ComparisonOps::LT, bMax)));
+//  color_cond->addComparison (pcl::PackedRGBComparison<PointT>::Ptr (new pcl::PackedRGBComparison<PointT> ("b", pcl::ComparisonOps::GT, bMin)));
 
-  // build the filter
-  pcl::ConditionalRemoval<PointT> condrem (color_cond);
-  condrem.setInputCloud (cloud);
-  condrem.setKeepOrganized(true);
+//  // build the filter
+//  pcl::ConditionalRemoval<PointT> condrem (color_cond);
+//  condrem.setInputCloud (cloud);
+//  condrem.setKeepOrganized(true);
 
-  // apply filter
-  condrem.filter (*cloud);
+//  // apply filter
+//  condrem.filter (*cloud);
 
-  //Get the transform, return if cannot get it
-  ros::Time tic = ros::Time::now();
-  ros::Time t = msg->header.stamp;
-  tf::StampedTransform trans;
-  try
-  {
-    p_listener->waitForTransform(ros::names::remap("/map"), msg->header.frame_id, t, ros::Duration(3.0));
-    p_listener->lookupTransform(ros::names::remap("/map"), msg->header.frame_id, t, trans);
-  }
-  catch (tf::TransformException& ex){
-    ROS_ERROR("%s",ex.what());
-    //ros::Duration(1.0).sleep();
-    ROS_WARN("Cannot accumulate");
-    return;
-  }
-  ROS_INFO("Collected transforms (%0.3f secs)", (ros::Time::now() - tic).toSec());
+//  for(int i=0; i<cloud->points.size(); i++){
+//    //      ROS_INFO("Escala das cores: r %.2f g %.2f b %.2f", cloud->points[i].r, cloud->points[i].g, cloud->points[i].b);
+//    //      if(cloud->points[i].r > 20 & cloud->points[i].g > 20 & cloud->points[i].b > 20){
+//    //        ROS_INFO("Achamos um ponto");
+//    cloud->erase(cloud->begin()+i);
+//    cloud->points.erase(cloud->begin()+i);
+//    //      }
+//  }
+
+    //Get the transform, return if cannot get it
+    ros::Time tic = ros::Time::now();
+    ros::Time t = msg->header.stamp;
+    tf::StampedTransform trans;
+    try
+    {
+        p_listener->waitForTransform(ros::names::remap("/map"), msg->header.frame_id, t, ros::Duration(3.0));
+        p_listener->lookupTransform(ros::names::remap("/map"), msg->header.frame_id, t, trans);
+    }
+    catch (tf::TransformException& ex){
+        ROS_ERROR("%s",ex.what());
+        //ros::Duration(1.0).sleep();
+        ROS_WARN("Cannot accumulate");
+        return;
+    }
+    ROS_INFO("Collected transforms (%0.3f secs)", (ros::Time::now() - tic).toSec());
 
 
-  //Transform point cloud using the transform obtained
-  Eigen::Affine3d eigen_trf;
-  tf::transformTFToEigen (trans, eigen_trf);
-  pcl::transformPointCloud<PointT>(*cloud, *cloud_transformed, eigen_trf);
+    //Transform point cloud using the transform obtained
+    Eigen::Affine3d eigen_trf;                                  
+    tf::transformTFToEigen (trans, eigen_trf);
+    pcl::transformPointCloud<PointT>(*cloud, *cloud_transformed, eigen_trf);
 
-  //Filter the transformed cloud before accumulate with voxel grid
-  *tmp_cloud = *cloud_transformed;
-  grid.setInputCloud(tmp_cloud);
-  grid.setLeafSize(lf, lf, lf);
-  grid.filter(*cloud_transformed);
-  //Accumulate the point cloud using the += operator
-  ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
-  (*accumulated_cloud) += (*cloud_transformed);
+    //Filter the transformed cloud before accumulate with voxel grid
+//    *tmp_cloud = *cloud_transformed;
+//    grid.setInputCloud(tmp_cloud);
+//    grid.setLeafSize(0.05f, 0.05f, 0.05f);
+//    grid.filter(*cloud_transformed);
+    //Accumulate the point cloud using the += operator
+    ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
+    (*accumulated_cloud) += (*cloud_transformed);
 
-  //Voxel grid filter the accumulated cloud
-  //    *tmp_cloud = *accumulated_cloud;
-  //    grid.setInputCloud(tmp_cloud);
-  //    grid.setLeafSize (0.2f, 0.2f, 0.2f);
-  //    grid.setLeafSize (0.05f, 0.05f, 0.05f);
-  //    grid.filter (*accumulated_cloud);
-  ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
+    //Voxel grid filter the accumulated cloud
+//    *tmp_cloud = *accumulated_cloud;
+//    grid.setInputCloud(tmp_cloud);
+//    grid.setLeafSize (0.2f, 0.2f, 0.2f);
+//    grid.setLeafSize (0.05f, 0.05f, 0.05f);
+//    grid.filter (*accumulated_cloud);
+    ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
 
-  //Conver the pcl point cloud to ros msg and publish
-  pcl::toROSMsg (*accumulated_cloud, msg_out);
-  msg_out.header.stamp = t;
-  pub->publish(msg_out);
+    //Conver the pcl point cloud to ros msg and publish
+    pcl::toROSMsg (*accumulated_cloud, msg_out);
+    msg_out.header.stamp = t;
+    pub->publish(msg_out);
 
-  cloud.reset();
-  tmp_cloud.reset();
-  cloud_transformed.reset();
+    cloud.reset();
+    tmp_cloud.reset();
+    cloud_transformed.reset();
 }
 
 
