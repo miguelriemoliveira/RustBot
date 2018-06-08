@@ -2,21 +2,23 @@
 <!--Launches the recording of the system messages. -->
 <launch>
 <!--arguments-->
-    <arg name="only_raw_data" default="false"/> <!--Whether or not to record only raw data-->
-    <arg name="bag" default="sev"/>
-    <arg name="folder" default="/home/$(env USER)/Desktop"/>
+<arg name="only_raw_data" default="false"/> <!--Whether or not to record only raw data-->
+<arg name="bag" default="sev"/>
+<arg name="folder" default="/home/$(env USER)/Desktop"/>
 
-    <param name="/use_sim_time" value="false"/>
+<param name="/use_sim_time" value="false"/>
 
-    <!--To record only raw data-->
-    <group if="$(arg only_raw_data)">
-        <node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/termica/thermal/image_raw /termica/thermal/camera_info /stereo/left/image_raw/compressed  /stereo/left/image_color/compressed /stereo/left/camera_info /stereo/right/image_raw/compressed /stereo/right/image_color/compressed /stereo/right/camera_info /mavros/global_position/raw/fix /mavros/imu/data /mavros/imu/data_raw /mavros/global_position/raw/gps_vel /mavros/global_position/raw/global /mavros/global_position/compass_hdg /mavros/imu/mag /mavros/imu/atm_pressure /mavros/gbal_position/compass_hdg /mavros/local_position/odom /mavros/local_position/pose /mavros/local_position/velocity -O $(arg folder)/$(arg bag)">
-        </node>
-    </group>
-  
-    <!--To record all data-->
-    <group unless="$(arg only_raw_data)">
-        <node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/termica/thermal/image_raw /termica/thermal/camera_info /stereo/left/image_raw/compressed /stereo/left/image_color/compressed /stereo/left/camera_info /stereo/right/image_raw/compressed /stereo/right/image_color/compressed /stereo/right/camera_info  /mavros/global_position/raw/fix /mavros/imu/data /mavros/imu/data_raw /mavros/global_position/raw/gps_vel /mavros/global_position/raw/global /stereo_odometry /stereo/points2 /mavros/global_position/compass_hdg /mavros/imu/mag /mavros/imu/atm_pressure /mavros/gbal_position/compass_hdg /mavros/local_position/odom /mavros/local_position/pose /mavros/local_position/velocity -O $(arg folder)/$(arg bag)">
-       </node>
-    </group>
+<!--To record only raw data-->
+<group if="$(arg only_raw_data)">
+<!--        <node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/termica/thermal/image_raw /termica/thermal/camera_info /stereo/left/image_raw  /stereo/left/image_color/compressed /stereo/left/camera_info /stereo/right/image_raw/compressed /stereo/right/image_color/compressed /stereo/right/camera_info /mavros/global_position/raw/fix /mavros/imu/data /mavros/imu/data_raw /mavros/global_position/raw/gps_vel /mavros/global_position/raw/global /mavros/global_position/compass_hdg /mavros/imu/mag /mavros/imu/atm_pressure /mavros/gbal_position/compass_hdg /mavros/local_position/odom /mavros/local_position/pose /mavros/local_position/velocity -O $(arg folder)/$(arg bag)">-->
+<node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/termica/thermal/image_raw /termica/thermal/camera_info /stereo/left/image_raw/compressed  /stereo/left/image_color/compressed /stereo/left/camera_info /stereo/right/image_raw/compressed /stereo/right/image_color/compressed /stereo/right/camera_info -O $(arg folder)/$(arg bag)">
+</node>
+</group>
+
+<!--To record all data-->
+<group unless="$(arg only_raw_data)">
+<!--<node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/termica/thermal/image_raw /termica/thermal/camera_info /stereo/left/image_raw /stereo/left/image_color/compressed /stereo/left/camera_info /stereo/right/image_raw/compressed /stereo/right/image_color/compressed /stereo/right/camera_info  /mavros/global_position/raw/fix /mavros/imu/data /mavros/imu/data_raw /mavros/global_position/raw/gps_vel /mavros/global_position/raw/global /stereo_odometry /stereo/points2 /mavros/global_position/compass_hdg /mavros/imu/mag /mavros/imu/atm_pressure /mavros/gbal_position/compass_hdg /mavros/local_position/odom /mavros/local_position/pose /mavros/local_position/velocity -O $(arg folder)/$(arg bag)">-->
+<node name="rosbag_record" pkg="rosbag" type="record" output="screen" args="/termica/thermal/image_raw /termica/thermal/camera_info /stereo/left/image_raw/compressed /stereo/left/image_color/compressed /stereo/left/camera_info /stereo/right/image_raw/compressed /stereo/right/image_color/compressed /stereo/right/camera_info -O $(arg folder)/$(arg bag)">
+</node>
+</group>
 </launch>
