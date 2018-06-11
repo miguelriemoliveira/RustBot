@@ -11,7 +11,8 @@
   <node pkg="image_transport" type="republish" name="republish_right" output="screen" args="compressed in:=/stereo/right/image_raw raw out:=/stereo/right/image_raw"/>
   <node pkg="image_transport" type="republish" name="republish_left_color" output="screen" args="compressed in:=/stereo/left/image_color raw out:=/stereo/left/image_color"/>
   <node pkg="image_transport" type="republish" name="republish_right_color" output="screen" args="compressed in:=/stereo/right/image_color raw out:=/stereo/right/image_color"/>
-  <!--playback a bag file in visual mode
+  <node pkg="image_transport" type="republish" name="republish_thermal" output="screen" args="compressed in:=/termica/thermal/image_raw/compressed raw out:=/termica/thermal/image_raw"/>
+<!--playback a bag file in visual mode
   <node pkg="rqt_bag" type="rqt_bag" name="rqt_bag" output="screen" args=" $(arg bag)"/> -->
   <!--playback a bag file-->
   <!--<node pkg="rosbag" type="play" name="rosbag_play" output="screen" args=" $(arg bag) -l -s 30 -clock -r 1 -duration 12"/>-->

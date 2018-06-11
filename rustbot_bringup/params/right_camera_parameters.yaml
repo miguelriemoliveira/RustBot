@@ -3,8 +3,8 @@ ptp_mode: 'Master'
 acquisition_rate: 4.0
 balance_ratio_abs: 1.0
 balance_ratio_selector: 'Red'
-binning_x: 1
-binning_y: 1
+binning_x: 2
+binning_y: 2
 #decimation_x: 2
 #decimation_y: 2
 decimation_x: 1
