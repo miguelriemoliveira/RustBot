@@ -40,20 +40,20 @@
     <param name="approximate_sync" value="true"/>
     <param name="publish_tf" value="true"/>
     <param name="queue_size" value="50"/>
-    <param name="ref_frame_change_method" value="0"/>
-    <param name="inlier_threshold" value="2.5"/>
+    <param name="ref_frame_change_method" value="1"/>
+    <param name="inlier_threshold" value="1.5"/>
     <param name="odom_frame_id" value="odom"/>
     <param name="base_link_frame_id" value="base_link"/>
 
     <!--Ajustar melhores valores para fazer o match das nuvens-->
     <param name="reweighting" value="true"/> <!--default ja-->
-    <param name="max_features" value="5"/>
+    <param name="max_features" value="2"/>
     <param name="bucket_width" value="50"/>
     <param name="bucket_height" value="50"/>
 
     <param name="half_resolution" value="1"/> <!--melhor esse mesmo-->
     <param name="match_binsize" value="50"/>
-    <param name="match_radius" value="100"/> <!--esse parametro e bastante importante, afeta a distancia entre features-->
+    <param name="match_radius" value="200"/> <!--esse parametro e bastante importante, afeta a distancia entre features-->
     <param name="outlier_disp_tolerance" value="5"/>
     <param name="outlier_flow_tolerance" value="5"/>
   </node>
