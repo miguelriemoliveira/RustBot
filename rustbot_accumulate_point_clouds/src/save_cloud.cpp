@@ -17,6 +17,58 @@ std::string filename;
 // Define to simplify matters
 typedef pcl::PointXYZRGB PointT;
 typedef pcl::PointXYZRGBNormal Out;
+// Control of the saved clouds
+bool visual_gravada = false, termica_gravada = false;
+
+struct PointTT
+{
+  PCL_ADD_POINT4D;                  // preferred way of adding a XYZ+padding
+  PCL_ADD_RGB;
+  float l;
+  float o;
+  float p;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW   // make sure our new allocators are aligned
+} EIGEN_ALIGN16;                    // enforce SSE padding for correct memory alignment
+
+POINT_CLOUD_REGISTER_POINT_STRUCT  (PointTT,           // here we assume a XYZ + "test" (as fields)
+                                   (float, x, x)
+                                   (float, y, y)
+                                   (float, z, z)
+                                   (float, rgb, rgb)
+                                   //(float, g, g)
+                                   //(float, b, b)
+                                   (float, l, l)
+                                   (float, o, o)
+                                   (float, p, p)
+)
+
+void savetermica_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
+{
+  ROS_INFO("Recebendo dados para salvar......");
+  // Declare the pointer to the received cloud
+  pcl::PointCloud<PointTT>::Ptr recv_cloud_ptr(new pcl::PointCloud<PointTT>); // Allocate memory
+
+  // Pass the message to a pcl entity
+  pcl::fromROSMsg(*msg, *recv_cloud_ptr);
+
+
+  ROS_INFO("Salvando o arquivo .ply na area de trabalho......");
+  // Ver o tempo para diferenciar bags gravadas automaticamente
+  time_t t = time(0);
+  struct tm * now = localtime( & t );
+  std::string year, month, day, hour, minutes;
+  year    = boost::lexical_cast<std::string>(now->tm_year + 1900);
+  month   = boost::lexical_cast<std::string>(now->tm_mon );
+  day     = boost::lexical_cast<std::string>(now->tm_mday);
+  hour    = boost::lexical_cast<std::string>(now->tm_hour);
+  minutes = boost::lexical_cast<std::string>(now->tm_min );
+  std::string date = "_" + year + "_" + month + "_" + day + "_" + hour + "h_" + minutes + "m";
+  filename = "$HOME/Desktop/pos_processo_termico_em_"+date;
+  pcl::io::savePLYFileASCII(filename, *recv_cloud_ptr);
+  ROS_INFO("Tudo correto, conferir pelo arquivo na area de trabalho !!");
+
+  termica_gravada = true;
+}
 
 void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
@@ -32,7 +84,7 @@ void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne; // Entity to compute normals in the future
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ()); // Kd Tree used to divide space and compute normals
   ne.setSearchMethod (tree);
-  ne.setRadiusSearch (1);
+  ne.setKSearch(5);
   pcl::PointCloud<pcl::Normal>::Ptr normals_cloud_ptr (new pcl::PointCloud<pcl::Normal> ()); // Pointer to the cloud of normals
 
   // Output cloud to save
@@ -72,7 +124,7 @@ void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
   ROS_INFO("Tudo correto, conferir pelo arquivo na area de trabalho !!");
 
   // Kill the node after saving the ptcloud
-  ros::shutdown();
+  visual_gravada = true;
 
 }
 
@@ -83,9 +135,17 @@ int main(int argc, char **argv)
 
   ROS_INFO("Iniciando o processo de salvar dados pos processados...");
 
-  ros::Subscriber sub = nh.subscribe("/accumulated_point_cloud", 1000, savecloud_plus_normal_ply);
+  ros::Subscriber sub  = nh.subscribe("/accumulated_point_cloud", 1000, savecloud_plus_normal_ply);
+  ros::Subscriber subt = nh.subscribe("/accumulated_termica", 1000, savetermica_ply);
 
-  ros::spin();
+  while(true){
+    ros::spinOnce();
+    if(visual_gravada && termica_gravada){
+      ros::shutdown();
+      break;
+    }
+  }
+  ros::shutdown();
 
   return 0;
 }
