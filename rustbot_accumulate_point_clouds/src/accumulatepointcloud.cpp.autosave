@@ -172,8 +172,6 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
   cloud_acumulada_termica.points.resize (nPontos);
   for(int i = 0; i < int(accumulated_cloud->points.size()); i++)
   {
-
-
       cloud_acumulada_visual.points[i].x = accumulated_cloud->points[i].x;
       cloud_acumulada_visual.points[i].y = accumulated_cloud->points[i].y;
       cloud_acumulada_visual.points[i].z = accumulated_cloud->points[i].z;
@@ -188,13 +186,13 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
 
       cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
       cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
-      cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
+      cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;
 
       if(cloud_acumulada_termica.points[i].r != -1)
       {
           cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
           cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
-          cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
+          cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;
       }
       else
       {
