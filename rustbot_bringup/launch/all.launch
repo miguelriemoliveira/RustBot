@@ -63,9 +63,9 @@
         <param name="prefilter_cap" value="63"/>
         <param name="disparity_range" value="150"/>
         <param name="min_disparity" value="0"/>
-        <param name="correlation_window_size" value="150"/>
-        <param name="speckle_size" value="50"/>
-        <param name="speckle_range" value="40"/>
+        <param name="correlation_window_size" value="20"/>
+        <param name="speckle_size" value="1000"/>
+        <param name="speckle_range" value="31"/>
 	<param name="fullDP" value="true"/>
         <param name="uniqueness_ratio" value="12.0"/>
         <param name="texture_threshold" value="10"/>

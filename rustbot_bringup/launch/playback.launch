@@ -16,6 +16,6 @@
   <node pkg="rqt_bag" type="rqt_bag" name="rqt_bag" output="screen" args=" $(arg bag)"/> -->
   <!--playback a bag file-->
   <!--<node pkg="rosbag" type="play" name="rosbag_play" output="screen" args=" $(arg bag) -l -s 30 -clock -r 1 -duration 12"/>-->
-  <node pkg="rosbag" type="play" name="rosbag_play" output="screen" args=" $(arg local)/$(arg bag).bag --clock -r 0.1"/>
+  <node pkg="rosbag" type="play" name="rosbag_play" output="screen" args=" $(arg local)/$(arg bag).bag --clock -r 0.1 --start=149.0"/>
       
 </launch>
