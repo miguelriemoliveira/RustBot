@@ -55,7 +55,7 @@ boost::shared_ptr<ros::Publisher> pub;
 //boost::shared_ptr<ros::Publisher> pub_visual;
 boost::shared_ptr<ros::Publisher> pub_termica;
 
-float lf = 0.05;
+float lf = 0.02;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void filter_color(pcl::PointCloud<PointT>::Ptr cloud_in){
@@ -131,13 +131,13 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
   passthrough(cloud, "x", -8, 8);
   passthrough(cloud, "y", -8, 8);
   // Filter for color
-  filter_color(cloud);
+//  filter_color(cloud);
   // Remove outiliers
-  remove_outlier(cloud, 16, 1);
+  remove_outlier(cloud, 19, 0.5);
   // Voxel grid
-  grid.setInputCloud(cloud);
-  grid.setLeafSize(lf, lf, lf);
-  grid.filter(*cloud);
+//  grid.setInputCloud(cloud);
+//  grid.setLeafSize(lf, lf, lf);
+//  grid.filter(*cloud);
   //Get the transform, return if cannot get it
   ros::Time tic = ros::Time::now();
   ros::Time t = msg->header.stamp;

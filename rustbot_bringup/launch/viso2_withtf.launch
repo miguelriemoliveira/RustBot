@@ -44,18 +44,24 @@
     <param name="base_link_frame_id" value="base_link"/>
 
     <!--Ajustar melhores valores para fazer o match das nuvens-->
-    <param name="ref_frame_change_method" value="0"/>
-    <param name="inlier_threshold" value="10"/>
-    <param name="reweighting" value="true"/> <!--default ja-->
-    <param name="max_features" value="45"/>
+    <param name="max_features" value="2"/>
     <param name="bucket_width" value="50"/>
     <param name="bucket_height" value="50"/>
-
-    <param name="half_resolution" value="1"/> <!--melhor esse mesmo-->
+    <param name="nms_n" value="3"/>
+    <param name="nms_tau" value="50"/>
     <param name="match_binsize" value="50"/>
     <param name="match_radius" value="200"/> <!--esse parametro e bastante importante, afeta a distancia entre features-->
     <param name="outlier_disp_tolerance" value="5"/>
     <param name="outlier_flow_tolerance" value="5"/>
-    <param name="ransac_iters" value="500"/>
+    <param name="match_disp_tolerance" value="2"/>
+    <param name="half_resolution" value="1"/> <!--melhor esse mesmo-->
+    <param name="refinement" value="1"/>
+    <param name="ransac_iters" value="200"/>
+    <param name="inlier_threshold" value="1.5"/>
+    <param name="reweighting" value="true"/> <!--default ja-->
+    <param name="ref_frame_change_method" value="0"/>
+    <param name="ref_frame_motion_threshold" value="5.0"/>
+    <param name="ref_frame_inlier_threshold" value="150"/>
+
   </node>
 </launch>
