@@ -12,6 +12,14 @@
 #include <pcl_ros/transforms.h>
 #include <pcl/features/normal_3d.h> // add normals to render in MART.exe
 
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
+
+using namespace message_filters;
+
+typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2, sensor_msgs::PointCloud2> syncPolicy;
+
 // FIle to save
 std::string filename;
 // Define to simplify matters
@@ -44,7 +52,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT  (PointTT,           // here we assume a XYZ +
 
 void savetermica_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
-  ROS_INFO("Recebendo dados para salvar......");
+  ROS_INFO("Recebendo dados termicos para salvar......");
   // Declare the pointer to the received cloud
   pcl::PointCloud<PointTT>::Ptr recv_cloud_ptr(new pcl::PointCloud<PointTT>); // Allocate memory
 
@@ -62,16 +70,18 @@ void savetermica_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
   day     = boost::lexical_cast<std::string>(now->tm_mday);
   hour    = boost::lexical_cast<std::string>(now->tm_hour);
   minutes = boost::lexical_cast<std::string>(now->tm_min );
-  std::string date = "_" + year + "_" + month + "_" + day + "_" + hour + "h_" + minutes + "m";
-  filename = "$HOME/Desktop/pos_processo_termico_em_"+date;
+  std::string date = "_" + year + "_" + month + "_" + day + "_" + hour + "h_" + minutes + "m.ply";
+  filename = "/home/mrs/Desktop/pos_processo_termico_em"+date;
   pcl::io::savePLYFileASCII(filename, *recv_cloud_ptr);
   ROS_INFO("Tudo correto, conferir pelo arquivo na area de trabalho !!");
 
   termica_gravada = true;
 }
 
-void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
+void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg, const sensor_msgs::PointCloud2ConstPtr& msgt)
 {
+  //////////////////////////// VISUAL
+
   ROS_INFO("Recebendo dados para salvar......");
   // Declare the pointer to the received cloud
   pcl::PointCloud<PointT>::Ptr recv_cloud_ptr(new pcl::PointCloud<PointT>); // Allocate memory
@@ -79,7 +89,7 @@ void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
   // Pass the message to a pcl entity
   pcl::fromROSMsg(*msg, *recv_cloud_ptr);
 
-  // CLouds to pass info around
+  // Clouds to pass info around
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz_ptr (new pcl::PointCloud<pcl::PointXYZ>); // Gather only pose so can compute normals
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne; // Entity to compute normals in the future
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ()); // Kd Tree used to divide space and compute normals
@@ -108,6 +118,17 @@ void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
   ROS_INFO("Concatenando os campos......");
   pcl::concatenateFields(*recv_cloud_ptr, *normals_cloud_ptr, *output_cloud_ptr);
 
+  //////////////////////////// TERMICA
+
+  ROS_INFO("Recebendo dados termicos para salvar......");
+  // Declare the pointer to the received cloud
+  pcl::PointCloud<PointTT>::Ptr recv_cloud_term_ptr(new pcl::PointCloud<PointTT>); // Allocate memory
+
+  // Pass the message to a pcl entity
+  pcl::fromROSMsg(*msgt, *recv_cloud_term_ptr);
+
+  //////////////////////////// SALVAR
+  // Hora atual
   ROS_INFO("Salvando o arquivo .ply na area de trabalho......");
   // Ver o tempo para diferenciar bags gravadas automaticamente
   time_t t = time(0);
@@ -118,14 +139,20 @@ void savecloud_plus_normal_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
   day     = boost::lexical_cast<std::string>(now->tm_mday);
   hour    = boost::lexical_cast<std::string>(now->tm_hour);
   minutes = boost::lexical_cast<std::string>(now->tm_min );
-  std::string date = "_" + year + "_" + month + "_" + day + "_" + hour + "h_" + minutes + "m";
-  filename = "$HOME/Desktop/pos_processo_em_"+date;
+  std::string date = "_" + year + "_" + month + "_" + day + "_" + hour + "h_" + minutes + "m.ply";
+
+  // Salvando
+  filename = "/home/mrs/Desktop/pos_processo_visual_em"+date;
   pcl::io::savePLYFileASCII(filename, *output_cloud_ptr);
-  ROS_INFO("Tudo correto, conferir pelo arquivo na area de trabalho !!");
+  filename = "/home/mrs/Desktop/pos_processo_termico_em"+date;
+  pcl::io::savePLYFileASCII(filename, *recv_cloud_term_ptr);
+
+  ROS_INFO("Tudo correto, conferir pelos arquivos na area de trabalho !!");
 
   // Kill the node after saving the ptcloud
   visual_gravada = true;
-
+  termica_gravada = true;
+  ros::shutdown();
 }
 
 int main(int argc, char **argv)
@@ -135,8 +162,15 @@ int main(int argc, char **argv)
 
   ROS_INFO("Iniciando o processo de salvar dados pos processados...");
 
-  ros::Subscriber sub  = nh.subscribe("/accumulated_point_cloud", 1000, savecloud_plus_normal_ply);
-  ros::Subscriber subt = nh.subscribe("/accumulated_termica", 1000, savetermica_ply);
+//  ros::Subscriber sub  = nh.subscribe("/accumulated_point_cloud", 1000, savecloud_plus_normal_ply);
+//  ros::Subscriber subt = nh.subscribe("/accumulated_termica", 1000, savetermica_ply);
+
+  message_filters::Subscriber<sensor_msgs::PointCloud2>  sub(nh, "/accumulated_point_cloud", 100);
+  message_filters::Subscriber<sensor_msgs::PointCloud2> subt(nh, "/accumulated_termica"    , 100);
+
+  // Sincroniza as leituras dos topicos (sensores a principio) em um so callback
+  Synchronizer<syncPolicy> sync(syncPolicy(100), sub, subt);
+  sync.registerCallback(boost::bind(&savecloud_plus_normal_ply, _1, _2));
 
   while(true){
     ros::spinOnce();

@@ -127,9 +127,9 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
   std::vector<int> indicesNAN;
   pcl::removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
   // Filter with passthrough filter -> region to see
-  passthrough(cloud, "z", 1, 35);
-  passthrough(cloud, "x", -8, 8);
-  passthrough(cloud, "y", -8, 8);
+//  passthrough(cloud, "z", 1, 35);
+//  passthrough(cloud, "x", -8, 8);
+//  passthrough(cloud, "y", -8, 8);
   // Filter for color
 //  filter_color(cloud);
   // Remove outiliers

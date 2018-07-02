@@ -1,10 +1,10 @@
-image_width: 800
-image_height: 600
+image_width: 1600
+image_height: 1200
 camera_name: left_optical
 camera_matrix:
   rows: 3
   cols: 3
-  data: [908.159257291513, 0, 395.431601581711, 0, 879.370761980893, 304.0292653288053, 0, 0, 1]
+  data: [1765.159257291513, 0, 755.431601581711, 0, 1705.370761980893, 591.0292653288053, 0, 0, 1]
 distortion_model: plumb_bob
 distortion_coefficients:
   rows: 1
