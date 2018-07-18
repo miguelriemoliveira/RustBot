@@ -61,11 +61,11 @@ float lf = 0.02;
 void filter_color(pcl::PointCloud<PointT>::Ptr cloud_in){
 
   // Try to clear white and blue points from sky, and green ones from the grass, or something close to it
-  int rMax = 200;
+  int rMax = 210;
   int rMin = 0;
-  int gMax = 120;
+  int gMax = 210;
   int gMin = 0;
-  int bMax = 120;
+  int bMax = 210;
   int bMin = 0;
 
   pcl::ConditionAnd<PointT>::Ptr color_cond (new pcl::ConditionAnd<PointT> ());
@@ -128,16 +128,16 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg)
   pcl::removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
   // Filter with passthrough filter -> region to see
 //  passthrough(cloud, "z", 1, 35);
-//  passthrough(cloud, "x", -8, 8);
-//  passthrough(cloud, "y", -8, 8);
+  passthrough(cloud, "x", -10, 10);
+  passthrough(cloud, "y", -10, 10);
   // Filter for color
-//  filter_color(cloud);
+  filter_color(cloud);
   // Remove outiliers
   remove_outlier(cloud, 19, 0.5);
   // Voxel grid
-//  grid.setInputCloud(cloud);
-//  grid.setLeafSize(lf, lf, lf);
-//  grid.filter(*cloud);
+  grid.setInputCloud(cloud);
+  grid.setLeafSize(lf, lf, lf);
+  grid.filter(*cloud);
   //Get the transform, return if cannot get it
   ros::Time tic = ros::Time::now();
   ros::Time t = msg->header.stamp;
@@ -265,8 +265,8 @@ int main (int argc, char** argv)
     ros::spinOnce();
   }
   //Save accumulated point cloud to a file
-  printf("Saving to file %s\n", filename.c_str());
-  pcl::io::savePCDFileASCII (filename, *accumulated_cloud);
+//  printf("Saving to file %s\n", filename.c_str());
+//  pcl::io::savePCDFileASCII (filename, *accumulated_cloud);
 
   return 0;
 
