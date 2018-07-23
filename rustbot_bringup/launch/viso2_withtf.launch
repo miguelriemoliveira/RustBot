@@ -16,13 +16,13 @@
 
   <!-- TF: "base_link" to "camera_link" [Rotate the camera frame.] -->
   <arg name="pi/2" value="1.5707963267948966"/>
-<!--  <arg name="optical_rotate" value="0 0 0 0 0 0"/>-->
-  <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0.0 -$(arg pi/2)"/>
+  <arg name="optical_rotate" value="0 0 0 0 0 0"/>
+<!--  <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0.0 -$(arg pi/2)"/>-->
   <node pkg="tf" type="static_transform_publisher" name="camera_to_gimbal" args="$(arg optical_rotate) gimball $(arg frameid_camera) 30"/>
 
   <!-- Tranformada entre o Gimbal e Base_link -->
-<!--  <arg name="Gimbal_rotate" value="0 0 0 0 0 0"/>-->
-  <arg name="Gimbal_rotate" value="0 0 0 0 0.19 0"/>
+  <arg name="Gimbal_rotate" value="0 0 0 0 0 0"/>
+<!--  <arg name="Gimbal_rotate" value="0 0 0 0 0.19 0"/>-->
   <node pkg="tf" type="static_transform_publisher" name="Gimbal_baselink" args="$(arg Gimbal_rotate) $(arg frameid_robot) gimball 30"/>
 
   <!-- Tranformada entre o Camera Frame e Leftoptical -->

@@ -53,6 +53,6 @@
 
   <node pkg="rustbot_accumulate_point_clouds" type="accumulatepointcloud" name="accumulatepointcloud" output="screen">
     <remap from="input" to="/stereo/points2"/>
-    <remap from="map" to="map"/>
+    <remap from="odom" to="odom"/>
   </node>
 </launch>
