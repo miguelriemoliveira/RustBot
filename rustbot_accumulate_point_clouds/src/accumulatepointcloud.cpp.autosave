@@ -165,6 +165,7 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t){
   double dpitch = DEG2RAD( bound180( (tilt_hor - tilt_current)*pwm2tilt ) ); // [RAD]
   // Calculo do quaternion relativo - forcar roll a 0 (futuramente considerar leitura do viso2)
   // Calculo da translacao - rotacionar segundo angulo de offset de yaw
+  
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const OdometryConstPtr& msg_odo,
