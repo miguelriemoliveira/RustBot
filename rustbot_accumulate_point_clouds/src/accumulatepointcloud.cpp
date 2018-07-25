@@ -93,6 +93,8 @@ bool   first_read_mavros_dyn;
 double yaw_offset_board; // [RAD]
 double east_offset, north_offset; // [m]
 double yaw_current_board, north_current, north_previous, east_current, east_previous;
+// Odometria resultante
+ros::Publisher pubodom;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void filter_color(PointCloud<PointTT>::Ptr cloud_in){
@@ -153,7 +155,7 @@ double bound180(double angle){
   return angle;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t){
+void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, const sensor_msgs::PointCloud2ConstPtr msg_ptc){
   /////////////////////////// Frames ///////////////////////////
   ///      Camera                  Inercial
   ///
@@ -183,6 +185,18 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t){
   t.data()[0] = x_camera;
   t.data()[1] =        0;
   t.data()[2] = z_camera;
+  // Printar para averiguar
+  if(true){
+    cout << "Roll: " <<     0    << "\tPitch: " << RAD2DEG(dpitch) << "\tYaw: " << RAD2DEG(dyaw) << endl;
+    cout << "X   : " << x_camera << "\tY    : " <<       0         << "\tZ  : " <<   z_camera    << endl;
+  }
+  // Publicar a odometria para a galera
+  Odometry odom_out;
+  odom_out.header.frame_id = msg_ptc->header.frame_id; odom_out.header.stamp = msg_ptc->header.stamp;
+  odom_out.pose.pose.position.x = x_camera; odom_out.pose.pose.position.y = 0; odom_out.pose.pose.position.z = z_camera;
+  odom_out.pose.pose.orientation.x = q.x(); odom_out.pose.pose.orientation.y = q.y();
+  odom_out.pose.pose.orientation.z = q.z(); odom_out.pose.pose.orientation.w = q.w();
+  pubodom.publish(odom_out);
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,7 +274,7 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const O
   // Calculo da pose a partir da placa, gps e dos motores
   Eigen::Quaternion<double> q2;
   Eigen::Vector3d offset2;
-  calculate_current_pose(q2, offset2);
+  calculate_current_pose(q2, offset2, msg_ptc);
 
   // Transformar a nuvem
 //  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q);
