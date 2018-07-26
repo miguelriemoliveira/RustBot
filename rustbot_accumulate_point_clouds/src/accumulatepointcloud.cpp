@@ -55,7 +55,6 @@ using namespace Eigen;
 /// Definitions
 typedef PointXYZRGB PointTT;
 typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2, Odometry, VFR_HUD, Odometry, Odometry> syncPolicy;
-//typedef sync_policies::ApproximateTime<DynamixelState, DynamixelState> syncPolicyDyn;
 
 struct PointT
 {
@@ -87,7 +86,6 @@ boost::shared_ptr<ros::Publisher> pub_termica;
 // Motors
 float pan_front, pan_current , pwm2pan ; // YAW   [PWM, PWM, DEG/PWM]
 float tilt_hor , tilt_current, pwm2tilt; // PITCH [PWM, PWM, DEG/PWM]
-bool  first_read_pan, first_read_tilt;
 // Mavros
 bool   first_read_mavros_dyn;
 double yaw_offset_board; // [RAD]
@@ -163,7 +161,7 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
   ///        |                        |
   ///      Y +                  N (Y) x--> E (X)
   ///
-  /// YAW   na horizontal, positivo para esquerda, 0 no NORTE
+  /// YAW   na horizontal, positivo para direita, 0 no NORTE
   /// PITCH na vertical, positivo nariz pra baixo, 0 na HORIZONTAL
   /// ROLL  forcar a 0, a camera nao faz esse movimento normalmente
 
@@ -174,11 +172,11 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
   // Diferenca do angulo de yaw para o offset - somente placa (HORARIO +, 0 NO NORTE)
   double dyaw = bound180( yaw_current_board - yaw_offset_board ); // [DEG]
   // Incremento do angulo de yaw segundo motor de PAN (HORARIO +, 0 para frente - offset)
-  dyaw = DEG2RAD( bound180( dyaw + (pan_current - pan_front)*pwm2pan ) ); // [RAD]
+  dyaw = DEG2RAD( bound180( dyaw + (pan_front - pan_current)*pwm2pan ) ); // [RAD]
   // Angulo de pitch segundo motor de TILT (positivo nariz pra baixo, 0 na horizontal - offset. Para isso, diferenca de angulos ao contrario)
-  double dpitch = DEG2RAD( bound180( (tilt_hor - tilt_current)*pwm2tilt ) ); // [RAD]
+  double dpitch = DEG2RAD( bound180( (tilt_current - tilt_hor)*pwm2tilt ) ); // [RAD]
   // Calculo do quaternion relativo - forcar roll a 0 (futuramente considerar leitura do viso2)
-  q = AngleAxisd(0, Vector3d::UnitX()) * AngleAxisd(dpitch, Vector3d::UnitY()) * AngleAxisd(dyaw, Vector3d::UnitZ());
+  q = AngleAxisd(dpitch, Vector3d::UnitX()) * AngleAxisd(dyaw, Vector3d::UnitY()) * AngleAxisd(0, Vector3d::UnitZ());
   // Calculo da translacao - rotacionar segundo angulo de offset de yaw
   double z_camera = dx*sin(DEG2RAD(yaw_offset_board)) + dy*cos(DEG2RAD(yaw_offset_board));
   double x_camera = dx*cos(DEG2RAD(yaw_offset_board)) - dy*sin(DEG2RAD(yaw_offset_board));
@@ -187,8 +185,10 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
   t.data()[2] = z_camera;
   // Printar para averiguar
   if(true){
+    cout << "\n###############################################################################"  << endl;
     cout << "Roll: " <<     0    << "\tPitch: " << RAD2DEG(dpitch) << "\tYaw: " << RAD2DEG(dyaw) << endl;
     cout << "X   : " << x_camera << "\tY    : " <<       0         << "\tZ  : " <<   z_camera    << endl;
+    cout << "\n###############################################################################"  << endl;
   }
   // Publicar a odometria para a galera
   Odometry odom_out;
@@ -219,7 +219,7 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const O
   vector<int> indicesNAN;
   removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
   // Voxel Grid
-  float lf = 0.12f;
+  float lf = 0.05f;
   filter_grid(cloud, lf);
   // Filter with passthrough filter -> region to see
   passthrough(cloud, "z",   1, 20);
@@ -240,11 +240,13 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const O
   // Translacao
   Eigen::Vector3d offset(msg_odo->pose.pose.position.x, msg_odo->pose.pose.position.y, msg_odo->pose.pose.position.z);
   // Print para averiguar
-  if(true){
+  if(false){
     Eigen::Matrix<double, 3, 1> euler;
     euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+    cout << "\n###############################################################################"  << endl;
     cout << "Roll: " << RAD2DEG(euler[0]) << "\tPitch: " << RAD2DEG(euler[1]) << "\tYaw: " << RAD2DEG(euler[2]) << endl;
     cout << "X   : " << offset(0)         << "\tY    : " << offset(1)         << "\tZ  : " << offset(2)         << endl;
+    cout << "\n###############################################################################"  << endl;
   }
 
   /// Obter pose das mensagens
@@ -277,8 +279,8 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const O
   calculate_current_pose(q2, offset2, msg_ptc);
 
   // Transformar a nuvem
-//  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q);
-  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset2, q2);
+  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q);
+//  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset2, q2);
 
   // Accumulate the point cloud using the += operator
 //  ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
@@ -337,35 +339,13 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const O
   cloud_transformed.reset();
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//void pan_cb(const DynamixelStateConstPtr& msg_pan){
-//  if(first_read_pan){
-//    pan_front   = msg_pan->present_position;
-//    pan_current = msg_pan->present_position;
-//    first_read_pan = false;
-//  } else {
-//    pan_current = msg_pan->present_position;
-//  }
-//}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//void tilt_cb(const DynamixelStateConstPtr& msg_tilt){
-//  if(first_read_tilt){
-//    tilt_hor     = msg_tilt->present_position;
-//    tilt_current = msg_tilt->present_position;
-//    first_read_tilt = false;
-//  } else {
-//    tilt_current = msg_tilt->present_position;
-//  }
-//}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char** argv)
 {
   // Initialize ROS
   ros::init (argc, argv, "accumulatepointcloud");
   ros::NodeHandle nh;
 
-  // It will be the first reading for motors when the subscribers start
-  first_read_pan = true; first_read_tilt = true;
-  // First time too for all position data from mavros
+  // First time for all position data from mavros and dynamixel
   first_read_mavros_dyn = true;
   // Constantes de conversao dos valores de PWM para DEGREES de ambos os motores - dados findos de $(find automatico_mrs)/controle_automatico.cpp
   pwm2pan  = (300.0 -   0  ) / (1023.0 -    0  ); // [DEG/PWM]
@@ -381,10 +361,6 @@ int main (int argc, char** argv)
   pub_termica = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
   *pub_termica = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_termica", 1);
 
-  // Subscribers para estados do motor
-//  ros::Subscriber sub_dynpan  = nh.subscribe("/multi_port/pan_state" , 100, pan_cb );
-//  ros::Subscriber sub_dyntilt = nh.subscribe("/multi_port/tilt_state", 100, tilt_cb);
-
   // Subscriber para a nuvem instantanea e odometria
   message_filters::Subscriber<sensor_msgs::PointCloud2>  subptc(nh, "/stereo/points2"              , 100);
   message_filters::Subscriber<Odometry>                  subodo(nh, "/stereo_odometer/odometry"    , 100);
@@ -394,6 +370,9 @@ int main (int argc, char** argv)
   // Sincroniza as leituras dos topicos (sensores e imagem a principio) em um so callback
   Synchronizer<syncPolicy> sync(syncPolicy(100), subptc, subodo, subang, subenu, subdyn);
   sync.registerCallback(boost::bind(&cloud_open_target2, _1, _2, _3, _4, _5));
+
+  // Publisher para a odometria calculada dos outros sensores
+  pubodom = nh.advertise<Odometry>("/nossa_pose_agora", 100);
 
   // Loop infinitly
   ros::spin();
