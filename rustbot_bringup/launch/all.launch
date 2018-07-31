@@ -19,7 +19,7 @@
   <!--To launch a gui for tunning the stereo parameters-->
   <arg name="config_stereo" default="false"/>
   <!--The desired frames per second-->
-  <arg name="fps" default="6"/>
+  <arg name="fps" default="2.9"/>
   <!--Queue size for the stereo images. More queue size better the possibilities to sync, but more memory required-->
   <arg name="queue_size" default="500"/>
   <!--data fusion-->
@@ -28,20 +28,20 @@
         </include>
   </group>
   <!--GPS drivers should work only on online mode-->
-  <group if="$(arg online_stereo)">
+<!--  <group if="$(arg online_stereo)">
     <group if="$(arg do_gps)">
-<!--      <include file="$(find rustbot_bringup)/launch/gps.launch">-->
+      <include file="$(find rustbot_bringup)/launch/gps.launch">
       <node name="imu_republish_to_enu" pkg="rustbot_bringup" type="imu_republish" output="screen">
           <param name="~/not_sim" value="true"/>
       </node>
-<!--        </include>-->
+        </include>
     </group>
-  </group>
-   <group unless="$(arg do_gps)">
+  </group>-->
+<!--   <group unless="$(arg do_gps)">
       <node name="imu_republish_to_enu" pkg="rustbot_bringup" type="imu_republish" output="screen">
 	<param name="not_sim" value="false"/>
       </node>
-    </group>
+    </group>-->
   <!--Stereo nodes -->
   <group ns="stereo">
     <!--Camera drivers (should work only in online mode)-->
@@ -67,7 +67,7 @@
         <param name="speckle_size" value="1000"/>
         <param name="speckle_range" value="31"/>
 	<param name="fullDP" value="true"/>
-        <param name="uniqueness_ratio" value="8.0"/>
+        <param name="uniqueness_ratio" value="10.0"/>
         <param name="texture_threshold" value="10"/>
 
 <!--        <rosparam command="load" file="$(find rustbot_calibration)/calibration/stereo_image_proc.yaml"/>-->
@@ -102,11 +102,11 @@
         </include>
   </group>
 
-  <group if="$(arg do_zmq_publish)">
-    <!--SEV zmq+protobuf publisher-->
+<!--  <group if="$(arg do_zmq_publish)">
+    SEV zmq+protobuf publisher
     <node name="sev_publisher" pkg="rustbot_translation" type="sev_publisher.py" output="screen">
     </node>
-  </group>
+  </group>-->
 
   <!-- UFJF SECTION -->
 

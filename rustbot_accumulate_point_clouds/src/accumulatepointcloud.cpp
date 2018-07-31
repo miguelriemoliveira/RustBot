@@ -84,8 +84,9 @@ tf::TransformListener *p_listener;
 boost::shared_ptr<ros::Publisher> pub;
 boost::shared_ptr<ros::Publisher> pub_termica;
 // Motors
-float pan_front, pan_current , pwm2pan ; // YAW   [PWM, PWM, DEG/PWM]
-float tilt_hor , tilt_current, pwm2tilt; // PITCH [PWM, PWM, DEG/PWM]
+double pan_front, pan_current , pan_previous , pwm2pan ; // YAW   [PWM, PWM, DEG/PWM]
+double tilt_hor , tilt_current, tilt_previous, pwm2tilt; // PITCH [PWM, PWM, DEG/PWM]
+double vel_pan_previous, vel_tilt_previous, vel_pan_current, vel_tilt_current; // quanto de PWM esta desviando
 // Mavros
 bool   first_read_mavros_dyn;
 double yaw_offset_board; // [RAD]
@@ -167,10 +168,8 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
 
   // Diferenca da posicao norte e leste para o offset
   double dy = north_current - north_offset, dx = east_current - east_offset;
-  // Translacao em relacao a nuvem anterior
-//  dy = dy - north_previous; dx = dx - east_previous; // NAO TENHO CERTEZA
   // Diferenca do angulo de yaw para o offset - somente placa (HORARIO +, 0 NO NORTE)
-  double dyaw = bound180( yaw_current_board - yaw_offset_board ); // [DEG]
+  double dyaw = 0;//bound180( yaw_current_board - yaw_offset_board ); // [DEG]
   // Incremento do angulo de yaw segundo motor de PAN (HORARIO +, 0 para frente - offset)
   dyaw = DEG2RAD( bound180( dyaw + (pan_front - pan_current)*pwm2pan ) ); // [RAD]
   // Angulo de pitch segundo motor de TILT (positivo nariz pra baixo, 0 na horizontal - offset. Para isso, diferenca de angulos ao contrario)
@@ -180,9 +179,9 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
   // Calculo da translacao - rotacionar segundo angulo de offset de yaw
   double z_camera = dx*sin(DEG2RAD(yaw_offset_board)) + dy*cos(DEG2RAD(yaw_offset_board));
   double x_camera = dx*cos(DEG2RAD(yaw_offset_board)) - dy*sin(DEG2RAD(yaw_offset_board));
-  t.data()[0] = x_camera;
+  t.data()[0] = 0;//x_camera;
   t.data()[1] =        0;
-  t.data()[2] = z_camera;
+  t.data()[2] = 0;//z_camera;
   // Printar para averiguar
   if(true){
     cout << "\n###############################################################################"  << endl;
@@ -193,7 +192,9 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
   // Publicar a odometria para a galera
   Odometry odom_out;
   odom_out.header.frame_id = msg_ptc->header.frame_id; odom_out.header.stamp = msg_ptc->header.stamp;
-  odom_out.pose.pose.position.x = x_camera; odom_out.pose.pose.position.y = 0; odom_out.pose.pose.position.z = z_camera;
+  odom_out.pose.pose.position.x = t.data()[0];
+  odom_out.pose.pose.position.y = t.data()[1];
+  odom_out.pose.pose.position.z = t.data()[2];
   odom_out.pose.pose.orientation.x = q.x(); odom_out.pose.pose.orientation.y = q.y();
   odom_out.pose.pose.orientation.z = q.z(); odom_out.pose.pose.orientation.w = q.w();
   pubodom.publish(odom_out);
@@ -259,10 +260,16 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const O
     east_offset    = msg_enu->pose.pose.position.x;
     east_current   = msg_enu->pose.pose.position.x;
     east_previous  = msg_enu->pose.pose.position.x;
-    pan_front    = msg_dyn->pose.pose.position.x; // O PAN  vem na mensagem na coordenada X do no $(find automatico_mrs)/controle_automatico
-    pan_current  = msg_dyn->pose.pose.position.x;
-    tilt_hor     = msg_dyn->pose.pose.position.y; // O TILT vem na mensagem na coordenada Y do no $(find automatico_mrs)/controle_automatico
-    tilt_current = msg_dyn->pose.pose.position.y;
+    pan_front     = msg_dyn->pose.pose.position.x; // O PAN  vem na mensagem na coordenada X do no $(find automatico_mrs)/controle_automatico
+    pan_current   = msg_dyn->pose.pose.position.x;
+    pan_previous  = msg_dyn->pose.pose.position.x;
+    tilt_hor      = msg_dyn->pose.pose.position.y; // O TILT vem na mensagem na coordenada Y do no $(find automatico_mrs)/controle_automatico
+    tilt_current  = msg_dyn->pose.pose.position.y;
+    tilt_previous = msg_dyn->pose.pose.position.y;
+    vel_pan_previous  = msg_dyn->twist.twist.angular.x;
+    vel_pan_current   = msg_dyn->twist.twist.angular.x;
+    vel_tilt_previous = msg_dyn->twist.twist.angular.y;
+    vel_tilt_previous = msg_dyn->twist.twist.angular.y;
     first_read_mavros_dyn = false;
   } else {
     yaw_current_board = DEG2RAD(msg_ang->groundspeed);
@@ -272,6 +279,8 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const O
     east_current   = msg_enu->pose.pose.position.x;
     pan_current  = msg_dyn->pose.pose.position.x;
     tilt_current = msg_dyn->pose.pose.position.y;
+    vel_pan_current   = msg_dyn->twist.twist.angular.x;
+    vel_tilt_current  = msg_dyn->twist.twist.angular.y;
   }
   // Calculo da pose a partir da placa, gps e dos motores
   Eigen::Quaternion<double> q2;
@@ -279,8 +288,8 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const O
   calculate_current_pose(q2, offset2, msg_ptc);
 
   // Transformar a nuvem
-  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q);
-//  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset2, q2);
+//  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q);
+  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q2);
 
   // Accumulate the point cloud using the += operator
 //  ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
