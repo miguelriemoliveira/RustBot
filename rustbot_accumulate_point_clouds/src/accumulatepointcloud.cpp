@@ -201,7 +201,8 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const OdometryConstPtr& msg_odo,
+void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
+                        const OdometryConstPtr& msg_odo,
                         const VFR_HUDConstPtr& msg_ang,
                         const OdometryConstPtr& msg_enu,
                         const OdometryConstPtr& msg_dyn){
@@ -266,10 +267,10 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const O
     tilt_hor      = msg_dyn->pose.pose.position.y; // O TILT vem na mensagem na coordenada Y do no $(find automatico_mrs)/controle_automatico
     tilt_current  = msg_dyn->pose.pose.position.y;
     tilt_previous = msg_dyn->pose.pose.position.y;
-    vel_pan_previous  = msg_dyn->twist.twist.angular.x;
-    vel_pan_current   = msg_dyn->twist.twist.angular.x;
-    vel_tilt_previous = msg_dyn->twist.twist.angular.y;
-    vel_tilt_previous = msg_dyn->twist.twist.angular.y;
+//    vel_pan_previous  = msg_dyn->twist.twist.angular.x;
+//    vel_pan_current   = msg_dyn->twist.twist.angular.x;
+//    vel_tilt_previous = msg_dyn->twist.twist.angular.y;
+//    vel_tilt_previous = msg_dyn->twist.twist.angular.y;
     first_read_mavros_dyn = false;
   } else {
     yaw_current_board = DEG2RAD(msg_ang->groundspeed);
@@ -279,8 +280,8 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc, const O
     east_current   = msg_enu->pose.pose.position.x;
     pan_current  = msg_dyn->pose.pose.position.x;
     tilt_current = msg_dyn->pose.pose.position.y;
-    vel_pan_current   = msg_dyn->twist.twist.angular.x;
-    vel_tilt_current  = msg_dyn->twist.twist.angular.y;
+//    vel_pan_current   = msg_dyn->twist.twist.angular.x;
+//    vel_tilt_current  = msg_dyn->twist.twist.angular.y;
   }
   // Calculo da pose a partir da placa, gps e dos motores
   Eigen::Quaternion<double> q2;
@@ -371,11 +372,13 @@ int main (int argc, char** argv)
   *pub_termica = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_termica", 1);
 
   // Subscriber para a nuvem instantanea e odometria
-  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptc(nh, "/stereo/points2"              , 100);
-  message_filters::Subscriber<Odometry>                  subodo(nh, "/stereo_odometer/odometry"    , 100);
-  message_filters::Subscriber<VFR_HUD>                   subang(nh, "/mavros/vfr_hud"              , 100);
-  message_filters::Subscriber<Odometry>                  subenu(nh, "/mavros/global_position/local", 100);
-  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_sync"              , 100);
+  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptc(nh, "/stereo/points2"                 , 100);
+  message_filters::Subscriber<Odometry>                  subodo(nh, "/stereo_odometer/odometry"       , 100);
+  message_filters::Subscriber<VFR_HUD>                   subang(nh, "/mavros/vfr_hud"                 , 100);
+  message_filters::Subscriber<Odometry>                  subenu(nh, "/mavros/global_position/local"   , 100);
+//  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_sync"              , 100);
+  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_angulos_sincronizados", 100);
+
   // Sincroniza as leituras dos topicos (sensores e imagem a principio) em um so callback
   Synchronizer<syncPolicy> sync(syncPolicy(100), subptc, subodo, subang, subenu, subdyn);
   sync.registerCallback(boost::bind(&cloud_open_target2, _1, _2, _3, _4, _5));
