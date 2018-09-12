@@ -169,7 +169,7 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
   // Diferenca da posicao norte e leste para o offset
   double dy = north_current - north_offset, dx = east_current - east_offset;
   // Diferenca do angulo de yaw para o offset - somente placa (HORARIO +, 0 NO NORTE)
-  double dyaw = 0;//bound180( yaw_current_board - yaw_offset_board ); // [DEG]
+  double dyaw = bound180( yaw_current_board - yaw_offset_board ); // [DEG]
   // Incremento do angulo de yaw segundo motor de PAN (HORARIO +, 0 para frente - offset)
   dyaw = DEG2RAD( bound180( dyaw + (pan_front - pan_current)*pwm2pan ) ); // [RAD]
   // Angulo de pitch segundo motor de TILT (positivo nariz pra baixo, 0 na horizontal - offset. Para isso, diferenca de angulos ao contrario)
@@ -179,9 +179,9 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
   // Calculo da translacao - rotacionar segundo angulo de offset de yaw
   double z_camera = dx*sin(DEG2RAD(yaw_offset_board)) + dy*cos(DEG2RAD(yaw_offset_board));
   double x_camera = dx*cos(DEG2RAD(yaw_offset_board)) - dy*sin(DEG2RAD(yaw_offset_board));
-  t.data()[0] = 0;//x_camera;
+  t.data()[0] = x_camera;
   t.data()[1] =        0;
-  t.data()[2] = 0;//z_camera;
+  t.data()[2] = z_camera;
   // Printar para averiguar
   if(true){
     cout << "\n###############################################################################"  << endl;
