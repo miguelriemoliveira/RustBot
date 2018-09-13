@@ -24,20 +24,20 @@
     <!-- 0=BOW, 1=OpticalFlow -->
     <param name="Vis/CorType" value="1"/>
     <!-- maximum features map size, default 2000 -->
-    <param name="OdomF2M/MaxSize" type="string" value="1000"/>
+    <param name="OdomF2M/MaxSize" type="string" value="2000"/>
     <!-- maximum features extracted by image, default 1000 -->
     <param name="Vis/MaxFeatures" type="string" value="600"/>
-    <param name="Odom/EstimationType" type="string" value="1"/>
+    <param name="Vis/EstimationType" type="string" value="1"/>
     <!-- 3D->2D (PnP) -->
-    <param name="Odom/MinInliers" type="string" value="5"/>
-    <param name="Odom/RoiRatios" type="string" value="0.03 0.03 0.04 0.04"/>
-    <param name="Odom/MaxDepth" type="string" value="15"/>
-    <param name="OdomBow/NNDR" type="string" value="0.8"/>
+    <param name="Vis/MinInliers" type="string" value="3"/>
+    <param name="Vis/RoiRatios" type="string" value="0.03 0.03 0.04 0.04"/>
+    <param name="Vis/MaxDepth" type="string" value="45"/>
+    <param name="Vis/CorNNDR" type="string" value="0.8"/>
     <param name="Odom/MaxFeatures" type="string" value="1000"/>
     <param name="Odom/FillInfoData" type="string" value="false"/>
     <param name="GFTT/MinDistance" type="string" value="10"/>
     <param name="GFTT/QualityLevel" type="string" value="0.00000001"/>
-    <param name="GFTT/MinDistance" type="string" value="50"/>
+    <param name="GFTT/MinDistance" type="string" value="10"/>
     <!--<param name="Odom/Strategy"      type="string" value="1"/> [> 0=Frame-to-Map, 1=Frame=to=Frame <]-->
     <!--<param name="Odom/GuessMotion"      type="string" value="true"/> [> 0=Frame-to-Map, 1=Frame=to=Frame <]-->
     <!--<param name="Vis/EstimationType" type="string" value="1"/> [> 0=3D->3D 1=3D->2D (PnP) <]-->

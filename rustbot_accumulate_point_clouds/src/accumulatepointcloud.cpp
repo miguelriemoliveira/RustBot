@@ -154,6 +154,13 @@ double bound180(double angle){
   return angle;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+double boundPI(double angle){
+  if(angle >  M_PI) angle = (angle - 2*M_PI);
+  if(angle < -M_PI) angle = (angle + 2*M_PI);
+
+  return angle;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, const sensor_msgs::PointCloud2ConstPtr msg_ptc){
   /////////////////////////// Frames ///////////////////////////
   ///      Camera                  Inercial
@@ -169,21 +176,37 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
   // Diferenca da posicao norte e leste para o offset
   double dy = north_current - north_offset, dx = east_current - east_offset;
   // Diferenca do angulo de yaw para o offset - somente placa (HORARIO +, 0 NO NORTE)
-  double dyaw = bound180( yaw_current_board - yaw_offset_board ); // [DEG]
+  double dyaw = boundPI( yaw_current_board - yaw_offset_board ); // [RAD] (ja foi convertido no recebimento)
   // Incremento do angulo de yaw segundo motor de PAN (HORARIO +, 0 para frente - offset)
-  dyaw = DEG2RAD( bound180( dyaw + (pan_front - pan_current)*pwm2pan ) ); // [RAD]
+  dyaw = boundPI( dyaw + DEG2RAD((pan_front - pan_current)*pwm2pan) ); // [RAD]
   // Angulo de pitch segundo motor de TILT (positivo nariz pra baixo, 0 na horizontal - offset. Para isso, diferenca de angulos ao contrario)
   double dpitch = DEG2RAD( bound180( (tilt_current - tilt_hor)*pwm2tilt ) ); // [RAD]
+  // Printar para averiguar
+  if(false){
+    cout << "\n###############################################################################"  << endl;
+//    cout << "North: " << dy << "\tEast: " << dx << endl;
+    cout << "Offset pitch: " << tilt_hor << "\tPitch considerado: " << dpitch << endl;
+    cout << "\n###############################################################################"  << endl;
+  }
+
   // Calculo do quaternion relativo - forcar roll a 0 (futuramente considerar leitura do viso2)
   q = AngleAxisd(dpitch, Vector3d::UnitX()) * AngleAxisd(dyaw, Vector3d::UnitY()) * AngleAxisd(0, Vector3d::UnitZ());
+//  q = AngleAxisd(0, Vector3d::UnitX()) * AngleAxisd(0, Vector3d::UnitY()) * AngleAxisd(0, Vector3d::UnitZ());
   // Calculo da translacao - rotacionar segundo angulo de offset de yaw
-  double z_camera = dx*sin(DEG2RAD(yaw_offset_board)) + dy*cos(DEG2RAD(yaw_offset_board));
-  double x_camera = dx*cos(DEG2RAD(yaw_offset_board)) - dy*sin(DEG2RAD(yaw_offset_board));
+  double z_camera = dx*sin(yaw_offset_board) + dy*cos(yaw_offset_board);
+  double x_camera = dx*cos(yaw_offset_board) - dy*sin(yaw_offset_board);
+  // Printar para averiguar
+  if(false){
+    cout << "\n###############################################################################"  << endl;
+    cout << "Frente Z: " << z_camera << "\tLado X: " << x_camera << endl;
+//    cout << "Offset pitch: " << tilt_hor << "\tPitch considerado: " << dpitch << endl;
+    cout << "\n###############################################################################"  << endl;
+  }
   t.data()[0] = x_camera;
   t.data()[1] =        0;
   t.data()[2] = z_camera;
   // Printar para averiguar
-  if(true){
+  if(false){
     cout << "\n###############################################################################"  << endl;
     cout << "Roll: " <<     0    << "\tPitch: " << RAD2DEG(dpitch) << "\tYaw: " << RAD2DEG(dyaw) << endl;
     cout << "X   : " << x_camera << "\tY    : " <<       0         << "\tZ  : " <<   z_camera    << endl;
@@ -202,7 +225,7 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
-                        const OdometryConstPtr& msg_odo,
+                        const OdometryConstPtr& msg_odo, // Aqui vem a odometria do VISO2
                         const VFR_HUDConstPtr& msg_ang,
                         const OdometryConstPtr& msg_enu,
                         const OdometryConstPtr& msg_dyn){
@@ -261,16 +284,12 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
     east_offset    = msg_enu->pose.pose.position.x;
     east_current   = msg_enu->pose.pose.position.x;
     east_previous  = msg_enu->pose.pose.position.x;
-    pan_front     = msg_dyn->pose.pose.position.x; // O PAN  vem na mensagem na coordenada X do no $(find automatico_mrs)/controle_automatico
+    pan_front     = msg_dyn->pose.pose.position.x; // O PAN  vem na mensagem na coordenada X
     pan_current   = msg_dyn->pose.pose.position.x;
     pan_previous  = msg_dyn->pose.pose.position.x;
-    tilt_hor      = msg_dyn->pose.pose.position.y; // O TILT vem na mensagem na coordenada Y do no $(find automatico_mrs)/controle_automatico
+    tilt_hor      = msg_dyn->pose.pose.position.y; // O TILT vem na mensagem na coordenada Y
     tilt_current  = msg_dyn->pose.pose.position.y;
     tilt_previous = msg_dyn->pose.pose.position.y;
-//    vel_pan_previous  = msg_dyn->twist.twist.angular.x;
-//    vel_pan_current   = msg_dyn->twist.twist.angular.x;
-//    vel_tilt_previous = msg_dyn->twist.twist.angular.y;
-//    vel_tilt_previous = msg_dyn->twist.twist.angular.y;
     first_read_mavros_dyn = false;
   } else {
     yaw_current_board = DEG2RAD(msg_ang->groundspeed);
@@ -280,8 +299,6 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
     east_current   = msg_enu->pose.pose.position.x;
     pan_current  = msg_dyn->pose.pose.position.x;
     tilt_current = msg_dyn->pose.pose.position.y;
-//    vel_pan_current   = msg_dyn->twist.twist.angular.x;
-//    vel_tilt_current  = msg_dyn->twist.twist.angular.y;
   }
   // Calculo da pose a partir da placa, gps e dos motores
   Eigen::Quaternion<double> q2;
@@ -289,9 +306,14 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   calculate_current_pose(q2, offset2, msg_ptc);
 
   // Transformar a nuvem
-//  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q);
-  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q2);
-
+  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q);
+//  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset2, q2);
+  if(true){
+    cout << "\n###############################################################################"  << endl;
+//    cout << "Roll: " <<     0    << "\tPitch: " << RAD2DEG(dpitch) << "\tYaw: " << RAD2DEG(dyaw) << endl;
+    cout << "X   : " << offset2.data()[0] << "\tY    : " << offset2.data()[1] << "\tZ  : " << offset2.data()[2] << endl;
+    cout << "\n###############################################################################"  << endl;
+  }
   // Accumulate the point cloud using the += operator
 //  ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
   (*accumulated_cloud) += (*cloud_transformed);
