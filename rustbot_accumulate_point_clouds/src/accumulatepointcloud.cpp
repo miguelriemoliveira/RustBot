@@ -242,6 +242,8 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   // Convert the ros message to pcl point cloud
   fromROSMsg (*msg_ptc, *cloud);
 
+//  ROS_INFO("Size of cloud raw= %ld", cloud->points.size());
+
   // Remove any NAN points in the cloud
   vector<int> indicesNAN;
   removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
@@ -257,6 +259,8 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   // Remove outiliers
   remove_outlier(cloud, 15, 0.5);
 
+//  ROS_INFO("Size of cloud after filter = %ld", cloud->points.size());
+
   /// Obter a odometria da mensagem
   // Rotacao
   Eigen::Quaternion<double> q;
@@ -264,7 +268,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   q.y() = (double)msg_odo->pose.pose.orientation.y;
   q.z() = (double)msg_odo->pose.pose.orientation.z;
   q.w() = (double)msg_odo->pose.pose.orientation.w;
-  // Translacao
+  // Translacao -> INVERTIDA
   Eigen::Vector3d offset(msg_odo->pose.pose.position.x, msg_odo->pose.pose.position.y, msg_odo->pose.pose.position.z);
   // Print para averiguar
   if(false){
@@ -275,34 +279,32 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
     cout << "X   : " << offset(0)         << "\tY    : " << offset(1)         << "\tZ  : " << offset(2)         << endl;
     cout << "\n###############################################################################"  << endl;
   }
+  // Transformar a nuvem
+  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q);
+
   // Escutar TF de MAP->ODOM para corrigir glitchs
   ros::Time t = msg_ptc->header.stamp;
-  cout << "Tempo da mensagem: \n" << t << "\nTempo now:\n" << ros::Time::now() << "Tempo 0: \n" << ros::Time(0) << endl;
   tf::StampedTransform trans;
-  ROS_INFO("VEIO ATE AQUI");
   try
   {
-//    tf_map_odom->waitForTransform("/map", "/odom", t, ros::Duration(3.0));
-    tf_map_odom->lookupTransform("odom", "map", t, trans);
+    tf_map_odom->waitForTransform("map", "odom", ros::Time::now(), ros::Duration(3.0));
+    tf_map_odom->lookupTransform("map", "odom", ros::Time::now(), trans);
+    ROS_INFO("Chegou odom->map OK.");
   }
   catch (tf::TransformException& ex){
     ROS_ERROR("%s",ex.what());
     ROS_WARN("Nao acumulou OK.");
     return;
   }
-  ROS_INFO("VEIO ATE AQUI");
-//  Eigen::Affine3d eigen_trf;
-//  tf::transformTFToEigen(trans, eigen_trf);
-//  pcl::transformPointCloud<PointTT>(*cloud, *cloud_transformed, eigen_trf);
-
-  // Transformar a nuvem
-  transformPointCloud<PointTT>(*cloud_transformed, *cloud_transformed, offset, q);
+  Eigen::Affine3d eigen_trf;
+  tf::transformTFToEigen(trans, eigen_trf);
+  pcl::transformPointCloud<PointTT>(*cloud_transformed, *cloud_transformed, eigen_trf);
 
   // Accumulate the point cloud using the += operator
 //  ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
   (*accumulated_cloud) += (*cloud_transformed);
 
-//  ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
+  ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
 
 //  // Separando as point clouds em visual e térmica
 //  int nPontos = int(accumulated_cloud->points.size());
@@ -610,6 +612,10 @@ int main (int argc, char** argv)
   ros::init (argc, argv, "accumulatepointcloud");
   ros::NodeHandle nh;
 
+  // Initialize the TF listeners
+  tf_map_odom      = (tf::TransformListener*) new tf::TransformListener;
+  tf_odom_baselink = (tf::TransformListener*) new tf::TransformListener;
+
   // First time for all position data from mavros and dynamixel
   first_read_mavros_dyn = true;
   // Constantes de conversao dos valores de PWM para DEGREES de ambos os motores - dados findos de $(find automatico_mrs)/controle_automatico.cpp
@@ -618,7 +624,7 @@ int main (int argc, char** argv)
 
   // Initialize accumulated cloud variable
   accumulated_cloud = (PointCloud<PointTT>::Ptr) new PointCloud<PointTT>;
-  accumulated_cloud->header.frame_id = ros::names::remap("/odom");
+  accumulated_cloud->header.frame_id = "map";
 
   // Initialize the point cloud publisher
   pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
