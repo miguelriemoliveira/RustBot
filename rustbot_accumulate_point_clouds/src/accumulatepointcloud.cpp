@@ -55,6 +55,7 @@ using namespace Eigen;
 /// Definitions
 typedef PointXYZRGB PointTT;
 typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2, Odometry, VFR_HUD, Odometry, Odometry> syncPolicy;
+typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2, Odometry> syncPolicy2;
 
 struct PointT
 {
@@ -94,6 +95,10 @@ double east_offset, north_offset; // [m]
 double yaw_current_board, north_current, north_previous, east_current, east_previous;
 // Odometria resultante
 ros::Publisher pubodom;
+
+// Escuta tf direto
+tf::TransformListener *tf_map_odom;
+tf::TransformListener *tf_odom_baselink;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void filter_color(PointCloud<PointTT>::Ptr cloud_in){
@@ -221,6 +226,133 @@ void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, co
   odom_out.pose.pose.orientation.x = q.x(); odom_out.pose.pose.orientation.y = q.y();
   odom_out.pose.pose.orientation.z = q.z(); odom_out.pose.pose.orientation.w = q.w();
   pubodom.publish(odom_out);
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
+                       const OdometryConstPtr& msg_odo){
+  // Declare variables
+  PointCloud<PointTT>::Ptr cloud (new PointCloud<PointTT>());
+  PointCloud<PointTT>::Ptr cloud_transformed (new PointCloud<PointTT>());
+  sensor_msgs::PointCloud2 msg_out;
+
+//  PointCloud<PointTT> cloud_acumulada_termica;
+//  sensor_msgs::PointCloud2 termica_out;
+
+  // Convert the ros message to pcl point cloud
+  fromROSMsg (*msg_ptc, *cloud);
+
+  // Remove any NAN points in the cloud
+  vector<int> indicesNAN;
+  removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
+  // Voxel Grid
+  float lf = 0.05f;
+  filter_grid(cloud, lf);
+  // Filter with passthrough filter -> region to see
+  passthrough(cloud, "z",   1, 20);
+  passthrough(cloud, "x", -10, 10);
+  passthrough(cloud, "y", -10, 10);
+  // Filter for color
+//  filter_color(cloud);
+  // Remove outiliers
+  remove_outlier(cloud, 15, 0.5);
+
+  /// Obter a odometria da mensagem
+  // Rotacao
+  Eigen::Quaternion<double> q;
+  q.x() = (double)msg_odo->pose.pose.orientation.x;
+  q.y() = (double)msg_odo->pose.pose.orientation.y;
+  q.z() = (double)msg_odo->pose.pose.orientation.z;
+  q.w() = (double)msg_odo->pose.pose.orientation.w;
+  // Translacao
+  Eigen::Vector3d offset(msg_odo->pose.pose.position.x, msg_odo->pose.pose.position.y, msg_odo->pose.pose.position.z);
+  // Print para averiguar
+  if(false){
+    Eigen::Matrix<double, 3, 1> euler;
+    euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+    cout << "\n###############################################################################"  << endl;
+    cout << "Roll: " << RAD2DEG(euler[0]) << "\tPitch: " << RAD2DEG(euler[1]) << "\tYaw: " << RAD2DEG(euler[2]) << endl;
+    cout << "X   : " << offset(0)         << "\tY    : " << offset(1)         << "\tZ  : " << offset(2)         << endl;
+    cout << "\n###############################################################################"  << endl;
+  }
+  // Escutar TF de MAP->ODOM para corrigir glitchs
+  ros::Time t = msg_ptc->header.stamp;
+  cout << "Tempo da mensagem: \n" << t << "\nTempo now:\n" << ros::Time::now() << "Tempo 0: \n" << ros::Time(0) << endl;
+  tf::StampedTransform trans;
+  ROS_INFO("VEIO ATE AQUI");
+  try
+  {
+//    tf_map_odom->waitForTransform("/map", "/odom", t, ros::Duration(3.0));
+    tf_map_odom->lookupTransform("odom", "map", t, trans);
+  }
+  catch (tf::TransformException& ex){
+    ROS_ERROR("%s",ex.what());
+    ROS_WARN("Nao acumulou OK.");
+    return;
+  }
+  ROS_INFO("VEIO ATE AQUI");
+//  Eigen::Affine3d eigen_trf;
+//  tf::transformTFToEigen(trans, eigen_trf);
+//  pcl::transformPointCloud<PointTT>(*cloud, *cloud_transformed, eigen_trf);
+
+  // Transformar a nuvem
+  transformPointCloud<PointTT>(*cloud_transformed, *cloud_transformed, offset, q);
+
+  // Accumulate the point cloud using the += operator
+//  ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
+  (*accumulated_cloud) += (*cloud_transformed);
+
+//  ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
+
+//  // Separando as point clouds em visual e térmica
+//  int nPontos = int(accumulated_cloud->points.size());
+//  cloud_acumulada_termica.points.resize (nPontos);
+//  for(int i = 0; i < int(accumulated_cloud->points.size()); i++)
+//  {
+
+//      cloud_acumulada_termica.points[i].x = accumulated_cloud->points[i].x;
+//      cloud_acumulada_termica.points[i].y = accumulated_cloud->points[i].y;
+//      cloud_acumulada_termica.points[i].z = accumulated_cloud->points[i].z;
+
+//      cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
+//      cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
+//      cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
+
+//      if(cloud_acumulada_termica.points[i].r != -1)
+//      {
+//          cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
+//          cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
+//          cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
+//      }
+//      else
+//      {
+//          cloud_acumulada_termica.points[i].x = nan("");
+//          cloud_acumulada_termica.points[i].y = nan("");
+//          cloud_acumulada_termica.points[i].z = nan("");
+//          cloud_acumulada_termica.points[i].r = nan("");
+//          cloud_acumulada_termica.points[i].g = nan("");
+//          cloud_acumulada_termica.points[i].b = nan("");
+//      }
+
+//  }
+
+//  // Limpar point cloud termica de elementos NAN
+//  vector<int> indicesNAN2;
+//  removeNaNFromPointCloud(cloud_acumulada_termica, cloud_acumulada_termica, indicesNAN2);
+
+  // Convert the pcl point cloud to ros msg and publish
+  toROSMsg(*accumulated_cloud, msg_out);
+  msg_out.header.stamp = ros::Time::now();
+  pub->publish(msg_out);
+
+  // Publicando point cloud térmica
+//  toROSMsg (cloud_acumulada_termica, termica_out);
+//  termica_out.header.stamp = msg_ptc->header.stamp;
+//  termica_out.header.frame_id = ros::names::remap("/odom");
+//  pub_termica->publish(termica_out);
+
+  cloud.reset();
+  cloud_transformed.reset();
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -371,6 +503,107 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   cloud_transformed.reset();
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void cloud_open_target3(const sensor_msgs::PointCloud2ConstPtr& msg_ptc){
+  // Declare variables
+  PointCloud<PointTT>::Ptr cloud (new PointCloud<PointTT>());
+  PointCloud<PointTT>::Ptr cloud_transformed (new PointCloud<PointTT>());
+  sensor_msgs::PointCloud2 msg_out;
+
+//  PointCloud<PointTT> cloud_acumulada_termica;
+//  sensor_msgs::PointCloud2 termica_out;
+
+  // Convert the ros message to pcl point cloud
+  fromROSMsg (*msg_ptc, *cloud);
+
+  // Remove any NAN points in the cloud
+  vector<int> indicesNAN;
+  removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
+  // Voxel Grid
+  float lf = 0.05f;
+  filter_grid(cloud, lf);
+  // Filter with passthrough filter -> region to see
+  passthrough(cloud, "z",   1, 20);
+  passthrough(cloud, "x", -10, 10);
+  passthrough(cloud, "y", -10, 10);
+  // Filter for color
+//  filter_color(cloud);
+  // Remove outiliers
+  remove_outlier(cloud, 15, 0.5);
+
+  /// ESCUTAR POR TFs
+  tf::StampedTransform trans_mo, trans_obl;
+  ros::Time t = msg_ptc->header.stamp;
+
+  tf_map_odom->waitForTransform("map", "odom", t, ros::Duration(3.0));
+  tf_map_odom->lookupTransform("map", "odom", t, trans_mo);
+  tf_odom_baselink->waitForTransform("odom", "base_link", t, ros::Duration(3.0));
+  tf_odom_baselink->lookupTransform("odom", "base_link", t, trans_obl);
+
+  // Transformar a nuvem
+  Eigen::Affine3d eigen_trf1, eigen_trf2;
+  tf::transformTFToEigen (trans_mo , eigen_trf1);
+  tf::transformTFToEigen (trans_obl, eigen_trf2);
+  pcl::transformPointCloud<PointTT>(*cloud            , *cloud_transformed, eigen_trf1);
+  pcl::transformPointCloud<PointTT>(*cloud_transformed, *cloud_transformed, eigen_trf2);
+
+  // Accumulate the point cloud using the += operator
+  *cloud_transformed = *cloud;
+  (*accumulated_cloud) += (*cloud_transformed);
+
+//  // Separando as point clouds em visual e térmica
+//  int nPontos = int(accumulated_cloud->points.size());
+//  cloud_acumulada_termica.points.resize (nPontos);
+//  for(int i = 0; i < int(accumulated_cloud->points.size()); i++)
+//  {
+
+//      cloud_acumulada_termica.points[i].x = accumulated_cloud->points[i].x;
+//      cloud_acumulada_termica.points[i].y = accumulated_cloud->points[i].y;
+//      cloud_acumulada_termica.points[i].z = accumulated_cloud->points[i].z;
+
+//      cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
+//      cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
+//      cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
+
+//      if(cloud_acumulada_termica.points[i].r != -1)
+//      {
+//          cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
+//          cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
+//          cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
+//      }
+//      else
+//      {
+//          cloud_acumulada_termica.points[i].x = nan("");
+//          cloud_acumulada_termica.points[i].y = nan("");
+//          cloud_acumulada_termica.points[i].z = nan("");
+//          cloud_acumulada_termica.points[i].r = nan("");
+//          cloud_acumulada_termica.points[i].g = nan("");
+//          cloud_acumulada_termica.points[i].b = nan("");
+//      }
+
+//  }
+
+//  // Limpar point cloud termica de elementos NAN
+//  vector<int> indicesNAN2;
+//  removeNaNFromPointCloud(cloud_acumulada_termica, cloud_acumulada_termica, indicesNAN2);
+
+  // Convert the pcl point cloud to ros msg and publish
+  toROSMsg(*accumulated_cloud, msg_out);
+  msg_out.header.stamp = ros::Time::now();
+  pub->publish(msg_out);
+
+  // Publicando point cloud térmica
+//  toROSMsg (cloud_acumulada_termica, termica_out);
+//  termica_out.header.stamp = msg_ptc->header.stamp;
+//  termica_out.header.frame_id = ros::names::remap("/odom");
+//  pub_termica->publish(termica_out);
+
+  cloud.reset();
+  cloud_transformed.reset();
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char** argv)
 {
   // Initialize ROS
@@ -395,15 +628,19 @@ int main (int argc, char** argv)
 
   // Subscriber para a nuvem instantanea e odometria
   message_filters::Subscriber<sensor_msgs::PointCloud2>  subptc(nh, "/stereo/points2"                 , 100);
-  message_filters::Subscriber<Odometry>                  subodo(nh, "/stereo_odometer/odometry"       , 100);
-  message_filters::Subscriber<VFR_HUD>                   subang(nh, "/mavros/vfr_hud"                 , 100);
-  message_filters::Subscriber<Odometry>                  subenu(nh, "/mavros/global_position/local"   , 100);
-//  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_sync"              , 100);
-  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_angulos_sincronizados", 100);
+  message_filters::Subscriber<Odometry>                  subodo(nh, "/stereo_odometry"       , 100);
+//  message_filters::Subscriber<VFR_HUD>                   subang(nh, "/mavros/vfr_hud"                 , 100);
+//  message_filters::Subscriber<Odometry>                  subenu(nh, "/mavros/global_position/local"   , 100);
+////  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_sync"              , 100);
+//  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_angulos_sincronizados", 100);
 
   // Sincroniza as leituras dos topicos (sensores e imagem a principio) em um so callback
-  Synchronizer<syncPolicy> sync(syncPolicy(100), subptc, subodo, subang, subenu, subdyn);
-  sync.registerCallback(boost::bind(&cloud_open_target2, _1, _2, _3, _4, _5));
+//  Synchronizer<syncPolicy> sync(syncPolicy(100), subptc, subodo, subang, subenu, subdyn);
+  Synchronizer<syncPolicy2> sync2(syncPolicy2(100), subptc, subodo);
+//  sync.registerCallback(boost::bind(&cloud_open_target2, _1, _2, _3, _4, _5));
+  sync2.registerCallback(boost::bind(&cloud_open_target, _1, _2));
+
+//  ros::Subscriber sub_target = nh.subscribe ("/stereo/points2", 300, cloud_open_target3);
 
   // Publisher para a odometria calculada dos outros sensores
   pubodom = nh.advertise<Odometry>("/nossa_pose_agora", 100);
