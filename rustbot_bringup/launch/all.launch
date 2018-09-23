@@ -85,8 +85,8 @@
     </include>-->
     <!--<include file="$(find rustbot_bringup)/launch/vSLAM_vOdo/crob_slam_rtabmapOdometryMapping.launch">-->
     <!--</include>-->
-    <include file="$(find rustbot_bringup)/launch/rtab.launch">
-    </include>
+<!--    <include file="$(find rustbot_bringup)/launch/rtab.launch">-->
+<!--    </include>-->
         <group if="$(arg do_fusion)">
 	    <include file="$(find rustbot_bringup)/launch/viso2.launch">
 		</include>

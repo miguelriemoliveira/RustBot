@@ -239,6 +239,17 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
 //  PointCloud<PointTT> cloud_acumulada_termica;
 //  sensor_msgs::PointCloud2 termica_out;
 
+  // Check for incorrect odometry from viso2
+  if(msg_odo->pose.covariance.at(0) > 100){
+    ROS_WARN("Nao se pode confiar na odometria, movimento rapido");
+    return;
+  }
+
+
+  cout << "Tempo da tf: " << msg_odo->header.stamp << "\nTempo da nv: " << msg_ptc->header.stamp << endl << endl;
+
+
+
   // Convert the ros message to pcl point cloud
   fromROSMsg (*msg_ptc, *cloud);
 
@@ -248,7 +259,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   vector<int> indicesNAN;
   removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
   // Voxel Grid
-  float lf = 0.05f;
+  float lf = 0.04f;
   filter_grid(cloud, lf);
   // Filter with passthrough filter -> region to see
   passthrough(cloud, "z",   1, 20);
@@ -257,7 +268,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   // Filter for color
 //  filter_color(cloud);
   // Remove outiliers
-  remove_outlier(cloud, 15, 0.5);
+  remove_outlier(cloud, 15, 0.2);
 
 //  ROS_INFO("Size of cloud after filter = %ld", cloud->points.size());
 
@@ -282,23 +293,23 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   // Transformar a nuvem
   transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q);
 
-  // Escutar TF de MAP->ODOM para corrigir glitchs
-  ros::Time t = msg_ptc->header.stamp;
-  tf::StampedTransform trans;
-  try
-  {
-    tf_map_odom->waitForTransform("map", "odom", ros::Time::now(), ros::Duration(3.0));
-    tf_map_odom->lookupTransform("map", "odom", ros::Time::now(), trans);
-    ROS_INFO("Chegou odom->map OK.");
-  }
-  catch (tf::TransformException& ex){
-    ROS_ERROR("%s",ex.what());
-    ROS_WARN("Nao acumulou OK.");
-    return;
-  }
-  Eigen::Affine3d eigen_trf;
-  tf::transformTFToEigen(trans, eigen_trf);
-  pcl::transformPointCloud<PointTT>(*cloud_transformed, *cloud_transformed, eigen_trf);
+//  // Escutar TF de MAP->ODOM para corrigir glitchs
+//  ros::Time t = msg_ptc->header.stamp;
+//  tf::StampedTransform trans;
+//  try
+//  {
+//    tf_map_odom->waitForTransform("odom", "map", ros::Time::now(), ros::Duration(3.0));
+//    tf_map_odom->lookupTransform("odom", "map", ros::Time::now(), trans);
+//    ROS_INFO("Chegou odom->map OK.");
+//  }
+//  catch (tf::TransformException& ex){
+//    ROS_ERROR("%s",ex.what());
+//    ROS_WARN("Nao acumulou OK.");
+//    return;
+//  }
+//  Eigen::Affine3d eigen_trf;
+//  tf::transformTFToEigen(trans, eigen_trf);
+//  pcl::transformPointCloud<PointTT>(*cloud_transformed, *cloud_transformed, eigen_trf);
 
   // Accumulate the point cloud using the += operator
 //  ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
@@ -530,26 +541,30 @@ void cloud_open_target3(const sensor_msgs::PointCloud2ConstPtr& msg_ptc){
   // Filter for color
 //  filter_color(cloud);
   // Remove outiliers
-  remove_outlier(cloud, 15, 0.5);
+  remove_outlier(cloud, 15, 0.2);
 
   /// ESCUTAR POR TFs
   tf::StampedTransform trans_mo, trans_obl;
-  ros::Time t = msg_ptc->header.stamp;
+//  ros::Time t = msg_ptc->header.stamp;
+  ros::Time t = ros::Time(0);
 
-  tf_map_odom->waitForTransform("map", "odom", t, ros::Duration(3.0));
-  tf_map_odom->lookupTransform("map", "odom", t, trans_mo);
-  tf_odom_baselink->waitForTransform("odom", "base_link", t, ros::Duration(3.0));
+//  tf_map_odom->waitForTransform("odom", "map", t, ros::Duration(5.0));
+//  tf_map_odom->lookupTransform("odom", "map", t, trans_mo);
+  tf_odom_baselink->waitForTransform("odom", "base_link", t, ros::Duration(5.0));
   tf_odom_baselink->lookupTransform("odom", "base_link", t, trans_obl);
+
+  cout << "Tempo da tf: " << trans_obl.stamp_ << "\nTempo da nv: " << t << endl << endl;
+
 
   // Transformar a nuvem
   Eigen::Affine3d eigen_trf1, eigen_trf2;
-  tf::transformTFToEigen (trans_mo , eigen_trf1);
+//  tf::transformTFToEigen (trans_mo , eigen_trf1);
   tf::transformTFToEigen (trans_obl, eigen_trf2);
-  pcl::transformPointCloud<PointTT>(*cloud            , *cloud_transformed, eigen_trf1);
-  pcl::transformPointCloud<PointTT>(*cloud_transformed, *cloud_transformed, eigen_trf2);
+//  pcl::transformPointCloud<PointTT>(*cloud            , *cloud_transformed, eigen_trf1);
+  pcl::transformPointCloud<PointTT>(*cloud, *cloud_transformed, eigen_trf2);
 
   // Accumulate the point cloud using the += operator
-  *cloud_transformed = *cloud;
+//  *cloud_transformed = *cloud;
   (*accumulated_cloud) += (*cloud_transformed);
 
 //  // Separando as point clouds em visual e térmica
@@ -624,25 +639,25 @@ int main (int argc, char** argv)
 
   // Initialize accumulated cloud variable
   accumulated_cloud = (PointCloud<PointTT>::Ptr) new PointCloud<PointTT>;
-  accumulated_cloud->header.frame_id = "map";
+  accumulated_cloud->header.frame_id = "odom";
 
   // Initialize the point cloud publisher
   pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
-  *pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 1);
+  *pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 300);
   pub_termica = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
-  *pub_termica = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_termica", 1);
+  *pub_termica = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_termica", 300);
 
   // Subscriber para a nuvem instantanea e odometria
-  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptc(nh, "/stereo/points2"                 , 100);
-  message_filters::Subscriber<Odometry>                  subodo(nh, "/stereo_odometry"       , 100);
+  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptc(nh, "/stereo/points2"                 , 200);
+  message_filters::Subscriber<Odometry>                  subodo(nh, "/stereo_odometer/odometry"       , 200);
 //  message_filters::Subscriber<VFR_HUD>                   subang(nh, "/mavros/vfr_hud"                 , 100);
 //  message_filters::Subscriber<Odometry>                  subenu(nh, "/mavros/global_position/local"   , 100);
-////  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_sync"              , 100);
+//  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_sync"              , 100);
 //  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_angulos_sincronizados", 100);
 
   // Sincroniza as leituras dos topicos (sensores e imagem a principio) em um so callback
 //  Synchronizer<syncPolicy> sync(syncPolicy(100), subptc, subodo, subang, subenu, subdyn);
-  Synchronizer<syncPolicy2> sync2(syncPolicy2(100), subptc, subodo);
+  Synchronizer<syncPolicy2> sync2(syncPolicy2(200), subptc, subodo);
 //  sync.registerCallback(boost::bind(&cloud_open_target2, _1, _2, _3, _4, _5));
   sync2.registerCallback(boost::bind(&cloud_open_target, _1, _2));
 
