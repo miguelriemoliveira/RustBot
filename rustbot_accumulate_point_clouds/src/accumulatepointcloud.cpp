@@ -54,8 +54,7 @@ using namespace Eigen;
 
 /// Definitions
 typedef PointXYZRGB PointTT;
-typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2, Odometry, VFR_HUD, Odometry, Odometry> syncPolicy;
-typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2, Odometry> syncPolicy2;
+typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2, Odometry> syncPolicy;
 
 struct PointT
 {
@@ -68,40 +67,30 @@ struct PointT
 } EIGEN_ALIGN16;                    // enforce SSE padding for correct memory alignment
 
 POINT_CLOUD_REGISTER_POINT_STRUCT  (PointT,           // here we assume a XYZ + "test" (as fields)
-                                   (float, x, x)
-                                   (float, y, y)
-                                   (float, z, z)
-                                   (float, rgb, rgb)
-                                   //(float, g, g)
-                                   //(float, b, b)
-                                   (float, l, l)
-                                   (float, o, o)
-                                   (float, p, p)
-)
+                                    (float, x, x)
+                                    (float, y, y)
+                                    (float, z, z)
+                                    (float, rgb, rgb)
+                                    //(float, g, g)
+                                    //(float, b, b)
+                                    (float, l, l)
+                                    (float, o, o)
+                                    (float, p, p)
+                                    )
 
 /// Global vars
-PointCloud<PointTT>::Ptr accumulated_cloud;
+PointCloud<PointT >::Ptr accumulated_cloud;
+PointCloud<PointTT>::Ptr cloud_acumulada_termica;
 tf::TransformListener *p_listener;
 boost::shared_ptr<ros::Publisher> pub;
 boost::shared_ptr<ros::Publisher> pub_termica;
-// Motors
-double pan_front, pan_current , pan_previous , pwm2pan ; // YAW   [PWM, PWM, DEG/PWM]
-double tilt_hor , tilt_current, tilt_previous, pwm2tilt; // PITCH [PWM, PWM, DEG/PWM]
-double vel_pan_previous, vel_tilt_previous, vel_pan_current, vel_tilt_current; // quanto de PWM esta desviando
-// Mavros
-bool   first_read_mavros_dyn;
-double yaw_offset_board; // [RAD]
-double east_offset, north_offset; // [m]
-double yaw_current_board, north_current, north_previous, east_current, east_previous;
-// Odometria resultante
-ros::Publisher pubodom;
 
-// Escuta tf direto
-tf::TransformListener *tf_map_odom;
-tf::TransformListener *tf_odom_baselink;
+float xmin = 1000000, xmax = -300000, xmintemp = 1000000, xmaxtemp = -300000;
+float ymin = 1000000, ymax = -300000, ymintemp = 1000000, ymaxtemp = -300000;
+float zmin = 1000000, zmax = -300000;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void filter_color(PointCloud<PointTT>::Ptr cloud_in){
+void filter_color(PointCloud<PointT>::Ptr cloud_in){
 
   // Try to clear white and blue points from sky, and green ones from the grass, or something close to it
   int rMax = 210;
@@ -111,16 +100,16 @@ void filter_color(PointCloud<PointTT>::Ptr cloud_in){
   int bMax = 210;
   int bMin = 0;
 
-  ConditionAnd<PointTT>::Ptr color_cond (new ConditionAnd<PointTT> ());
-  color_cond->addComparison (PackedRGBComparison<PointTT>::Ptr (new PackedRGBComparison<PointTT> ("r", ComparisonOps::LT, rMax)));
-  color_cond->addComparison (PackedRGBComparison<PointTT>::Ptr (new PackedRGBComparison<PointTT> ("r", ComparisonOps::GT, rMin)));
-  color_cond->addComparison (PackedRGBComparison<PointTT>::Ptr (new PackedRGBComparison<PointTT> ("g", ComparisonOps::LT, gMax)));
-  color_cond->addComparison (PackedRGBComparison<PointTT>::Ptr (new PackedRGBComparison<PointTT> ("g", ComparisonOps::GT, gMin)));
-  color_cond->addComparison (PackedRGBComparison<PointTT>::Ptr (new PackedRGBComparison<PointTT> ("b", ComparisonOps::LT, bMax)));
-  color_cond->addComparison (PackedRGBComparison<PointTT>::Ptr (new PackedRGBComparison<PointTT> ("b", ComparisonOps::GT, bMin)));
+  ConditionAnd<PointT>::Ptr color_cond (new ConditionAnd<PointT> ());
+  color_cond->addComparison (PackedRGBComparison<PointT>::Ptr (new PackedRGBComparison<PointT> ("r", ComparisonOps::LT, rMax)));
+  color_cond->addComparison (PackedRGBComparison<PointT>::Ptr (new PackedRGBComparison<PointT> ("r", ComparisonOps::GT, rMin)));
+  color_cond->addComparison (PackedRGBComparison<PointT>::Ptr (new PackedRGBComparison<PointT> ("g", ComparisonOps::LT, gMax)));
+  color_cond->addComparison (PackedRGBComparison<PointT>::Ptr (new PackedRGBComparison<PointT> ("g", ComparisonOps::GT, gMin)));
+  color_cond->addComparison (PackedRGBComparison<PointT>::Ptr (new PackedRGBComparison<PointT> ("b", ComparisonOps::LT, bMax)));
+  color_cond->addComparison (PackedRGBComparison<PointT>::Ptr (new PackedRGBComparison<PointT> ("b", ComparisonOps::GT, bMin)));
 
   // build the filter
-  ConditionalRemoval<PointTT> condrem (color_cond);
+  ConditionalRemoval<PointT> condrem (color_cond);
   condrem.setInputCloud (cloud_in);
   condrem.setKeepOrganized(true);
 
@@ -128,8 +117,8 @@ void filter_color(PointCloud<PointTT>::Ptr cloud_in){
   condrem.filter (*cloud_in);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void passthrough(PointCloud<PointTT>::Ptr in, std::string field, float min, float max){
-  PassThrough<PointTT> ps;
+void passthrough(PointCloud<PointT>::Ptr in, std::string field, float min, float max){
+  PassThrough<PointT> ps;
   ps.setInputCloud(in);
   ps.setFilterFieldName(field);
   ps.setFilterLimits(min, max);
@@ -137,250 +126,103 @@ void passthrough(PointCloud<PointTT>::Ptr in, std::string field, float min, floa
   ps.filter(*in);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void remove_outlier(PointCloud<PointTT>::Ptr in, float mean, float deviation){
-  StatisticalOutlierRemoval<PointTT> sor;
+void remove_outlier(PointCloud<PointT>::Ptr in, float mean, float deviation){
+  StatisticalOutlierRemoval<PointT> sor;
   sor.setInputCloud(in);
   sor.setMeanK(mean);
   sor.setStddevMulThresh(deviation);
   sor.filter(*in);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void filter_grid(PointCloud<PointTT>::Ptr in, float lf){
-  VoxelGrid<PointTT> grid;
+void filter_grid(PointCloud<PointT>::Ptr in, float lf){
+  VoxelGrid<PointT> grid;
   grid.setInputCloud(in);
   grid.setLeafSize(lf, lf, lf);
   grid.filter(*in);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-double bound180(double angle){
-  if(angle >  180.0) angle = (angle - 360.0);
-  if(angle < -180.0) angle = (angle + 360.0);
-
-  return angle;
+void init_limits_xyz(PointCloud<PointT>::Ptr cloud){
+  for(int i=0; i++; i<cloud->points.size()){
+    if(cloud->points[i].x < xmin){
+      xmin = cloud->points[i].x;
+      xmintemp = cloud->points[i].x;
+    }
+    if(cloud->points[i].y < ymin){
+      ymin = cloud->points[i].y;
+      ymintemp = cloud->points[i].y;
+    }
+    if(cloud->points[i].x > xmax){
+      xmax = cloud->points[i].x;
+      xmaxtemp = cloud->points[i].x;
+    }
+    if(cloud->points[i].y > ymax){
+      ymax = cloud->points[i].y;
+      ymaxtemp = cloud->points[i].y;
+    }
+    if(cloud->points[i].z < zmin){
+      zmin = cloud->points[i].z;
+    }
+    if(cloud->points[i].z > zmax){
+      zmax = cloud->points[i].z;
+    }
+  }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-double boundPI(double angle){
-  if(angle >  M_PI) angle = (angle - 2*M_PI);
-  if(angle < -M_PI) angle = (angle + 2*M_PI);
-
-  return angle;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void calculate_current_pose(Eigen::Quaternion<double> &q, Eigen::Vector3d &t, const sensor_msgs::PointCloud2ConstPtr msg_ptc){
-  /////////////////////////// Frames ///////////////////////////
-  ///      Camera                  Inercial
-  ///
-  ///      Z x--> X                   ^ U (Z)
-  ///        |                        |
-  ///      Y +                  N (Y) x--> E (X)
-  ///
-  /// YAW   na horizontal, positivo para direita, 0 no NORTE
-  /// PITCH na vertical, positivo nariz pra baixo, 0 na HORIZONTAL
-  /// ROLL  forcar a 0, a camera nao faz esse movimento normalmente
-
-  // Diferenca da posicao norte e leste para o offset
-  double dy = north_current - north_offset, dx = east_current - east_offset;
-  // Diferenca do angulo de yaw para o offset - somente placa (HORARIO +, 0 NO NORTE)
-  double dyaw = boundPI( yaw_current_board - yaw_offset_board ); // [RAD] (ja foi convertido no recebimento)
-  // Incremento do angulo de yaw segundo motor de PAN (HORARIO +, 0 para frente - offset)
-  dyaw = boundPI( dyaw + DEG2RAD((pan_front - pan_current)*pwm2pan) ); // [RAD]
-  // Angulo de pitch segundo motor de TILT (positivo nariz pra baixo, 0 na horizontal - offset. Para isso, diferenca de angulos ao contrario)
-  double dpitch = DEG2RAD( bound180( (tilt_current - tilt_hor)*pwm2tilt ) ); // [RAD]
-  // Printar para averiguar
-  if(false){
-    cout << "\n###############################################################################"  << endl;
-//    cout << "North: " << dy << "\tEast: " << dx << endl;
-    cout << "Offset pitch: " << tilt_hor << "\tPitch considerado: " << dpitch << endl;
-    cout << "\n###############################################################################"  << endl;
+void temp_limits_and_filter_xyz(PointCloud<PointT>::Ptr cloud){
+  PointCloud<PointT>::iterator it = cloud->begin();
+  for(it = cloud->begin(); it!=cloud->end(); it++){
+    // Gather new limits if thats the case
+    if(it->x < xmin){
+      xmintemp = it->x;
+    }
+    if(it->y < ymin){
+      ymintemp = it->y;
+    }
+    if(it->x > xmax){
+      xmaxtemp = it->x;
+    }
+    if(it->y > ymax){
+      ymaxtemp = it->y;
+    }
+    if(it->z < zmin){
+      zmin = it->z;
+    }
+    if(it->z > zmax){
+      zmax = it->z;
+    }
+    // If that is not the case, the cloud point can be filtered
+    if(it->x > xmin && it->x < xmax && it->y > ymin && it->y < ymax){
+      cloud->erase(it);
+      it++;
+    }
+    if(it == cloud->end())
+      return;
   }
-
-  // Calculo do quaternion relativo - forcar roll a 0 (futuramente considerar leitura do viso2)
-  q = AngleAxisd(dpitch, Vector3d::UnitX()) * AngleAxisd(dyaw, Vector3d::UnitY()) * AngleAxisd(0, Vector3d::UnitZ());
-//  q = AngleAxisd(0, Vector3d::UnitX()) * AngleAxisd(0, Vector3d::UnitY()) * AngleAxisd(0, Vector3d::UnitZ());
-  // Calculo da translacao - rotacionar segundo angulo de offset de yaw
-  double z_camera = dx*sin(yaw_offset_board) + dy*cos(yaw_offset_board);
-  double x_camera = dx*cos(yaw_offset_board) - dy*sin(yaw_offset_board);
-  // Printar para averiguar
-  if(false){
-    cout << "\n###############################################################################"  << endl;
-    cout << "Frente Z: " << z_camera << "\tLado X: " << x_camera << endl;
-//    cout << "Offset pitch: " << tilt_hor << "\tPitch considerado: " << dpitch << endl;
-    cout << "\n###############################################################################"  << endl;
-  }
-  t.data()[0] = x_camera;
-  t.data()[1] =        0;
-  t.data()[2] = z_camera;
-  // Printar para averiguar
-  if(false){
-    cout << "\n###############################################################################"  << endl;
-    cout << "Roll: " <<     0    << "\tPitch: " << RAD2DEG(dpitch) << "\tYaw: " << RAD2DEG(dyaw) << endl;
-    cout << "X   : " << x_camera << "\tY    : " <<       0         << "\tZ  : " <<   z_camera    << endl;
-    cout << "\n###############################################################################"  << endl;
-  }
-  // Publicar a odometria para a galera
-  Odometry odom_out;
-  odom_out.header.frame_id = msg_ptc->header.frame_id; odom_out.header.stamp = msg_ptc->header.stamp;
-  odom_out.pose.pose.position.x = t.data()[0];
-  odom_out.pose.pose.position.y = t.data()[1];
-  odom_out.pose.pose.position.z = t.data()[2];
-  odom_out.pose.pose.orientation.x = q.x(); odom_out.pose.pose.orientation.y = q.y();
-  odom_out.pose.pose.orientation.z = q.z(); odom_out.pose.pose.orientation.w = q.w();
-  pubodom.publish(odom_out);
-
+  // Update the limits from the last cloud
+  if(xmintemp < xmin)
+    xmin = xmintemp;
+  if(xmaxtemp > xmax)
+    xmax = xmaxtemp;
+  if(ymintemp < ymin)
+    ymin = ymintemp;
+  if(ymaxtemp > ymax)
+    ymax = ymaxtemp;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
                        const OdometryConstPtr& msg_odo){
   // Declare variables
-  PointCloud<PointTT>::Ptr cloud (new PointCloud<PointTT>());
-  PointCloud<PointTT>::Ptr cloud_transformed (new PointCloud<PointTT>());
+  PointCloud<PointT >::Ptr cloud (new PointCloud<PointT>());
+  PointCloud<PointT >::Ptr cloud_transformed (new PointCloud<PointT>());
+  PointCloud<PointTT>::Ptr temp_termica (new PointCloud<PointTT>());
   sensor_msgs::PointCloud2 msg_out;
-
-//  PointCloud<PointTT> cloud_acumulada_termica;
-//  sensor_msgs::PointCloud2 termica_out;
+  sensor_msgs::PointCloud2 msg_termica_out;
 
   // Check for incorrect odometry from viso2
   if(msg_odo->pose.covariance.at(0) > 100){
     ROS_WARN("Nao se pode confiar na odometria, movimento rapido");
     return;
   }
-
-
-  cout << "Tempo da tf: " << msg_odo->header.stamp << "\nTempo da nv: " << msg_ptc->header.stamp << endl << endl;
-
-
-
-  // Convert the ros message to pcl point cloud
-  fromROSMsg (*msg_ptc, *cloud);
-
-//  ROS_INFO("Size of cloud raw= %ld", cloud->points.size());
-
-  // Remove any NAN points in the cloud
-  vector<int> indicesNAN;
-  removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
-  // Voxel Grid
-  float lf = 0.04f;
-  filter_grid(cloud, lf);
-  // Filter with passthrough filter -> region to see
-  passthrough(cloud, "z",   1, 20);
-  passthrough(cloud, "x", -10, 10);
-  passthrough(cloud, "y", -10, 10);
-  // Filter for color
-//  filter_color(cloud);
-  // Remove outiliers
-  remove_outlier(cloud, 15, 0.2);
-
-//  ROS_INFO("Size of cloud after filter = %ld", cloud->points.size());
-
-  /// Obter a odometria da mensagem
-  // Rotacao
-  Eigen::Quaternion<double> q;
-  q.x() = (double)msg_odo->pose.pose.orientation.x;
-  q.y() = (double)msg_odo->pose.pose.orientation.y;
-  q.z() = (double)msg_odo->pose.pose.orientation.z;
-  q.w() = (double)msg_odo->pose.pose.orientation.w;
-  // Translacao -> INVERTIDA
-  Eigen::Vector3d offset(msg_odo->pose.pose.position.x, msg_odo->pose.pose.position.y, msg_odo->pose.pose.position.z);
-  // Print para averiguar
-  if(false){
-    Eigen::Matrix<double, 3, 1> euler;
-    euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
-    cout << "\n###############################################################################"  << endl;
-    cout << "Roll: " << RAD2DEG(euler[0]) << "\tPitch: " << RAD2DEG(euler[1]) << "\tYaw: " << RAD2DEG(euler[2]) << endl;
-    cout << "X   : " << offset(0)         << "\tY    : " << offset(1)         << "\tZ  : " << offset(2)         << endl;
-    cout << "\n###############################################################################"  << endl;
-  }
-  // Transformar a nuvem
-  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q);
-
-//  // Escutar TF de MAP->ODOM para corrigir glitchs
-//  ros::Time t = msg_ptc->header.stamp;
-//  tf::StampedTransform trans;
-//  try
-//  {
-//    tf_map_odom->waitForTransform("odom", "map", ros::Time::now(), ros::Duration(3.0));
-//    tf_map_odom->lookupTransform("odom", "map", ros::Time::now(), trans);
-//    ROS_INFO("Chegou odom->map OK.");
-//  }
-//  catch (tf::TransformException& ex){
-//    ROS_ERROR("%s",ex.what());
-//    ROS_WARN("Nao acumulou OK.");
-//    return;
-//  }
-//  Eigen::Affine3d eigen_trf;
-//  tf::transformTFToEigen(trans, eigen_trf);
-//  pcl::transformPointCloud<PointTT>(*cloud_transformed, *cloud_transformed, eigen_trf);
-
-  // Accumulate the point cloud using the += operator
-//  ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
-  (*accumulated_cloud) += (*cloud_transformed);
-
-  ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
-
-//  // Separando as point clouds em visual e térmica
-//  int nPontos = int(accumulated_cloud->points.size());
-//  cloud_acumulada_termica.points.resize (nPontos);
-//  for(int i = 0; i < int(accumulated_cloud->points.size()); i++)
-//  {
-
-//      cloud_acumulada_termica.points[i].x = accumulated_cloud->points[i].x;
-//      cloud_acumulada_termica.points[i].y = accumulated_cloud->points[i].y;
-//      cloud_acumulada_termica.points[i].z = accumulated_cloud->points[i].z;
-
-//      cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
-//      cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
-//      cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
-
-//      if(cloud_acumulada_termica.points[i].r != -1)
-//      {
-//          cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
-//          cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
-//          cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
-//      }
-//      else
-//      {
-//          cloud_acumulada_termica.points[i].x = nan("");
-//          cloud_acumulada_termica.points[i].y = nan("");
-//          cloud_acumulada_termica.points[i].z = nan("");
-//          cloud_acumulada_termica.points[i].r = nan("");
-//          cloud_acumulada_termica.points[i].g = nan("");
-//          cloud_acumulada_termica.points[i].b = nan("");
-//      }
-
-//  }
-
-//  // Limpar point cloud termica de elementos NAN
-//  vector<int> indicesNAN2;
-//  removeNaNFromPointCloud(cloud_acumulada_termica, cloud_acumulada_termica, indicesNAN2);
-
-  // Convert the pcl point cloud to ros msg and publish
-  toROSMsg(*accumulated_cloud, msg_out);
-  msg_out.header.stamp = ros::Time::now();
-  pub->publish(msg_out);
-
-  // Publicando point cloud térmica
-//  toROSMsg (cloud_acumulada_termica, termica_out);
-//  termica_out.header.stamp = msg_ptc->header.stamp;
-//  termica_out.header.frame_id = ros::names::remap("/odom");
-//  pub_termica->publish(termica_out);
-
-  cloud.reset();
-  cloud_transformed.reset();
-
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
-                        const OdometryConstPtr& msg_odo, // Aqui vem a odometria do VISO2
-                        const VFR_HUDConstPtr& msg_ang,
-                        const OdometryConstPtr& msg_enu,
-                        const OdometryConstPtr& msg_dyn){
-  // Declare variables
-  PointCloud<PointTT>::Ptr cloud (new PointCloud<PointTT>());
-  PointCloud<PointTT>::Ptr cloud_transformed (new PointCloud<PointTT>());
-  sensor_msgs::PointCloud2 msg_out;
-
-  PointCloud<PointTT> cloud_acumulada_termica;
-  sensor_msgs::PointCloud2 termica_out;
 
   // Convert the ros message to pcl point cloud
   fromROSMsg (*msg_ptc, *cloud);
@@ -398,7 +240,14 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   // Filter for color
   filter_color(cloud);
   // Remove outiliers
-  remove_outlier(cloud, 15, 0.5);
+  remove_outlier(cloud, 15, 0.2);
+
+  //  // If first cloud, get the first limits
+  //  if(accumulated_cloud->points.size() < 5){
+  //    init_limits_xyz(cloud);
+  //  } else {
+  //    temp_limits_and_filter_xyz(cloud);
+  //  }
 
   /// Obter a odometria da mensagem
   // Rotacao
@@ -409,210 +258,58 @@ void cloud_open_target2(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   q.w() = (double)msg_odo->pose.pose.orientation.w;
   // Translacao
   Eigen::Vector3d offset(msg_odo->pose.pose.position.x, msg_odo->pose.pose.position.y, msg_odo->pose.pose.position.z);
-  // Print para averiguar
-  if(false){
-    Eigen::Matrix<double, 3, 1> euler;
-    euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
-    cout << "\n###############################################################################"  << endl;
-    cout << "Roll: " << RAD2DEG(euler[0]) << "\tPitch: " << RAD2DEG(euler[1]) << "\tYaw: " << RAD2DEG(euler[2]) << endl;
-    cout << "X   : " << offset(0)         << "\tY    : " << offset(1)         << "\tZ  : " << offset(2)         << endl;
-    cout << "\n###############################################################################"  << endl;
-  }
-
-  /// Obter pose das mensagens
-  if(first_read_mavros_dyn){
-    yaw_offset_board  = DEG2RAD(msg_ang->groundspeed); // Vem em graus, devemos passar para radianos
-    yaw_current_board = DEG2RAD(msg_ang->groundspeed);
-    north_offset   = msg_enu->pose.pose.position.y; // [m]
-    north_current  = msg_enu->pose.pose.position.y;
-    north_previous = msg_enu->pose.pose.position.y;
-    east_offset    = msg_enu->pose.pose.position.x;
-    east_current   = msg_enu->pose.pose.position.x;
-    east_previous  = msg_enu->pose.pose.position.x;
-    pan_front     = msg_dyn->pose.pose.position.x; // O PAN  vem na mensagem na coordenada X
-    pan_current   = msg_dyn->pose.pose.position.x;
-    pan_previous  = msg_dyn->pose.pose.position.x;
-    tilt_hor      = msg_dyn->pose.pose.position.y; // O TILT vem na mensagem na coordenada Y
-    tilt_current  = msg_dyn->pose.pose.position.y;
-    tilt_previous = msg_dyn->pose.pose.position.y;
-    first_read_mavros_dyn = false;
-  } else {
-    yaw_current_board = DEG2RAD(msg_ang->groundspeed);
-    north_previous = north_current;
-    east_previous  = east_current;
-    north_current  = msg_enu->pose.pose.position.y;
-    east_current   = msg_enu->pose.pose.position.x;
-    pan_current  = msg_dyn->pose.pose.position.x;
-    tilt_current = msg_dyn->pose.pose.position.y;
-  }
-  // Calculo da pose a partir da placa, gps e dos motores
-  Eigen::Quaternion<double> q2;
-  Eigen::Vector3d offset2;
-  calculate_current_pose(q2, offset2, msg_ptc);
 
   // Transformar a nuvem
-  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset, q);
-//  transformPointCloud<PointTT>(*cloud, *cloud_transformed, offset2, q2);
-  if(true){
-    cout << "\n###############################################################################"  << endl;
-//    cout << "Roll: " <<     0    << "\tPitch: " << RAD2DEG(dpitch) << "\tYaw: " << RAD2DEG(dyaw) << endl;
-    cout << "X   : " << offset2.data()[0] << "\tY    : " << offset2.data()[1] << "\tZ  : " << offset2.data()[2] << endl;
-    cout << "\n###############################################################################"  << endl;
+  transformPointCloud<PointT>(*cloud, *cloud_transformed, offset, q);
+
+  // Accumulate the point cloud using the += operator
+  (*accumulated_cloud) += (*cloud_transformed);
+
+  ROS_INFO("Tamanho da nuvem acumulada = %ld", accumulated_cloud->points.size());
+
+  temp_termica->resize(cloud_transformed->size());
+  // Trazendo a informacao termica, filtrando regiao que nao existe e acumulando
+  for(int i=0; i<cloud_transformed->size(); i++)
+  {
+    if(cloud_transformed->points[i].l > 1 && cloud_transformed->points[i].o > 1 && cloud_transformed->points[i].p > 1){
+      temp_termica->points[i].x = cloud_transformed->points[i].x;
+      temp_termica->points[i].y = cloud_transformed->points[i].y;
+      temp_termica->points[i].z = cloud_transformed->points[i].z;
+
+      temp_termica->points[i].r = int(cloud_transformed->points[i].l);
+      temp_termica->points[i].g = int(cloud_transformed->points[i].o);
+      temp_termica->points[i].b = int(cloud_transformed->points[i].p);
+    } else {
+      temp_termica->points[i].x = nan("");
+      temp_termica->points[i].y = nan("");
+      temp_termica->points[i].z = nan("");
+
+      temp_termica->points[i].r = nan("");
+      temp_termica->points[i].g = nan("");
+      temp_termica->points[i].b = nan("");
+    }
   }
-  // Accumulate the point cloud using the += operator
-//  ROS_INFO("Size of cloud_transformed = %ld", cloud_transformed->points.size());
-  (*accumulated_cloud) += (*cloud_transformed);
 
-//  ROS_INFO("Size of accumulated_cloud = %ld", accumulated_cloud->points.size());
+  // Limpar point cloud termica de elementos NAN
+  removeNaNFromPointCloud(*temp_termica, *temp_termica, indicesNAN);
 
-//  // Separando as point clouds em visual e térmica
-//  int nPontos = int(accumulated_cloud->points.size());
-//  cloud_acumulada_termica.points.resize (nPontos);
-//  for(int i = 0; i < int(accumulated_cloud->points.size()); i++)
-//  {
-
-//      cloud_acumulada_termica.points[i].x = accumulated_cloud->points[i].x;
-//      cloud_acumulada_termica.points[i].y = accumulated_cloud->points[i].y;
-//      cloud_acumulada_termica.points[i].z = accumulated_cloud->points[i].z;
-
-//      cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
-//      cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
-//      cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
-
-//      if(cloud_acumulada_termica.points[i].r != -1)
-//      {
-//          cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
-//          cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
-//          cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
-//      }
-//      else
-//      {
-//          cloud_acumulada_termica.points[i].x = nan("");
-//          cloud_acumulada_termica.points[i].y = nan("");
-//          cloud_acumulada_termica.points[i].z = nan("");
-//          cloud_acumulada_termica.points[i].r = nan("");
-//          cloud_acumulada_termica.points[i].g = nan("");
-//          cloud_acumulada_termica.points[i].b = nan("");
-//      }
-
-//  }
-
-//  // Limpar point cloud termica de elementos NAN
-//  vector<int> indicesNAN2;
-//  removeNaNFromPointCloud(cloud_acumulada_termica, cloud_acumulada_termica, indicesNAN2);
-
-  // Convert the pcl point cloud to ros msg and publish
-  toROSMsg(*accumulated_cloud, msg_out);
-  msg_out.header.stamp = msg_ptc->header.stamp;
-  pub->publish(msg_out);
-
-  // Publicando point cloud térmica
-  toROSMsg (cloud_acumulada_termica, termica_out);
-  termica_out.header.stamp = msg_ptc->header.stamp;
-  termica_out.header.frame_id = ros::names::remap("/odom");
-  pub_termica->publish(termica_out);
-
-  cloud.reset();
-  cloud_transformed.reset();
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void cloud_open_target3(const sensor_msgs::PointCloud2ConstPtr& msg_ptc){
-  // Declare variables
-  PointCloud<PointTT>::Ptr cloud (new PointCloud<PointTT>());
-  PointCloud<PointTT>::Ptr cloud_transformed (new PointCloud<PointTT>());
-  sensor_msgs::PointCloud2 msg_out;
-
-//  PointCloud<PointTT> cloud_acumulada_termica;
-//  sensor_msgs::PointCloud2 termica_out;
-
-  // Convert the ros message to pcl point cloud
-  fromROSMsg (*msg_ptc, *cloud);
-
-  // Remove any NAN points in the cloud
-  vector<int> indicesNAN;
-  removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
-  // Voxel Grid
-  float lf = 0.05f;
-  filter_grid(cloud, lf);
-  // Filter with passthrough filter -> region to see
-  passthrough(cloud, "z",   1, 20);
-  passthrough(cloud, "x", -10, 10);
-  passthrough(cloud, "y", -10, 10);
-  // Filter for color
-//  filter_color(cloud);
-  // Remove outiliers
-  remove_outlier(cloud, 15, 0.2);
-
-  /// ESCUTAR POR TFs
-  tf::StampedTransform trans_mo, trans_obl;
-//  ros::Time t = msg_ptc->header.stamp;
-  ros::Time t = ros::Time(0);
-
-//  tf_map_odom->waitForTransform("odom", "map", t, ros::Duration(5.0));
-//  tf_map_odom->lookupTransform("odom", "map", t, trans_mo);
-  tf_odom_baselink->waitForTransform("odom", "base_link", t, ros::Duration(5.0));
-  tf_odom_baselink->lookupTransform("odom", "base_link", t, trans_obl);
-
-  cout << "Tempo da tf: " << trans_obl.stamp_ << "\nTempo da nv: " << t << endl << endl;
-
-
-  // Transformar a nuvem
-  Eigen::Affine3d eigen_trf1, eigen_trf2;
-//  tf::transformTFToEigen (trans_mo , eigen_trf1);
-  tf::transformTFToEigen (trans_obl, eigen_trf2);
-//  pcl::transformPointCloud<PointTT>(*cloud            , *cloud_transformed, eigen_trf1);
-  pcl::transformPointCloud<PointTT>(*cloud, *cloud_transformed, eigen_trf2);
-
-  // Accumulate the point cloud using the += operator
-//  *cloud_transformed = *cloud;
-  (*accumulated_cloud) += (*cloud_transformed);
-
-//  // Separando as point clouds em visual e térmica
-//  int nPontos = int(accumulated_cloud->points.size());
-//  cloud_acumulada_termica.points.resize (nPontos);
-//  for(int i = 0; i < int(accumulated_cloud->points.size()); i++)
-//  {
-
-//      cloud_acumulada_termica.points[i].x = accumulated_cloud->points[i].x;
-//      cloud_acumulada_termica.points[i].y = accumulated_cloud->points[i].y;
-//      cloud_acumulada_termica.points[i].z = accumulated_cloud->points[i].z;
-
-//      cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
-//      cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
-//      cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
-
-//      if(cloud_acumulada_termica.points[i].r != -1)
-//      {
-//          cloud_acumulada_termica.points[i].r = accumulated_cloud->points[i].l;
-//          cloud_acumulada_termica.points[i].g = accumulated_cloud->points[i].o;
-//          cloud_acumulada_termica.points[i].b = accumulated_cloud->points[i].p;\
-//      }
-//      else
-//      {
-//          cloud_acumulada_termica.points[i].x = nan("");
-//          cloud_acumulada_termica.points[i].y = nan("");
-//          cloud_acumulada_termica.points[i].z = nan("");
-//          cloud_acumulada_termica.points[i].r = nan("");
-//          cloud_acumulada_termica.points[i].g = nan("");
-//          cloud_acumulada_termica.points[i].b = nan("");
-//      }
-
-//  }
-
-//  // Limpar point cloud termica de elementos NAN
-//  vector<int> indicesNAN2;
-//  removeNaNFromPointCloud(cloud_acumulada_termica, cloud_acumulada_termica, indicesNAN2);
+  // Acumular termica sem filtros a principio
+  (*cloud_acumulada_termica) += (*temp_termica);
+  ROS_INFO("Tamanho da nuvem termica = %ld", cloud_acumulada_termica->points.size());
 
   // Convert the pcl point cloud to ros msg and publish
   toROSMsg(*accumulated_cloud, msg_out);
   msg_out.header.stamp = ros::Time::now();
   pub->publish(msg_out);
+  toROSMsg(*cloud_acumulada_termica, msg_termica_out);
+  msg_termica_out.header.stamp = ros::Time::now();
+  pub_termica->publish(msg_termica_out);
 
   // Publicando point cloud térmica
-//  toROSMsg (cloud_acumulada_termica, termica_out);
-//  termica_out.header.stamp = msg_ptc->header.stamp;
-//  termica_out.header.frame_id = ros::names::remap("/odom");
-//  pub_termica->publish(termica_out);
+  //  toROSMsg (cloud_acumulada_termica, termica_out);
+  //  termica_out.header.stamp = msg_ptc->header.stamp;
+  //  termica_out.header.frame_id = ros::names::remap("/odom");
+  //  pub_termica->publish(termica_out);
 
   cloud.reset();
   cloud_transformed.reset();
@@ -627,19 +324,11 @@ int main (int argc, char** argv)
   ros::init (argc, argv, "accumulatepointcloud");
   ros::NodeHandle nh;
 
-  // Initialize the TF listeners
-  tf_map_odom      = (tf::TransformListener*) new tf::TransformListener;
-  tf_odom_baselink = (tf::TransformListener*) new tf::TransformListener;
-
-  // First time for all position data from mavros and dynamixel
-  first_read_mavros_dyn = true;
-  // Constantes de conversao dos valores de PWM para DEGREES de ambos os motores - dados findos de $(find automatico_mrs)/controle_automatico.cpp
-  pwm2pan  = (300.0 -   0  ) / (1023.0 -    0  ); // [DEG/PWM]
-  pwm2tilt = (205.0 - 153.0) / (2343.0 - 1746.0); // [DEG/PWM]
-
   // Initialize accumulated cloud variable
-  accumulated_cloud = (PointCloud<PointTT>::Ptr) new PointCloud<PointTT>;
+  accumulated_cloud = (PointCloud<PointT>::Ptr) new PointCloud<PointT>;
   accumulated_cloud->header.frame_id = "odom";
+  cloud_acumulada_termica = (PointCloud<PointTT>::Ptr) new PointCloud<PointTT>;
+  cloud_acumulada_termica->header.frame_id = "odom";
 
   // Initialize the point cloud publisher
   pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
@@ -648,25 +337,14 @@ int main (int argc, char** argv)
   *pub_termica = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_termica", 300);
 
   // Subscriber para a nuvem instantanea e odometria
-  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptc(nh, "/stereo/points2"                 , 200);
-  message_filters::Subscriber<Odometry>                  subodo(nh, "/stereo_odometer/odometry"       , 200);
-//  message_filters::Subscriber<VFR_HUD>                   subang(nh, "/mavros/vfr_hud"                 , 100);
-//  message_filters::Subscriber<Odometry>                  subenu(nh, "/mavros/global_position/local"   , 100);
-//  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_sync"              , 100);
-//  message_filters::Subscriber<Odometry>                  subdyn(nh, "/dynamixel_angulos_sincronizados", 100);
+  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptc(nh, "/completa_pc"             , 200);
+  message_filters::Subscriber<Odometry>                  subodo(nh, "/stereo_odometer/odometry", 200);
 
   // Sincroniza as leituras dos topicos (sensores e imagem a principio) em um so callback
-//  Synchronizer<syncPolicy> sync(syncPolicy(100), subptc, subodo, subang, subenu, subdyn);
-  Synchronizer<syncPolicy2> sync2(syncPolicy2(200), subptc, subodo);
-//  sync.registerCallback(boost::bind(&cloud_open_target2, _1, _2, _3, _4, _5));
-  sync2.registerCallback(boost::bind(&cloud_open_target, _1, _2));
+  Synchronizer<syncPolicy> sync(syncPolicy(200), subptc, subodo);
+  sync.registerCallback(boost::bind(&cloud_open_target, _1, _2));
 
-//  ros::Subscriber sub_target = nh.subscribe ("/stereo/points2", 300, cloud_open_target3);
-
-  // Publisher para a odometria calculada dos outros sensores
-  pubodom = nh.advertise<Odometry>("/nossa_pose_agora", 100);
-
-  // Loop infinitly
+  // Loop infinitely
   ros::spin();
 
   return 0;

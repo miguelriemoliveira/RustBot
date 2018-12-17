@@ -19,7 +19,7 @@
   <!--To launch a gui for tunning the stereo parameters-->
   <arg name="config_stereo" default="false"/>
   <!--The desired frames per second-->
-  <arg name="fps" default="15"/>
+  <arg name="fps" default="20"/>
   <!--Queue size for the stereo images. More queue size better the possibilities to sync, but more memory required-->
   <arg name="queue_size" default="500"/>
   <!--data fusion-->
@@ -111,11 +111,13 @@
   <!-- UFJF SECTION -->
 
 <!-- TERMICA -->
-  <group ns="termica">
+<group ns="termica">
+  <group if="$(arg online_stereo)">
       <include file="$(find rustbot_bringup)/launch/termica.launch">
         <arg name="mac_address" value="$(arg mac_address_termica)"/>
         <arg name="calib_url"   value="$(arg termica_url)"/>
       </include>
+</group>
 </group>
 
 <!--start the gimbal-->
