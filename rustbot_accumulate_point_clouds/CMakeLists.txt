@@ -20,6 +20,12 @@ find_package(catkin REQUIRED COMPONENTS
   dynamixel_sdk
   dynamixel_workbench_msgs
   dynamixel_workbench_toolbox
+  cv_bridge
+  image_transport
+  geometry_msgs
+  camera_calibration_parsers
+  camera_info_manager
+  image_geometry
 )
 
 ## System dependencies are found with CMake's conventions
@@ -29,6 +35,9 @@ find_package(PCL 1.2 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
+
+find_package(OpenCV)
+
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -131,7 +140,9 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
+    ${Eigen_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -149,6 +160,8 @@ include_directories(
 
 add_executable(accumulatepointcloud src/accumulatepointcloud.cpp)
 target_link_libraries (accumulatepointcloud ${PCL_LIBRARIES} ${catkin_LIBRARIES} )
+add_executable(continuous_loop_closure src/continuous_loop_closure.cpp)
+target_link_libraries (continuous_loop_closure ${OpenCV_LIBS} ${Eigen_LIBRARIES} ${PCL_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(save_cloud src/save_cloud.cpp)
 target_link_libraries (save_cloud ${PCL_LIBRARIES} ${catkin_LIBRARIES} )
 
