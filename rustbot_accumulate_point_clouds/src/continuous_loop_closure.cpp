@@ -43,19 +43,16 @@ using namespace cv;
 
 /// Definitions
 typedef PointXYZRGB PointT;
-typedef sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::CameraInfo, sensor_msgs::PointCloud2, Odometry> syncPolicy;
+typedef sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::PointCloud2, Odometry> syncPolicy;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Variaveis globais
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Mat imagem_anterior;
-Odometry odom_anterior;
-sensor_msgs::CameraInfo cam_info;
-Eigen::Quaternion<double> q_anterior, q_atual;
-Eigen::Vector3d offset_anterior, offset_atual;
-PointCloud<PointT>::Ptr cloud;
+Eigen::Quaternion<double> q_anterior, q_anterior_inverso, q_atual, q_relativo;
+Eigen::Vector3d t_anterior, t_atual, t_relativo;
+PointCloud<PointT>::Ptr cloud, cloud_tf, cloud_filt;
 image_geometry::PinholeCameraModel model;
-Mat T_camera, P_camera, R, t;
 
 bool primeira_vez = true;
 
@@ -63,20 +60,34 @@ bool primeira_vez = true;
 ros::Publisher cloud_pub;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Iniciar o modelo da camera
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void inicia_modelo_camera(sensor_msgs::CameraInfo ci){
+  model.fromCameraInfo(ci);
+//  cout << "Matriz intrinseca da camera:\n" << model.fullIntrinsicMatrix() << endl;
+//  cout << "Matriz de projecao da camera:\n" << model.fullProjectionMatrix() << endl;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Retornar transformacao relativa entre os instantes
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void calcula_transformacao_relativa(){
+  q_anterior_inverso = q_anterior.inverse();
+  q_relativo = q_anterior_inverso*q_atual;
+  t_relativo = q_anterior_inverso*(t_atual - t_anterior);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Callback para evitar repeticao da nuvem por projecao na imagem anterior
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop_closure_callback(const sensor_msgs::ImageConstPtr& msg_ima,
-                           const sensor_msgs::CameraInfoConstPtr& msg_cam,
                            const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
                            const OdometryConstPtr& msg_odo){
   ROS_INFO("Entramos no callback de loop closure");
+
   // Ler nuvem de pontos
   fromROSMsg(*msg_ptc, *cloud);
-
-  // Ler camera info
-//  imagem_atual = cv_bridge::toCvShare(msg_ima, "bgr8")->image;
-//  odom_atual = *msg_odo;
-  cam_info = *msg_cam;
+  cloud_filt->header.frame_id = cloud->header.frame_id;
+  cloud_filt->header.stamp    = cloud->header.stamp;
 
   // Remover NaN
   vector<int> indicesNAN;
@@ -84,8 +95,8 @@ void loop_closure_callback(const sensor_msgs::ImageConstPtr& msg_ima,
 
   // Preparando mensagem da nuvem de saida
   sensor_msgs::PointCloud2 msg_ptc_out;
-  msg_ptc_out.header.frame_id = cloud->header.frame_id;
-//  msg_ptc_out.header.stamp    = cloud->header.stamp;
+  msg_ptc_out.header.frame_id = msg_ptc->header.frame_id;
+  msg_ptc_out.header.stamp    = msg_ptc->header.stamp;
 
   /// LOOP de PROJECAO sobre a nuvem
   if(!primeira_vez){
@@ -94,60 +105,49 @@ void loop_closure_callback(const sensor_msgs::ImageConstPtr& msg_ima,
     q_atual.y() = (double)msg_odo->pose.pose.orientation.y;
     q_atual.z() = (double)msg_odo->pose.pose.orientation.z;
     q_atual.w() = (double)msg_odo->pose.pose.orientation.w;
-    offset_atual = {msg_odo->pose.pose.position.x, msg_odo->pose.pose.position.y, msg_odo->pose.pose.position.z};
+    t_atual = {msg_odo->pose.pose.position.x, msg_odo->pose.pose.position.y, msg_odo->pose.pose.position.z};
+
+    // Calcular transformacao relativa entre os instantes
+    calcula_transformacao_relativa();
 
     // Transformar camera para o ponto onde estava na iteracao anterior, e a nuvem para a iteracao de agora
-    transformPointCloud<PointT>(*cloud, *cloud, offset_atual, q_atual);
-    cout << "Parametros intrinsecos da camera:\n" << model.fullIntrinsicMatrix() << endl;
-//    R = Mat(3, 3, CV_64F, q_anterior.matrix());
-    R = Mat::eye(3, 3, CV_64F);
-    cout << "Matriz vinda do quaternion:\n" << q_anterior.matrix() << endl;
-    T_camera.push_back(R);
-    t = (cv::Mat1d(3, 1, CV_64F) << offset_anterior.data()[0], offset_anterior.data()[1], offset_anterior.data()[2]);
-    T_camera.push_back(t);
-    cout << "Matriz T final:\n" << T_camera << endl;
-//    cam_info.P = cam_info.K*T_camera;
-
-    // Com a matriz de projecao correta ajustar o modelo da camera
-    model.fromCameraInfo(cam_info);
+    transformPointCloud<PointT>(*cloud, *cloud_tf, t_relativo, q_relativo);
 
     // Projeta cada ponto da nuvem na imagem e se cair fora adiciona na nuvem filtrada - OU REMOVE DA NUVEM
     cv::Point3d ponto3D;
     cv::Point2d pontoProjetado;
-    for(PointCloud<PointT>::iterator it = cloud->begin(); it!=cloud->end(); it++){
-      ponto3D.x = it->x;
-      ponto3D.y = it->y;
-      ponto3D.z = it->z;
+    for(int i=0; i < cloud_tf->size(); i++){
+      ponto3D.x = cloud_tf->points[i].x;
+      ponto3D.y = cloud_tf->points[i].y;
+      ponto3D.z = cloud_tf->points[i].z;
 
       pontoProjetado = model.project3dToPixel(ponto3D);
-      // Se dentro da imagem, apaga da nuvem - mais rapido
-      if(pontoProjetado.x > 0  && pontoProjetado.x < imagem_anterior.cols && pontoProjetado.y > 0 && pontoProjetado.y < imagem_anterior.rows){
-        cloud->erase(it);
-        it++;
+      // Se cair na imagem da esquerda esta fora
+      if(!(pontoProjetado.x > 0 && pontoProjetado.x < 2*imagem_anterior.cols-200 && pontoProjetado.y > 0 && pontoProjetado.y < 2*imagem_anterior.rows-100)){
+        cloud_filt->push_back(cloud->points[i]); // Guardar o ponto sem transformacao relativa
       }
     }
+    cout << "Tamanho antes da nuvem que nao foi projetada: " << cloud_filt->size() << endl;
 
     // Armazena para a proxima iteracao
     imagem_anterior = cv_bridge::toCvShare(msg_ima, "bgr8")->image;
-    odom_anterior = *msg_odo;
     q_anterior = q_atual;
-    offset_anterior = offset_atual;
+    t_anterior = t_atual;
 
     // Publica nuvem normalmente aqui
-    toROSMsg(*cloud, msg_ptc_out);
+    toROSMsg(*cloud_filt, msg_ptc_out);
     cloud_pub.publish(msg_ptc_out);
 
   } else {
 
     // Armazena tudo nas variaveis anteriores
     imagem_anterior = cv_bridge::toCvShare(msg_ima, "bgr8")->image;
-    odom_anterior = *msg_odo;
 
     q_anterior.x() = (double)msg_odo->pose.pose.orientation.x;
     q_anterior.y() = (double)msg_odo->pose.pose.orientation.y;
     q_anterior.z() = (double)msg_odo->pose.pose.orientation.z;
     q_anterior.w() = (double)msg_odo->pose.pose.orientation.w;
-    offset_anterior = {msg_odo->pose.pose.position.x, msg_odo->pose.pose.position.y, msg_odo->pose.pose.position.z};
+    t_anterior = {msg_odo->pose.pose.position.x, msg_odo->pose.pose.position.y, msg_odo->pose.pose.position.z};
 
     // Publica nuvem normalmente aqui
     toROSMsg(*cloud, msg_ptc_out);
@@ -156,9 +156,8 @@ void loop_closure_callback(const sensor_msgs::ImageConstPtr& msg_ima,
     primeira_vez = false;
   } // fim do if
 
-  // Libera as nuvens e matrizes
-  cloud->clear();
-  R.release(); t.release(); T_camera.release(); P_camera.release();
+  // Libera as nuvens
+  cloud->clear(); cloud_filt->clear(); cloud_tf->clear();
 }
 
 
@@ -168,22 +167,37 @@ void loop_closure_callback(const sensor_msgs::ImageConstPtr& msg_ima,
 int main(int argc, char **argv){
   ros::init(argc, argv, "continuous_loop_closure");
   ros::NodeHandle nh;
+  ros::NodeHandle n_("~"); // Frescura da camera
 
   // Aloca as nuvens
   cloud      = (PointCloud<PointT>::Ptr) new PointCloud<PointT>;
+  cloud_tf   = (PointCloud<PointT>::Ptr) new PointCloud<PointT>;
+  cloud_filt = (PointCloud<PointT>::Ptr) new PointCloud<PointT>;
 
   // Inicia o publicador
   cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/loop_closure_cloud", 1000);
 
+  // Inicia o modelo da camera com arquivo de calibracao
+  std::string camera_calibration_yaml;
+  n_.getParam("left_calibration_yaml", camera_calibration_yaml);
+  camera_calibration_yaml = camera_calibration_yaml + std::string(".yaml");
+  camera_info_manager::CameraInfoManager cam_info(n_, "left_optical", camera_calibration_yaml);
+  inicia_modelo_camera(cam_info.getCameraInfo());
+
   // Subscriber para a nuvem instantanea e odometria
-  message_filters::Subscriber<sensor_msgs::Image>       subima(nh, "/stereo/left/image_rect"  , 200);
-  message_filters::Subscriber<sensor_msgs::CameraInfo>  subcam(nh, "/stereo/left/camera_info" , 200);
-  message_filters::Subscriber<sensor_msgs::PointCloud2> subptc(nh, "/stereo/points2"          , 200);
-  message_filters::Subscriber<Odometry>                 subodo(nh, "/stereo_odometer/odometry", 200);
+  message_filters::Subscriber<sensor_msgs::Image>       subima(nh, "/stereo/left/image_raw"   , 2000);
+  message_filters::Subscriber<sensor_msgs::PointCloud2> subptc(nh, "/stereo/points2"          , 2000);
+  message_filters::Subscriber<Odometry>                 subodo(nh, "/stereo_odometer/odometry", 2000);
 
   // Sincroniza as leituras dos topicos
-  Synchronizer<syncPolicy> sync(syncPolicy(200), subima, subcam, subptc, subodo);
-  sync.registerCallback(boost::bind(&loop_closure_callback, _1, _2, _3, _4));
+  Synchronizer<syncPolicy> sync(syncPolicy(2000), subima, subptc, subodo);
+  sync.registerCallback(boost::bind(&loop_closure_callback, _1, _2, _3));
 
-  ros::spin();
+  ros::Rate rate(1);
+
+  while(ros::ok()){
+    ros::spinOnce();
+    rate.sleep();
+  }
+//  ros::spin();
 }

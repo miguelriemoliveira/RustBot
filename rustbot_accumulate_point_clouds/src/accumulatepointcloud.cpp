@@ -53,34 +53,34 @@ using namespace geometry_msgs;
 using namespace Eigen;
 
 /// Definitions
-typedef PointXYZRGB PointTT;
-typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2, Odometry> syncPolicy;
+typedef PointXYZRGB PointT;
+typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2, sensor_msgs::PointCloud2, Odometry> syncPolicy;
 
-struct PointT
-{
-  PCL_ADD_POINT4D;                  // preferred way of adding a XYZ+padding
-  PCL_ADD_RGB;
-  float l;
-  float o;
-  float p;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW   // make sure our new allocators are aligned
-} EIGEN_ALIGN16;                    // enforce SSE padding for correct memory alignment
+//struct PointT
+//{
+//  PCL_ADD_POINT4D;                  // preferred way of adding a XYZ+padding
+//  PCL_ADD_RGB;
+//  float l;
+//  float o;
+//  float p;
+//  EIGEN_MAKE_ALIGNED_OPERATOR_NEW   // make sure our new allocators are aligned
+//} EIGEN_ALIGN16;                    // enforce SSE padding for correct memory alignment
 
-POINT_CLOUD_REGISTER_POINT_STRUCT  (PointT,           // here we assume a XYZ + "test" (as fields)
-                                    (float, x, x)
-                                    (float, y, y)
-                                    (float, z, z)
-                                    (float, rgb, rgb)
-                                    //(float, g, g)
-                                    //(float, b, b)
-                                    (float, l, l)
-                                    (float, o, o)
-                                    (float, p, p)
-                                    )
+//POINT_CLOUD_REGISTER_POINT_STRUCT  (PointT,           // here we assume a XYZ + "test" (as fields)
+//                                    (float, x, x)
+//                                    (float, y, y)
+//                                    (float, z, z)
+//                                    (float, rgb, rgb)
+//                                    //(float, g, g)
+//                                    //(float, b, b)
+//                                    (float, l, l)
+//                                    (float, o, o)
+//                                    (float, p, p)
+//                                    )
 
 /// Global vars
 PointCloud<PointT >::Ptr accumulated_cloud;
-PointCloud<PointTT>::Ptr cloud_acumulada_termica;
+PointCloud<PointT>::Ptr cloud_acumulada_termica;
 tf::TransformListener *p_listener;
 boost::shared_ptr<ros::Publisher> pub;
 boost::shared_ptr<ros::Publisher> pub_termica;
@@ -209,12 +209,13 @@ void temp_limits_and_filter_xyz(PointCloud<PointT>::Ptr cloud){
     ymax = ymaxtemp;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
+void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc_vis,
+                       const sensor_msgs::PointCloud2ConstPtr& msg_ptc_ter,
                        const OdometryConstPtr& msg_odo){
   // Declare variables
-  PointCloud<PointT >::Ptr cloud (new PointCloud<PointT>());
-  PointCloud<PointT >::Ptr cloud_transformed (new PointCloud<PointT>());
-  PointCloud<PointTT>::Ptr temp_termica (new PointCloud<PointTT>());
+  PointCloud<PointT>::Ptr cloud (new PointCloud<PointT>());
+  PointCloud<PointT>::Ptr cloud_transformed (new PointCloud<PointT>());
+  PointCloud<PointT>::Ptr temp_termica (new PointCloud<PointT>());
   sensor_msgs::PointCloud2 msg_out;
   sensor_msgs::PointCloud2 msg_termica_out;
 
@@ -225,22 +226,24 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   }
 
   // Convert the ros message to pcl point cloud
-  fromROSMsg (*msg_ptc, *cloud);
+  fromROSMsg (*msg_ptc_vis, *cloud);
+  fromROSMsg (*msg_ptc_ter, *temp_termica);
 
   // Remove any NAN points in the cloud
-  vector<int> indicesNAN;
-  removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
+//  vector<int> indicesNAN;
+//  removeNaNFromPointCloud(*cloud, *cloud, indicesNAN);
   // Voxel Grid
-  float lf = 0.05f;
-  filter_grid(cloud, lf);
+//  float lf = 0.05f;
+//  filter_grid(cloud, lf);
   // Filter with passthrough filter -> region to see
-  passthrough(cloud, "z",   1, 20);
+  passthrough(cloud, "z",   0, 20);
   passthrough(cloud, "x", -10, 10);
   passthrough(cloud, "y", -10, 10);
   // Filter for color
-  filter_color(cloud);
+//  filter_color(cloud);
   // Remove outiliers
   remove_outlier(cloud, 15, 0.2);
+  remove_outlier(temp_termica, 15, 0.2);
 
   //  // If first cloud, get the first limits
   //  if(accumulated_cloud->points.size() < 5){
@@ -259,43 +262,55 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   // Translacao
   Eigen::Vector3d offset(msg_odo->pose.pose.position.x, msg_odo->pose.pose.position.y, msg_odo->pose.pose.position.z);
 
-  // Transformar a nuvem
-  transformPointCloud<PointT>(*cloud, *cloud_transformed, offset, q);
+  // Transformar as nuvens
+  transformPointCloud<PointT>(*cloud       , *cloud_transformed, offset, q);
+  transformPointCloud<PointT>(*temp_termica, *temp_termica     , offset, q);
 
   // Accumulate the point cloud using the += operator
-  (*accumulated_cloud) += (*cloud_transformed);
+  (*accumulated_cloud)       += (*cloud_transformed);
+  (*cloud_acumulada_termica) += (*temp_termica)     ;
 
   ROS_INFO("Tamanho da nuvem acumulada = %ld", accumulated_cloud->points.size());
+  ROS_INFO("Tamanho da nuvem termica   = %ld", cloud_acumulada_termica->points.size());
 
-  temp_termica->resize(cloud_transformed->size());
+//  temp_termica->resize(cloud_transformed->size());
   // Trazendo a informacao termica, filtrando regiao que nao existe e acumulando
-  for(int i=0; i<cloud_transformed->size(); i++)
-  {
-    if(cloud_transformed->points[i].l > 1 && cloud_transformed->points[i].o > 1 && cloud_transformed->points[i].p > 1){
-      temp_termica->points[i].x = cloud_transformed->points[i].x;
-      temp_termica->points[i].y = cloud_transformed->points[i].y;
-      temp_termica->points[i].z = cloud_transformed->points[i].z;
+//  PoinT point;
+//  for(int i=0; i<cloud_transformed->size(); i++)
+//  {
+//    if(cloud_transformed->points[i].l > 1 && cloud_transformed->points[i].o > 1 && cloud_transformed->points[i].p > 1){
+//      point.x = cloud_transformed->points[i].x;
+//      point.y = cloud_transformed->points[i].y;
+//      point.z = cloud_transformed->points[i].z;
 
-      temp_termica->points[i].r = int(cloud_transformed->points[i].l);
-      temp_termica->points[i].g = int(cloud_transformed->points[i].o);
-      temp_termica->points[i].b = int(cloud_transformed->points[i].p);
-    } else {
-      temp_termica->points[i].x = nan("");
-      temp_termica->points[i].y = nan("");
-      temp_termica->points[i].z = nan("");
+//      point.r = int(cloud_transformed->points[i].l);
+//      point.g = int(cloud_transformed->points[i].o);
+//      point.b = int(cloud_transformed->points[i].p);
 
-      temp_termica->points[i].r = nan("");
-      temp_termica->points[i].g = nan("");
-      temp_termica->points[i].b = nan("");
-    }
-  }
+//      temp_termica->push_back(point);
+//      temp_termica->points[i].x = cloud_transformed->points[i].x;
+//      temp_termica->points[i].y = cloud_transformed->points[i].y;
+//      temp_termica->points[i].z = cloud_transformed->points[i].z;
+
+//      temp_termica->points[i].r = int(cloud_transformed->points[i].l);
+//      temp_termica->points[i].g = int(cloud_transformed->points[i].o);
+//      temp_termica->points[i].b = int(cloud_transformed->points[i].p);
+//    } else {
+//      temp_termica->points[i].x = nan("");
+//      temp_termica->points[i].y = nan("");
+//      temp_termica->points[i].z = nan("");
+
+//      temp_termica->points[i].r = nan("");
+//      temp_termica->points[i].g = nan("");
+//      temp_termica->points[i].b = nan("");
+//    }
+//  }
 
   // Limpar point cloud termica de elementos NAN
-  removeNaNFromPointCloud(*temp_termica, *temp_termica, indicesNAN);
+//  removeNaNFromPointCloud(*temp_termica, *temp_termica, indicesNAN);
 
   // Acumular termica sem filtros a principio
-  (*cloud_acumulada_termica) += (*temp_termica);
-  ROS_INFO("Tamanho da nuvem termica = %ld", cloud_acumulada_termica->points.size());
+//  (*cloud_acumulada_termica) += (*temp_termica);
 
   // Convert the pcl point cloud to ros msg and publish
   toROSMsg(*accumulated_cloud, msg_out);
@@ -305,14 +320,9 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc,
   msg_termica_out.header.stamp = ros::Time::now();
   pub_termica->publish(msg_termica_out);
 
-  // Publicando point cloud térmica
-  //  toROSMsg (cloud_acumulada_termica, termica_out);
-  //  termica_out.header.stamp = msg_ptc->header.stamp;
-  //  termica_out.header.frame_id = ros::names::remap("/odom");
-  //  pub_termica->publish(termica_out);
-
   cloud.reset();
   cloud_transformed.reset();
+  temp_termica.reset();
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -327,7 +337,7 @@ int main (int argc, char** argv)
   // Initialize accumulated cloud variable
   accumulated_cloud = (PointCloud<PointT>::Ptr) new PointCloud<PointT>;
   accumulated_cloud->header.frame_id = "odom";
-  cloud_acumulada_termica = (PointCloud<PointTT>::Ptr) new PointCloud<PointTT>;
+  cloud_acumulada_termica = (PointCloud<PointT>::Ptr) new PointCloud<PointT>;
   cloud_acumulada_termica->header.frame_id = "odom";
 
   // Initialize the point cloud publisher
@@ -337,15 +347,21 @@ int main (int argc, char** argv)
   *pub_termica = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_termica", 300);
 
   // Subscriber para a nuvem instantanea e odometria
-  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptc(nh, "/completa_pc"             , 200);
-  message_filters::Subscriber<Odometry>                  subodo(nh, "/stereo_odometer/odometry", 200);
+  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptcvis(nh, "/visual_pc"               , 100);
+  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptcter(nh, "/termica/termica_pc"      , 100); // ALTEREI O TAMANHO DAS FILAS!
+  message_filters::Subscriber<Odometry>                  subodo   (nh, "/stereo_odometer/odometry", 100);
 
   // Sincroniza as leituras dos topicos (sensores e imagem a principio) em um so callback
-  Synchronizer<syncPolicy> sync(syncPolicy(200), subptc, subodo);
-  sync.registerCallback(boost::bind(&cloud_open_target, _1, _2));
+  Synchronizer<syncPolicy> sync(syncPolicy(100), subptcvis, subptcter, subodo); // ALTEREI O TAMANHO DAS FILAS!
+  sync.registerCallback(boost::bind(&cloud_open_target, _1, _2, _3));
 
   // Loop infinitely
-  ros::spin();
+  ros::Rate rate(10);
+  while(ros::ok()){
+    ros::spinOnce();
+    rate.sleep();
+  }
+//  ros::spin();
 
   return 0;
 

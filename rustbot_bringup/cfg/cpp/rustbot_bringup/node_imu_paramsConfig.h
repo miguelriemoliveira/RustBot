@@ -10,12 +10,6 @@
 #ifndef __rustbot_bringup__NODE_IMU_PARAMSCONFIG_H__
 #define __rustbot_bringup__NODE_IMU_PARAMSCONFIG_H__
 
-#if __cplusplus >= 201103L
-#define DYNAMIC_RECONFIGURE_FINAL final
-#else
-#define DYNAMIC_RECONFIGURE_FINAL
-#endif
-
 #include <dynamic_reconfigure/config_tools.h>
 #include <limits>
 #include <ros/node_handle.h>
@@ -57,10 +51,8 @@ namespace rustbot_bringup
     typedef boost::shared_ptr<AbstractParamDescription> AbstractParamDescriptionPtr;
     typedef boost::shared_ptr<const AbstractParamDescription> AbstractParamDescriptionConstPtr;
 
-    // Final keyword added to class because it has virtual methods and inherits
-    // from a class with a non-virtual destructor.
     template <class T>
-    class ParamDescription DYNAMIC_RECONFIGURE_FINAL : public AbstractParamDescription
+    class ParamDescription : public AbstractParamDescription
     {
     public:
       ParamDescription(std::string a_name, std::string a_type, uint32_t a_level,
@@ -145,10 +137,8 @@ namespace rustbot_bringup
     typedef boost::shared_ptr<AbstractGroupDescription> AbstractGroupDescriptionPtr;
     typedef boost::shared_ptr<const AbstractGroupDescription> AbstractGroupDescriptionConstPtr;
 
-    // Final keyword added to class because it has virtual methods and inherits
-    // from a class with a non-virtual destructor.
     template<class T, class PT>
-    class GroupDescription DYNAMIC_RECONFIGURE_FINAL : public AbstractGroupDescription
+    class GroupDescription : public AbstractGroupDescription
     {
     public:
       GroupDescription(std::string a_name, std::string a_type, int a_parent, int a_id, bool a_s, T PT::* a_f) : AbstractGroupDescription(a_name, a_type, a_parent, a_id, a_s), field(a_f)
@@ -260,7 +250,7 @@ int b;
       int a;
 //#line 274 "/opt/ros/kinetic/lib/python2.7/dist-packages/dynamic_reconfigure/parameter_generator.py"
       int b;
-//#line 228 "/opt/ros/kinetic/share/dynamic_reconfigure/templates/ConfigType.h.template"
+//#line 218 "/opt/ros/kinetic/share/dynamic_reconfigure/templates/ConfigType.h.template"
 
     bool __fromMessage__(dynamic_reconfigure::Config &msg)
     {
@@ -432,7 +422,7 @@ node_imu_paramsConfig::GroupDescription<node_imu_paramsConfig::DEFAULT, node_imu
       Default.convertParams();
 //#line 246 "/opt/ros/kinetic/lib/python2.7/dist-packages/dynamic_reconfigure/parameter_generator.py"
       __group_descriptions__.push_back(node_imu_paramsConfig::AbstractGroupDescriptionConstPtr(new node_imu_paramsConfig::GroupDescription<node_imu_paramsConfig::DEFAULT, node_imu_paramsConfig>(Default)));
-//#line 366 "/opt/ros/kinetic/share/dynamic_reconfigure/templates/ConfigType.h.template"
+//#line 356 "/opt/ros/kinetic/share/dynamic_reconfigure/templates/ConfigType.h.template"
 
       for (std::vector<node_imu_paramsConfig::AbstractGroupDescriptionConstPtr>::const_iterator i = __group_descriptions__.begin(); i != __group_descriptions__.end(); ++i)
       {
@@ -509,7 +499,5 @@ node_imu_paramsConfig::GroupDescription<node_imu_paramsConfig::DEFAULT, node_imu
 
 
 }
-
-#undef DYNAMIC_RECONFIGURE_FINAL
 
 #endif // __NODE_IMU_PARAMSRECONFIGURATOR_H__
