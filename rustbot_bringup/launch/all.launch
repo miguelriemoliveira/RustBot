@@ -59,22 +59,22 @@
         <param name="approximate_sync" value="true"/>
         <param name="queue_size" value="$(arg queue_size)"/>
 	<!--Melhorar visao stereo -->
-        <param name="prefilter_size" value="10"/>
-        <param name="prefilter_cap" value="63"/>
-        <param name="disparity_range" value="200"/>
+        <param name="prefilter_size" value="9"/>
+        <param name="prefilter_cap" value="31"/>
+        <param name="disparity_range" value="64"/>
         <param name="min_disparity" value="0"/>
-        <param name="correlation_window_size" value="63"/>
-        <param name="speckle_size" value="1000"/>
-        <param name="speckle_range" value="31"/>
-	<param name="fullDP" value="true"/>
-        <param name="uniqueness_ratio" value="6.0"/>
-        <param name="texture_threshold" value="1"/>
+        <param name="correlation_window_size" value="15"/>
+        <param name="speckle_size" value="100"/>
+        <param name="speckle_range" value="4"/>
+        <param name="fullDP" value="false"/>
+        <param name="uniqueness_ratio" value="15.0"/>
+        <param name="texture_threshold" value="10"/>
 
 <!--        <rosparam command="load" file="$(find rustbot_calibration)/calibration/stereo_image_proc.yaml"/>-->
       </node>
-      <node name="continuous_loop_closure" pkg="rustbot_accumulate_point_clouds" type="continuous_loop_closure" output="screen">
+      <!--<node name="continuous_loop_closure" pkg="rustbot_accumulate_point_clouds" type="continuous_loop_closure" output="screen">
          <param name="left_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>
-      </node>
+      </node>-->
 
     </group>
   </group>
