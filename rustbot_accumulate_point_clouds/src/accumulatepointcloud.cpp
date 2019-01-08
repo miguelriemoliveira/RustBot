@@ -349,7 +349,7 @@ int main (int argc, char** argv)
   // Subscriber para a nuvem instantanea e odometria
   message_filters::Subscriber<sensor_msgs::PointCloud2>  subptcvis(nh, "/overlap/visual_cloud"    , 100);
 //  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptcter(nh, "/termica/termica_pc"      , 100); // ALTEREI O TAMANHO DAS FILAS!
-  message_filters::Subscriber<Odometry>                  subodo   (nh, "/overlap/odometry", 100);
+  message_filters::Subscriber<Odometry>                  subodo   (nh, "/overlap/visual_odometry", 100);
 
   // Sincroniza as leituras dos topicos (sensores e imagem a principio) em um so callback
   Synchronizer<syncPolicy> sync(syncPolicy(100), subptcvis, subodo); // ALTEREI O TAMANHO DAS FILAS!
