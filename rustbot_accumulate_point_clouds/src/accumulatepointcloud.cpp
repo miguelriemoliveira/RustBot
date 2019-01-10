@@ -334,6 +334,9 @@ int main (int argc, char** argv)
   ros::init (argc, argv, "accumulatepointcloud");
   ros::NodeHandle nh;
 
+  ros::Rate rate(0.5);
+  rate.sleep();
+
   // Initialize accumulated cloud variable
   accumulated_cloud = (PointCloud<PointT>::Ptr) new PointCloud<PointT>;
   accumulated_cloud->header.frame_id = "odom";

@@ -47,13 +47,13 @@
 	<!--Melhorar visao stereo -->
         <param name="prefilter_size" value="77"/>
         <param name="prefilter_cap" value="34"/>
-        <param name="disparity_range" value="192"/>
+        <param name="disparity_range" value="32"/>
         <param name="min_disparity" value="0"/>
-        <param name="correlation_window_size" value="69"/>
+        <param name="correlation_window_size" value="97"/>
         <param name="speckle_size" value="638"/>
         <param name="speckle_range" value="10"/>
         <param name="fullDP" value="true"/>
-        <param name="uniqueness_ratio" value="10.0"/>
+        <param name="uniqueness_ratio" value="7.0"/>
         <param name="texture_threshold" value="3000"/>
       </node>
       <group if="$(arg online_stereo)">
@@ -105,7 +105,7 @@
         <param name="odom_topic_in"   value="/stereo_odometer/odometry"  />
         <param name="odom_topic_out"  value="/overlap/visual_odometry" />
         <param name="camera_type"     value="left_camera"    />
-        <param name="overlap_rate"    value="90"   /> <!--Importante overlap mais baixo-->
+        <param name="overlap_rate"    value="99"   /> <!--Importante overlap mais baixo-->
     </node>
     <node name="overlap_termica" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
         <param name="camera_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>
@@ -116,7 +116,7 @@
         <param name="odom_topic_in"   value="/stereo_odometer/odometry"  />
         <param name="odom_topic_out"  value="/overlap/termica_odometry" />
         <param name="camera_type"     value="termica"    />
-        <param name="overlap_rate"    value="90"   /> <!--Importante overlap mais alto pela termica estar focada no centro-->
+        <param name="overlap_rate"    value="99"   /> <!--Importante overlap mais alto pela termica estar focada no centro-->
     </node>
     <!-- Acumula visual como ja feito com a nuvem de overlap -->
     <include file="$(find rustbot_bringup)/launch/accumulate.launch">
