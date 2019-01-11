@@ -1,5 +1,5 @@
-image_width: 800
-image_height: 600
+image_width: 1600
+image_height: 1200
 camera_name: right_optical
 camera_matrix:
   rows: 3
