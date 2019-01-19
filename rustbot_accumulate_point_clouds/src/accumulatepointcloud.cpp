@@ -149,6 +149,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc_vis,
   toROSMsg(*accumulated_cloud, msg_out);
   msg_out.header.stamp = ros::Time::now();
   pub->publish(msg_out);
+  ROS_INFO("A nuvem acumulada foi publicada");
 
   cloud.reset();
   cloud_transformed.reset();

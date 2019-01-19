@@ -9,9 +9,9 @@ binning_y: 2
 #decimation_y: 2
 decimation_x: 1
 decimation_y: 1
-exposure: 6523.0
-exposure_auto: 'Off'
-#exposure_auto: Continuous
+exposure: 19523.0
+#exposure_auto: 'Off'
+exposure_auto: Continuous
 exposure_auto_alg: 'Mean'
 exposure_auto_max: 50000
 exposure_auto_min: 41
