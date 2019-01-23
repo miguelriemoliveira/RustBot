@@ -19,7 +19,7 @@
   <!--To launch a gui for tunning the stereo parameters-->
   <arg name="config_stereo" default="false"/>
   <!--The desired frames per second-->
-  <arg name="fps" default="20"/>
+  <arg name="fps" default="25"/>
   <!--Queue size for the stereo images. More queue size better the possibilities to sync, but more memory required-->
   <arg name="queue_size" default="500"/>
   <!--data fusion-->
@@ -47,13 +47,13 @@
 	<!--Melhorar visao stereo -->
         <param name="prefilter_size" value="77"/>
         <param name="prefilter_cap" value="34"/>
-        <param name="disparity_range" value="100"/>
+        <param name="disparity_range" value="50"/>
         <param name="min_disparity" value="0"/>
-        <param name="correlation_window_size" value="75"/>
+        <param name="correlation_window_size" value="25"/>
         <param name="speckle_size" value="638"/>
         <param name="speckle_range" value="10"/>
         <param name="fullDP" value="true"/>
-        <param name="uniqueness_ratio" value="7.0"/>
+        <param name="uniqueness_ratio" value="15.0"/>
         <param name="texture_threshold" value="3000"/>
       </node>
       <group if="$(arg online_stereo)">
