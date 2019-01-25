@@ -43,9 +43,8 @@ typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2, Odometry> syncP
 /// Global vars
 PointCloud<PointT >::Ptr accumulated_cloud;
 PointCloud<PointT>::Ptr cloud_acumulada_termica;
-tf::TransformListener *p_listener;
-boost::shared_ptr<ros::Publisher> pub;
-boost::shared_ptr<ros::Publisher> pub_termica;
+//boost::shared_ptr<ros::Publisher> pub;
+ros::Publisher pub;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void filter_color(PointCloud<PointT>::Ptr cloud_in){
@@ -98,7 +97,8 @@ void publicar_nuvem_atual(){
     toROSMsg(*accumulated_cloud, msg_out);
     msg_out.header.stamp = ros::Time::now();
     msg_out.header.frame_id = accumulated_cloud->header.frame_id;
-    pub->publish(msg_out);
+    ROS_INFO("Publicando nuvem acumulada VISUAL");
+    pub.publish(msg_out);
   }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +108,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc_vis,
   PointCloud<PointT>::Ptr cloud (new PointCloud<PointT>());
   PointCloud<PointT>::Ptr cloud_transformed (new PointCloud<PointT>());
   sensor_msgs::PointCloud2 msg_out;
-
+cout << "PORRA\n\n" << endl;
   // Check for incorrect odometry from viso2
   if(msg_odo->pose.covariance.at(0) > 100){
     ROS_WARN("Nao se pode confiar na odometria, movimento rapido");
@@ -145,11 +145,12 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc_vis,
 
   ROS_INFO("Tamanho da nuvem acumulada = %ld", accumulated_cloud->points.size());
 
+
   // Convert the pcl point cloud to ros msg and publish
-  toROSMsg(*accumulated_cloud, msg_out);
-  msg_out.header.stamp = ros::Time::now();
-  pub->publish(msg_out);
-  ROS_INFO("A nuvem acumulada foi publicada");
+//  toROSMsg(*accumulated_cloud, msg_out);
+//  msg_out.header.stamp = ros::Time::now();
+//  pub->publish(msg_out);
+  publicar_nuvem_atual();
 
   cloud.reset();
   cloud_transformed.reset();
@@ -169,24 +170,25 @@ int main (int argc, char** argv)
   accumulated_cloud->header.frame_id = "odom";
 
   // Initialize the point cloud publisher
-  pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
-  *pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 300);
+//  pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
+  pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 5);
 
   // Subscriber para a nuvem instantanea e odometria
-  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptcvis(nh, "/overlap/visual_cloud"    , 100);
-  message_filters::Subscriber<Odometry>                  subodo   (nh, "/overlap/visual_odometry", 100);
+  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptcvis(nh, "/stereo/points2"   , 100);
+  message_filters::Subscriber<Odometry>                  subodo   (nh, "/stereo_odometer/odometry", 100);
 
   // Sincroniza as leituras dos topicos (sensores e imagem a principio) em um so callback
   Synchronizer<syncPolicy> sync(syncPolicy(100), subptcvis, subodo); // ALTEREI O TAMANHO DAS FILAS!
   sync.registerCallback(boost::bind(&cloud_open_target, _1, _2));
 
   // Loop infinitely
-  ros::Rate rate(1);
-  while(ros::ok()){
-    publicar_nuvem_atual();
-    ros::spinOnce();
-    rate.sleep();
-  }
+  ros::spin();
+//  ros::Rate rate(0.5);
+//  while(ros::ok()){
+////    publicar_nuvem_atual();
+//    rate.sleep();
+//    ros::spinOnce();
+//  }
 
   return 0;
 

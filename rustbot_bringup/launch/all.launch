@@ -19,7 +19,7 @@
   <!--To launch a gui for tunning the stereo parameters-->
   <arg name="config_stereo" default="false"/>
   <!--The desired frames per second-->
-  <arg name="fps" default="25"/>
+  <arg name="fps" default="20"/>
   <!--Queue size for the stereo images. More queue size better the possibilities to sync, but more memory required-->
   <arg name="queue_size" default="500"/>
   <!--data fusion-->
@@ -42,6 +42,10 @@
     <!--Stereo processing-->
     <group if="$(arg do_stereo)">
       <node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" output="screen">
+        <remap from="/stereo/left/image_raw" to="/stereo/left/image_raw1"/>
+        <remap from="/stereo/right/image_raw" to="/stereo/right/image_raw1"/>
+        <remap from="/stereo/left/camera_info" to="/stereo/left/camera_info1"/>
+        <remap from="/stereo/right/camera_info" to="/stereo/right/camera_info1"/>
         <param name="approximate_sync" value="true"/>
         <param name="queue_size" value="$(arg queue_size)"/>
 	<!--Melhorar visao stereo -->
@@ -105,7 +109,7 @@
         <param name="odom_topic_in"   value="/stereo_odometer/odometry"  />
         <param name="odom_topic_out"  value="/overlap/visual_odometry" />
         <param name="camera_type"     value="left_camera"    />
-        <param name="overlap_rate"    value="60"   /> <!--Importante overlap mais baixo-->
+        <param name="overlap_rate"    value="90"   /> <!--Importante overlap mais baixo-->
     </node>
     <node name="overlap_termica" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
         <param name="camera_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>
