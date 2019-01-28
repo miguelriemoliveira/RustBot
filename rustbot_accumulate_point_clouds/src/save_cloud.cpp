@@ -230,7 +230,7 @@ int main(int argc, char **argv)
   ROS_INFO("Iniciando o processo de salvar dados pos processados...");
 
   ros::Subscriber sub  = nh.subscribe("/accumulated_point_cloud", 1000, save_acumulada_plus_normal_ply);
-//  ros::Subscriber subt = nh.subscribe("/accumulated_termica", 1000, savetermica_ply);
+  ros::Subscriber subt = nh.subscribe("/accumulated_termica", 1000, savetermica_ply);
 
 //  message_filters::Subscriber<sensor_msgs::PointCloud2>  sub(nh, "/accumulated_point_cloud", 100);
 //  message_filters::Subscriber<sensor_msgs::PointCloud2> subt(nh, "/accumulated_termica"    , 100);

@@ -108,7 +108,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc_vis,
   PointCloud<PointT>::Ptr cloud (new PointCloud<PointT>());
   PointCloud<PointT>::Ptr cloud_transformed (new PointCloud<PointT>());
   sensor_msgs::PointCloud2 msg_out;
-cout << "PORRA\n\n" << endl;
+
   // Check for incorrect odometry from viso2
   if(msg_odo->pose.covariance.at(0) > 100){
     ROS_WARN("Nao se pode confiar na odometria, movimento rapido");
@@ -174,8 +174,8 @@ int main (int argc, char** argv)
   pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 5);
 
   // Subscriber para a nuvem instantanea e odometria
-  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptcvis(nh, "/stereo/points2"   , 100);
-  message_filters::Subscriber<Odometry>                  subodo   (nh, "/stereo_odometer/odometry", 100);
+  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptcvis(nh, "/overlap/visual_cloud"   , 100);
+  message_filters::Subscriber<Odometry>                  subodo   (nh, "/overlap/visual_odometry", 100);
 
   // Sincroniza as leituras dos topicos (sensores e imagem a principio) em um so callback
   Synchronizer<syncPolicy> sync(syncPolicy(100), subptcvis, subodo); // ALTEREI O TAMANHO DAS FILAS!

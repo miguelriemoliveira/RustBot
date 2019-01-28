@@ -34,32 +34,32 @@
   <!-- Viso2 -->
   <node pkg="viso2_ros" type="stereo_odometer" name="stereo_odometer" output="screen">
     <remap from="stereo" to="$(arg camera)"/>
-    <remap from="image" to="image_raw"/> <!-- aqui era rect, teste meu -->
+    <remap from="image" to="image_rect"/> <!-- aqui era rect, teste meu -->
     <param name="sensor_frame_id" value="/stereo"/> <!--Vinicius-->
     <param name="base_link_frame_id" value="base_link"/>
     <param name="approximate_sync" value="true"/>
     <param name="publish_tf" value="true"/>
-    <param name="queue_size" value="10"/>
+    <param name="queue_size" value="5"/>
     <param name="odom_frame_id" value="odom"/>
     <param name="base_link_frame_id" value="base_link"/>
 
     <!--Ajustar melhores valores para fazer o match das nuvens-->
-    <param name="max_features" value="3"/>
-    <param name="bucket_width" value="30"/>
-    <param name="bucket_height" value="30"/>
-    <param name="nms_n" value="7"/>
+    <param name="max_features" value="2"/>
+    <param name="bucket_width" value="50"/>
+    <param name="bucket_height" value="=50"/>
+    <param name="nms_n" value="3"/>
     <param name="nms_tau" value="50"/>
-    <param name="match_binsize" value="25"/>
-    <param name="match_radius" value="80"/> <!--esse parametro e bastante importante, afeta a distancia entre features-->
-    <param name="outlier_disp_tolerance" value="7"/>
-    <param name="outlier_flow_tolerance" value="7"/>
+    <param name="match_binsize" value="50"/>
+    <param name="match_radius" value="200"/> <!--esse parametro e bastante importante, afeta a distancia entre features-->
+    <param name="outlier_disp_tolerance" value="5"/>
+    <param name="outlier_flow_tolerance" value="5"/>
     <param name="match_disp_tolerance" value="2"/>
-    <param name="half_resolution" value="0"/> <!--melhor esse mesmo-->
+    <param name="half_resolution" value="1"/> <!--melhor esse mesmo-->
     <param name="refinement" value="1"/>
-    <param name="ransac_iters" value="300"/>
-    <param name="inlier_threshold" value="1.0"/>
+    <param name="ransac_iters" value="150"/>
+    <param name="inlier_threshold" value="1.5"/>
     <param name="reweighting" value="true"/> <!--default ja-->
-    <param name="ref_frame_change_method" value="2"/>
+    <param name="ref_frame_change_method" value="0"/>
     <param name="ref_frame_motion_threshold" value="5.0"/>
     <param name="ref_frame_inlier_threshold" value="150"/>
 
