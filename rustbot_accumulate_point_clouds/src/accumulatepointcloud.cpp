@@ -181,14 +181,16 @@ int main (int argc, char** argv)
   Synchronizer<syncPolicy> sync(syncPolicy(100), subptcvis, subodo); // ALTEREI O TAMANHO DAS FILAS!
   sync.registerCallback(boost::bind(&cloud_open_target, _1, _2));
 
+  ROS_INFO("Comecamos o no de acumulacao, aguardando nuvens...");
+
   // Loop infinitely
-  ros::spin();
-//  ros::Rate rate(0.5);
-//  while(ros::ok()){
-////    publicar_nuvem_atual();
-//    rate.sleep();
-//    ros::spinOnce();
-//  }
+//  ros::spin();
+  ros::Rate rate(10);
+  while(ros::ok()){
+    publicar_nuvem_atual();
+    rate.sleep();
+    ros::spinOnce();
+  }
 
   return 0;
 

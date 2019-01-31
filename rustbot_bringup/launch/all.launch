@@ -12,7 +12,7 @@
   <arg name="do_auto_track" default="false"/>
   <arg name="do_supercooljoy_gimbal" default="false"/>
   <arg name="mac_address_termica" default="00:11:1c:01:7c:80"/>
-  <arg name="termica_url" default="file:///home/mrs/mrs_ws/src/RUST/RustBot/rustbot_calibration/calibration/termica"/>
+  <arg name="termica_url" default="file:///home/mrs/mrs_ws/src/RUST/RustBot/rustbot_calibration/calibration/termica.yaml"/>
 
   <!--This is for running the system computing the stereo (and the slam) from played back offline data-->
   <arg name="online_stereo" default="false"/>
@@ -53,12 +53,12 @@
         <param name="prefilter_cap" value="34"/>
         <param name="disparity_range" value="50"/>
         <param name="min_disparity" value="0"/>
-        <param name="correlation_window_size" value="25"/>
-        <param name="speckle_size" value="638"/>
-        <param name="speckle_range" value="10"/>
+        <param name="correlation_window_size" value="35"/>
+        <param name="speckle_size" value="1000"/>
+        <param name="speckle_range" value="3"/>
         <param name="fullDP" value="true"/>
-        <param name="uniqueness_ratio" value="10.0"/>
-        <param name="texture_threshold" value="3000"/>
+        <param name="uniqueness_ratio" value="5.0"/>
+        <param name="texture_threshold" value="1000"/>
       </node>
       <group if="$(arg online_stereo)">
       <!--   Aqui liga a termica sobre a nuvem instantanea para ver de modo online pelo GUI  -->
@@ -99,6 +99,9 @@
   </group>
   <!--Point cloud accumulator-->
   <group if="$(arg do_accumulation)">
+  <!-- Acumula visual como ja feito com a nuvem de overlap -->
+  <include file="$(find rustbot_bringup)/launch/accumulate.launch">
+  </include>
   <!-- Nos de overlap sobre a imagem termica e visual, cada uma repassando imagem nuvem e odometria nos topicos certos para acumular -->
     <node name="overlap_visual" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
         <param name="camera_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>
@@ -109,7 +112,7 @@
         <param name="odom_topic_in"   value="/stereo_odometer/odometry"  />
         <param name="odom_topic_out"  value="/overlap/visual_odometry" />
         <param name="camera_type"     value="left_camera"    />
-        <param name="overlap_rate"    value="70"   /> <!--Importante overlap mais baixo-->
+        <param name="overlap_rate"    value="90"   /> <!--Importante overlap mais baixo-->
     </node>
     <node name="overlap_termica" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
         <param name="camera_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>
@@ -122,9 +125,7 @@
         <param name="camera_type"     value="termica"    />
         <param name="overlap_rate"    value="90"   /> <!--Importante overlap mais alto pela termica estar focada no centro-->
     </node>
-    <!-- Acumula visual como ja feito com a nuvem de overlap -->
-    <include file="$(find rustbot_bringup)/launch/accumulate.launch">
-    </include>
+
     <!-- Acumula termica com a nuvem vinda do pipeline overlap - reprojecao offline - acumulacao -->
     <node name="acumula_termica" pkg="termica_reconstrucao" type="acumula_termica" output="screen">
     </node>
