@@ -1,0 +1,20 @@
+image_width: 640
+image_height: 512
+camera_name: termica
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [1502.80000, 0.000000, -231.744200, 0.000000, 1484.45000, -287.633700, 0.000000, 0.000000, 1.000000]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [-0.52910, 2.240600, 0.000000, 0.0000000, 0.000000]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.00000, 0.000000, 0.00000, 0.0000000, 1.000000, 0.000000, 0.000000, 0.000000, 1.000000]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [800.80000, 0.000000, -15.744200, -35.140000, 0.000000, 800.45000, 40.633700, -8.1645000, 0.000000, 0.000000, 1.000000, 0.000000]

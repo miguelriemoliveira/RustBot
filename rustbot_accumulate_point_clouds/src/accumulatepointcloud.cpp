@@ -123,7 +123,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc_vis,
   passthrough(cloud, "x", -10, 10);
   passthrough(cloud, "y", -10, 10);
   // Filter for color
-//  filter_color(cloud);
+  filter_color(cloud);
   // Remove outiliers
   remove_outlier(cloud, 15, 0.2);
 
