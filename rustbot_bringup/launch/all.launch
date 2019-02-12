@@ -61,8 +61,8 @@
         <param name="texture_threshold" value="1000"/>
       </node>
       <!--Leitura da termica sincronizada com outros para atribuir temperatura-->
-<!--      <node name="escala_termica" pkg="termica_reconstrucao" type="imTermicaScaled.py" output="screen">-->
-<!--      </node>-->
+      <node name="escala_termica" pkg="termica_reconstrucao" type="imTermicaScaled.py" output="screen">
+      </node>
       <group if="$(arg online_stereo)">
       <!--   Aqui liga a termica sobre a nuvem instantanea para ver de modo online pelo GUI  -->
          <node name="termica_instantanea" pkg="termica_reconstrucao" type="projeta_termica" output="screen">
