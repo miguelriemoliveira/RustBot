@@ -105,6 +105,7 @@
   <!-- Acumula visual como ja feito com a nuvem de overlap -->
   <include file="$(find rustbot_bringup)/launch/accumulate.launch">
   </include>
+  <!-- Deixa o no de salvar as nuvens em .ply de prontidao -->
   <!-- Nos de overlap sobre a imagem termica e visual, cada uma repassando imagem nuvem e odometria nos topicos certos para acumular -->
     <node name="overlap_visual" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
         <param name="camera_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>
