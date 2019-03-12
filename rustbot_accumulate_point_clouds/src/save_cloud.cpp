@@ -127,10 +127,10 @@ void savetermica_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
 void salvando_nuvens(const std_msgs::BoolConstPtr& salvar){
   if(salvar->data == true){
     // Filtrando nuvens
-    std::vector<int> indicesNAN;
-    pcl::removeNaNFromPointCloud(*visual_acumulada, *visual_acumulada, indicesNAN);
-    std::vector<int> indicesNAN2;
-    pcl::removeNaNFromPointCloud(*termica_acumulada, *visual_acumulada, indicesNAN2);
+//    std::vector<int> indicesNAN;
+//    pcl::removeNaNFromPointCloud(*visual_acumulada, *visual_acumulada, indicesNAN);
+//    std::vector<int> indicesNAN2;
+//    pcl::removeNaNFromPointCloud(*termica_acumulada, *termica_acumulada, indicesNAN2);
 
     // Ver o tempo para diferenciar bags gravadas automaticamente
     time_t t = time(0);
@@ -140,7 +140,7 @@ void salvando_nuvens(const std_msgs::BoolConstPtr& salvar){
     if(tmp)
       home = std::string(tmp);
     year    = boost::lexical_cast<std::string>(now->tm_year + 1900);
-    month   = boost::lexical_cast<std::string>(now->tm_mon );
+    month   = boost::lexical_cast<std::string>(now->tm_mon + 1);
     day     = boost::lexical_cast<std::string>(now->tm_mday);
     hour    = boost::lexical_cast<std::string>(now->tm_hour);
     minutes = boost::lexical_cast<std::string>(now->tm_min );

@@ -116,7 +116,7 @@
         <param name="odom_topic_in"   value="/stereo_odometer/odometry"  />
         <param name="odom_topic_out"  value="/overlap/visual_odometry" />
         <param name="camera_type"     value="left_camera"    />
-        <param name="overlap_rate"    value="80"   /> <!--Importante overlap mais baixo-->
+        <param name="overlap_rate"    value="90"   /> <!--Importante overlap mais baixo-->
     </node>
     <node name="overlap_termica" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
         <param name="camera_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>

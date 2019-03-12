@@ -119,13 +119,13 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc_vis,
   fromROSMsg (*msg_ptc_vis, *cloud);
 
   // Filter with passthrough filter -> region to see
-  passthrough(cloud, "z",   0, 20);
-  passthrough(cloud, "x", -10, 10);
-  passthrough(cloud, "y", -10, 10);
+//  passthrough(cloud, "z",   0, 20);
+//  passthrough(cloud, "x", -10, 10);
+//  passthrough(cloud, "y", -10, 10);
   // Filter for color
-  filter_color(cloud);
+//  filter_color(cloud);
   // Remove outiliers
-  remove_outlier(cloud, 15, 0.2);
+//  remove_outlier(cloud, 10, 1);
 
   /// Obter a odometria da mensagem
   // Rotacao
