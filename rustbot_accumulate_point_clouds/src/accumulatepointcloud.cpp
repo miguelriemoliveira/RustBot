@@ -46,6 +46,8 @@ PointCloud<PointT>::Ptr cloud_acumulada_termica;
 //boost::shared_ptr<ros::Publisher> pub;
 ros::Publisher pub;
 
+//boost::shared_ptr<ros::Publisher> pub_bobo;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void filter_color(PointCloud<PointT>::Ptr cloud_in){
 
@@ -123,9 +125,9 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc_vis,
 //  passthrough(cloud, "x", -10, 10);
 //  passthrough(cloud, "y", -10, 10);
   // Filter for color
-//  filter_color(cloud);
+  filter_color(cloud);
   // Remove outiliers
-//  remove_outlier(cloud, 10, 1);
+  remove_outlier(cloud, 10, 1);
 
   /// Obter a odometria da mensagem
   // Rotacao
@@ -157,6 +159,12 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc_vis,
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//void funcao_boba(const sensor_msgs::PointCloud2ConstPtr& msg){
+//  ROS_INFO("Chegou nuvem boba sim");
+//  for (int i=1; i<100; i++)
+//    pub_bobo->publish(*msg);
+//}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char** argv)
@@ -170,22 +178,25 @@ int main (int argc, char** argv)
   accumulated_cloud->header.frame_id = "odom";
 
   // Initialize the point cloud publisher
-//  pub = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
-  pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 5);
+//  pub_bobo = (boost::shared_ptr<ros::Publisher>) new ros::Publisher;
+//  *pub_bobo = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_boba", 1);
+  pub = nh.advertise<sensor_msgs::PointCloud2>("/accumulated_point_cloud", 1);
 
   // Subscriber para a nuvem instantanea e odometria
-  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptcvis(nh, "/overlap/visual_cloud"   , 100);
-  message_filters::Subscriber<Odometry>                  subodo   (nh, "/overlap/visual_odometry", 100);
+  message_filters::Subscriber<sensor_msgs::PointCloud2>  subptcvis(nh, "/overlap/visual_cloud"   , 1);
+  message_filters::Subscriber<Odometry>                  subodo   (nh, "/overlap/visual_odometry", 1);
 
   // Sincroniza as leituras dos topicos (sensores e imagem a principio) em um so callback
-  Synchronizer<syncPolicy> sync(syncPolicy(100), subptcvis, subodo); // ALTEREI O TAMANHO DAS FILAS!
+  Synchronizer<syncPolicy> sync(syncPolicy(1), subptcvis, subodo); // ALTEREI O TAMANHO DAS FILAS!
   sync.registerCallback(boost::bind(&cloud_open_target, _1, _2));
 
   ROS_INFO("Comecamos o no de acumulacao, aguardando nuvens...");
 
+//  ros::Subscriber bobo = nh.subscribe("/overlap/visual_cloud", 100, &funcao_boba);
+
   // Loop infinitely
 //  ros::spin();
-  ros::Rate rate(10);
+  ros::Rate rate(1);
   while(ros::ok()){
     publicar_nuvem_atual();
     rate.sleep();

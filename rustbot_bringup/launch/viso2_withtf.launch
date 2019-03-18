@@ -7,23 +7,15 @@
   <!--OR: base_footprint -->
   <arg name="frameid_camera" default="stereo_camera"/>
 
-  <!-- yaw, pitch, rooll -->
-  <!-- Transformada entre base_link e IMU -->
-  <node pkg="tf" type="static_transform_publisher" name="base_link_to_imu" args="0 0 0 0 0 0 base_link imu_frame 30"/>
-
-  <!-- Transformada entre base_link e GPS-->
-  <node pkg="tf" type="static_transform_publisher" name="base_link_to_gps" args="0 0 0 0 0 0 base_link gps 30"/> 
-
   <!-- TF: "base_link" to "camera_link" [Rotate the camera frame.] -->
   <arg name="pi/2" value="1.5707963267948966"/>
   <arg name="optical_rotate" value="0 0 0 0 0 0"/>
-<!--  <arg name="optical_rotate" value="0 0 0 -$(arg pi/2) 0.0 -$(arg pi/2)"/>-->
-  <node pkg="tf" type="static_transform_publisher" name="camera_to_gimbal" args="$(arg optical_rotate) gimball $(arg frameid_camera) 30"/>
 
-  <!-- Tranformada entre o Gimbal e Base_link -->
-  <arg name="Gimbal_rotate" value="0 0 0 0 0 0"/>
 <!--  <arg name="Gimbal_rotate" value="0 0 0 0 0.19 0"/>-->
-  <node pkg="tf" type="static_transform_publisher" name="Gimbal_baselink" args="$(arg Gimbal_rotate) $(arg frameid_robot) gimball 30"/>
+  <node pkg="tf" type="static_transform_publisher" name="baselink_camera" args="$(arg optical_rotate) $(arg frameid_robot) stereo_camera 30"/>
+
+  <!-- Tranformada entre o base link e Leftoptical -->
+  <node pkg="tf" type="static_transform_publisher" name="baselink2left_optical" args="0 0 0 0 0 0 $(arg frameid_robot) left_optical 30"/>
 
   <!-- Tranformada entre o Camera Frame e Leftoptical -->
   <node pkg="tf" type="static_transform_publisher" name="left_optical2stereo_camera" args="0 0 0 0 0 0 stereo_camera left_optical 30"/>
@@ -45,21 +37,21 @@
 
     <!--Ajustar melhores valores para fazer o match das nuvens-->
     <param name="max_features" value="2"/>
-    <param name="bucket_width" value="40"/>
-    <param name="bucket_height" value="=40"/>
+    <param name="bucket_width" value="50"/>
+    <param name="bucket_height" value="=50"/>
     <param name="nms_n" value="3"/>
     <param name="nms_tau" value="50"/>
     <param name="match_binsize" value="50"/>
     <param name="match_radius" value="200"/> <!--esse parametro e bastante importante, afeta a distancia entre features-->
-    <param name="outlier_disp_tolerance" value="4"/>
+    <param name="outlier_disp_tolerance" value="5"/>
     <param name="outlier_flow_tolerance" value="5"/>
     <param name="match_disp_tolerance" value="2"/>
-    <param name="half_resolution" value="0"/> <!--melhor esse mesmo-->
+    <param name="half_resolution" value="1"/> <!--melhor esse mesmo-->
     <param name="refinement" value="1"/>
     <param name="ransac_iters" value="200"/>
-    <param name="inlier_threshold" value="4.5"/>
+    <param name="inlier_threshold" value="1.5"/>
     <param name="reweighting" value="true"/> <!--default ja-->
-    <param name="ref_frame_change_method" value="1"/>
+    <param name="ref_frame_change_method" value="0"/>
     <param name="ref_frame_motion_threshold" value="5.0"/>
     <param name="ref_frame_inlier_threshold" value="150"/>
 
