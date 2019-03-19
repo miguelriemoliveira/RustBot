@@ -25,7 +25,7 @@
   <!--data fusion-->
   <group if="$(arg do_fusion)">
     <include file="$(find rustbot_bringup)/launch/EKF_fusion.launch">
-        </include>
+    </include>
   </group>
   <!--Stereo nodes -->
   <group ns="stereo">
@@ -42,10 +42,6 @@
     <!--Stereo processing-->
     <group if="$(arg do_stereo)">
       <node name="stereo_image_proc" pkg="stereo_image_proc" type="stereo_image_proc" output="screen">
-<!--        <remap from="/stereo/left/image_raw" to="/stereo/left/image_raw1"/>-->
-<!--        <remap from="/stereo/right/image_raw" to="/stereo/right/image_raw1"/>-->
-<!--        <remap from="/stereo/left/camera_info" to="/stereo/left/camera_info1"/>-->
-<!--        <remap from="/stereo/right/camera_info" to="/stereo/right/camera_info1"/>-->
         <param name="approximate_sync" value="true"/>
         <param name="queue_size" value="$(arg queue_size)"/>
 	<!--Melhorar visao stereo -->
@@ -64,33 +60,23 @@
       <node name="escala_termica" pkg="termica_reconstrucao" type="imTermicaScaled.py" output="screen">
       </node>
       <group if="$(arg online_stereo)">
-      <!--   Aqui liga a termica sobre a nuvem instantanea para ver de modo online pelo GUI  -->
-         <node name="termica_instantanea" pkg="termica_reconstrucao" type="projeta_termica" output="screen">
-              <param name="termica_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/termica"/> <!-- Diretorio que contem o arquivo .yaml da calibracao da camera termica -->
-              <param name="input_cloud" value="/dados_sync/point_cloud"/>
-              <param name="input_image" value="/dados_sync/image_8bits"/>
-              <param name="input_odom"  value="/dados_sync/odometry"/>
-         </node>
-      </group>
-      <group unless="$(arg online_stereo)">
-      <!--   Aqui liga a termica sobre a nuvem de overlap, linkado com a acumulacao-->
-         <node name="termica_instantanea" pkg="termica_reconstrucao" type="projeta_termica" output="screen">
-              <param name="termica_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/termica"/> <!-- Diretorio que contem o arquivo .yaml da calibracao da camera termica -->
-              <param name="input_cloud" value="/overlap/termica_cloud"/>
-              <param name="input_image" value="/overlap/termica_image"        />
-              <param name="input_odom"  value="/overlap/termica_odometry"     />
-         </node>
+            <!--   Aqui liga a termica sobre a nuvem instantanea para ver de modo online pelo GUI  -->
+               <node name="termica_instantanea" pkg="termica_reconstrucao" type="projeta_termica" output="screen">
+                    <param name="termica_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/termica"/> <!-- Diretorio que contem o arquivo .yaml da calibracao da camera termica -->
+                    <param name="input_cloud" value="/dados_sync/point_cloud"/>
+                    <param name="input_image" value="/dados_sync/image_8bits"/>
+                    <param name="input_odom"  value="/dados_sync/odometry"/>
+               </node>
       </group>
     </group>
   </group>
   <!--Configure stereo-->
   <group if="$(arg config_stereo)">
     <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" output="screen">
-        </node>
+    </node>
   </group>
   <!--SLAM launch files (several options to do slam. Andry's rtab, Miguel's rtab and Miguel's viso2)-->
   <group if="$(arg do_slam)">
-
         <group if="$(arg do_fusion)">
 	    <include file="$(find rustbot_bringup)/launch/viso2.launch">
 		</include>
@@ -102,37 +88,28 @@
   </group>
   <!--Point cloud accumulator-->
   <group if="$(arg do_accumulation)">
-  <!-- Acumula visual como ja feito com a nuvem de overlap -->
-  <include file="$(find rustbot_bringup)/launch/accumulate.launch">
-  </include>
-  <!-- Deixa o no de salvar as nuvens em .ply de prontidao -->
   <!-- Nos de overlap sobre a imagem termica e visual, cada uma repassando imagem nuvem e odometria nos topicos certos para acumular -->
-    <node name="overlap_visual" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
-        <param name="camera_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>
-        <param name="cloud_topic_in"  value="/stereo/points2" />
-        <param name="cloud_topic_out" value="/overlap/visual_cloud"/>
-        <param name="image_topic_in"  value="/stereo/left/image_rect_color" />
-        <param name="image_topic_out" value="/overlap/visual_image"/>
-        <param name="odom_topic_in"   value="/stereo_odometer/odometry"  />
-        <param name="odom_topic_out"  value="/overlap/visual_odometry" />
-        <param name="camera_type"     value="left_camera"    />
-        <param name="overlap_rate"    value="90"   /> <!--Importante overlap mais baixo-->
+    <node name="overlap_acumula_visual" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
+        <param name="camera_calibration_yaml"  value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>
+        <param name="termica_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/termica"                  />
+        <param name="cloud_topic_in"  value="/dados_sync/point_cloud"                                                                  />
+        <param name="image_topic_in"  value="/dados_sync/image_8bits"                                                    />
+        <param name="odom_topic_in"   value="/dados_sync/odometry"                                                        />
+        <param name="cloud_topic_out" value="/accumulated_termica"                                                         />
+        <param name="camera_type"     value="termica"                                                                      />
+        <param name="overlap_rate"    value="90"                                                                               /> <!--Importante overlap mais baixo-->
     </node>
-    <node name="overlap_termica" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
-        <param name="camera_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>
-        <param name="cloud_topic_in"  value="/dados_sync/point_cloud" />
-        <param name="cloud_topic_out" value="/overlap/termica_cloud"/>
-        <param name="image_topic_in"  value="/dados_sync/image_8bits" />
-        <param name="image_topic_out" value="/overlap/termica_image"/>
-        <param name="odom_topic_in"   value="/dados_sync/odometry"  />
-        <param name="odom_topic_out"  value="/overlap/termica_odometry" />
-        <param name="camera_type"     value="termica"    />
-        <param name="overlap_rate"    value="95"   /> <!--Importante overlap mais alto pela termica estar focada no centro-->
+    <node name="overlap_acumula_termica" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
+        <param name="camera_calibration_yaml"  value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>
+        <param name="termica_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/termica"                  />
+        <param name="cloud_topic_in"  value="/stereo/points2"                                                                  />
+        <param name="image_topic_in"  value="/stereo/left/image_rect_color"                                                    />
+        <param name="odom_topic_in"   value="/stereo_odometer/odometry"                                                        />
+        <param name="cloud_topic_out" value="/accumulated_point_cloud"                                                         />
+        <param name="camera_type"     value="left_camera"                                                                      />
+        <param name="overlap_rate"    value="90"                                                                               /> <!--Importante overlap mais baixo-->
     </node>
 
-    <!-- Acumula termica com a nuvem vinda do pipeline overlap - reprojecao offline - acumulacao -->
-    <node name="acumula_termica" pkg="termica_reconstrucao" type="acumula_termica" output="screen">
-    </node>
   </group>
 
   <!-- UFJF SECTION -->
@@ -144,7 +121,7 @@
         <arg name="mac_address" value="$(arg mac_address_termica)"/>
         <arg name="calib_url"   value="$(arg termica_url)"/>
       </include>
-</group>
+  </group>
 </group>
 
 <!--start the gimbal-->
@@ -176,6 +153,5 @@
       </node>
     </group>
   </group>
-
 
 </launch>
