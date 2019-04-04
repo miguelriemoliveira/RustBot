@@ -57,17 +57,17 @@
         <param name="texture_threshold" value="1000"/>
       </node>
       <!--Leitura da termica sincronizada com outros para atribuir temperatura-->
-      <node name="escala_termica" pkg="termica_reconstrucao" type="imTermicaScaled.py" output="screen">
-      </node>
-      <group if="$(arg online_stereo)">
+<!--      <node name="escala_termica" pkg="termica_reconstrucao" type="imTermicaScaled.py" output="screen">-->
+<!--      </node>-->
+<!--      <group if="$(arg online_stereo)">-->
             <!--   Aqui liga a termica sobre a nuvem instantanea para ver de modo online pelo GUI  -->
-               <node name="termica_instantanea" pkg="termica_reconstrucao" type="projeta_termica" output="screen">
-                    <param name="termica_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/termica"/> <!-- Diretorio que contem o arquivo .yaml da calibracao da camera termica -->
-                    <param name="input_cloud" value="/dados_sync/point_cloud"/>
-                    <param name="input_image" value="/dados_sync/image_8bits"/>
-                    <param name="input_odom"  value="/dados_sync/odometry"/>
-               </node>
-      </group>
+<!--               <node name="termica_instantanea" pkg="termica_reconstrucao" type="projeta_termica" output="screen">-->
+<!--                    <param name="termica_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/termica"/>-->
+<!--                    <param name="input_cloud" value="/dados_sync/point_cloud"/>-->
+<!--                    <param name="input_image" value="/dados_sync/image_8bits"/>-->
+<!--                    <param name="input_odom"  value="/dados_sync/odometry"/>-->
+<!--               </node>-->
+<!--      </group>-->
     </group>
   </group>
   <!--Configure stereo-->

@@ -127,7 +127,7 @@ void cloud_open_target(const sensor_msgs::PointCloud2ConstPtr& msg_ptc_vis,
   // Filter for color
   filter_color(cloud);
   // Remove outiliers
-  remove_outlier(cloud, 10, 1);
+  remove_outlier(cloud, 10, 2);
 
   /// Obter a odometria da mensagem
   // Rotacao
