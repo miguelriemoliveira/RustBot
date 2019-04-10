@@ -22,11 +22,7 @@
   <arg name="fps" default="20"/>
   <!--Queue size for the stereo images. More queue size better the possibilities to sync, but more memory required-->
   <arg name="queue_size" default="500"/>
-  <!--data fusion-->
-  <group if="$(arg do_fusion)">
-    <include file="$(find rustbot_bringup)/launch/EKF_fusion.launch">
-    </include>
-  </group>
+
   <!--Stereo nodes -->
   <group ns="stereo">
     <!--Camera drivers (should work only in online mode)-->
@@ -77,15 +73,12 @@
   </group>
   <!--SLAM launch files (several options to do slam. Andry's rtab, Miguel's rtab and Miguel's viso2)-->
   <group if="$(arg do_slam)">
-        <group if="$(arg do_fusion)">
-	    <include file="$(find rustbot_bringup)/launch/viso2.launch">
-		</include>
-        </group>
-	<group unless="$(arg do_fusion)">
-	    <include file="$(find rustbot_bringup)/launch/viso2_withtf.launch">
-		</include>
-        </group>
+  <group unless="$(arg online_stereo)">
+       <include file="$(find rustbot_bringup)/launch/viso2_withtf.launch">
+       </include>
   </group>
+  </group>
+
   <!--Point cloud accumulator-->
   <group if="$(arg do_accumulation)">
   <!-- Nos de overlap sobre a imagem termica e visual, cada uma repassando imagem nuvem e odometria nos topicos certos para acumular -->

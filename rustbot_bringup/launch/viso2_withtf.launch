@@ -51,7 +51,7 @@
     <param name="ransac_iters" value="200"/>
     <param name="inlier_threshold" value="1.5"/>
     <param name="reweighting" value="true"/> <!--default ja-->
-    <param name="ref_frame_change_method" value="0"/>
+    <param name="ref_frame_change_method" value="1"/>
     <param name="ref_frame_motion_threshold" value="5.0"/>
     <param name="ref_frame_inlier_threshold" value="150"/>
 
