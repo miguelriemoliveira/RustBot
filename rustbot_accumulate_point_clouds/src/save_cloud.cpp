@@ -1,7 +1,4 @@
 #include <ros/ros.h>
-#include <rosbag/bag.h>
-#include <rosbag/view.h>
-#include <rosbag/buffer.h>
 #include <tf/transform_listener.h>
 #include <tf_conversions/tf_eigen.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -79,7 +76,7 @@ void savetermica_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
 }
 
 void salvando_nuvens(const std_msgs::BoolConstPtr& salvar){
-  cout << "\nMutex visual " << mutexv << "\tMutex termico " << mutext << "\tSalvar dados " << int(salvar->data) << endl;
+
   if(salvar->data == true && mutexv == 0 && mutext == 0 && termica_gravada == false && visual_gravada == false){
     mutexv = 1; // Por hora, ninguem mais acessa a memoria da nuvem
     mutext = 1;
@@ -135,12 +132,10 @@ void salvando_nuvens(const std_msgs::BoolConstPtr& salvar){
 
   }
 
-  ros::Rate aguardar(15);
+  ros::Rate aguardar(30);
   if(visual_gravada && termica_gravada){
-    ROS_INFO("AGUARDE PARA GRAVAR OS DADOS EM SEGURANCA...");
-    ROS_INFO("ESSA JANELA SE FECHARA EM 10 SEGUNDOS...");
+    ROS_INFO("AMBOS OS PROCESSOS GRAVADOS!!");
     aguardar.sleep();
-//    ros::shutdown();
   }
 
   mutexv = 0;
@@ -164,21 +159,13 @@ int main(int argc, char **argv)
 
   mutexv = 0; mutext = 0;
 
-  rosbag::Bag bag;
-  bag.open("/home/mrs/Desktop/ponto_lat_21,7550864_lon_43,329889700000003.bag");
-  rosbag::View view(bag, rosbag::TopicQuery("/stereo/left/image_raw"));
-
-
-
   while(ros::ok()){
     ros::spinOnce();
     if(visual_gravada && termica_gravada && mutext == 0 && mutexv == 0){
-      ROS_INFO("Habilitou salvar");
-      ros::shutdown();
       break;
     }
   }
-//  ros::shutdown();
+  ros::shutdown();
 
   return 0;
 }
