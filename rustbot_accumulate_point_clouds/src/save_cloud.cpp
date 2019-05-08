@@ -1,4 +1,7 @@
 #include <ros/ros.h>
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
+#include <rosbag/buffer.h>
 #include <tf/transform_listener.h>
 #include <tf_conversions/tf_eigen.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -18,6 +21,7 @@
 #include <message_filters/sync_policies/approximate_time.h>
 
 using namespace message_filters;
+using namespace std;
 
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2, sensor_msgs::PointCloud2> syncPolicy;
 
@@ -75,7 +79,8 @@ void savetermica_ply(const sensor_msgs::PointCloud2ConstPtr& msg)
 }
 
 void salvando_nuvens(const std_msgs::BoolConstPtr& salvar){
-  if(salvar->data == true && mutexv == 0 && mutext == 0){
+  cout << "\nMutex visual " << mutexv << "\tMutex termico " << mutext << "\tSalvar dados " << int(salvar->data) << endl;
+  if(salvar->data == true && mutexv == 0 && mutext == 0 && termica_gravada == false && visual_gravada == false){
     mutexv = 1; // Por hora, ninguem mais acessa a memoria da nuvem
     mutext = 1;
 
@@ -98,32 +103,31 @@ void salvando_nuvens(const std_msgs::BoolConstPtr& salvar){
     hour    = boost::lexical_cast<std::string>(now->tm_hour);
     minutes = boost::lexical_cast<std::string>(now->tm_min );
     std::string date = "_" + year + "_" + month + "_" + day + "_" + hour + "h_" + minutes + "m.ply";
-    ROS_INFO("Recebendo dados termicos para salvar......");    
+    cout << "\n\nRecebendo dados termicos para salvar......\n";
 
     if(termica_acumulada->size() > 0){
-      ROS_INFO("Salvando o arquivo .ply na area de trabalho......");
+      cout << "\nSalvando o arquivo .ply na area de trabalho......\n";
 
       filename = home+"/Desktop/pos_processo_termico_em"+date;
       pcl::io::savePLYFileASCII(filename, *termica_acumulada);
 
-      ROS_INFO("Tudo correto, conferir pelo arquivo na area de trabalho !!");
+      cout << "\nTudo correto, conferir pelo arquivo na area de trabalho !!\n\n";
 
       termica_gravada = true;
     } else {
       ROS_INFO("Nao ha dados termicos, nada foi salvo...");
     }
 
-    ROS_INFO("Recebendo dados visuais para salvar......");
+    cout << "\n\nRecebendo dados visuais para salvar......\n";
 
     if(visual_acumulada->size() > 0){
-      ROS_INFO("Salvando o arquivo .ply na area de trabalho......");
+      cout << "\nSalvando o arquivo .ply na area de trabalho......\n";
       // Salvando
       filename = home+"/Desktop/pos_processo_visual_em"+date;
       pcl::io::savePLYFileASCII(filename, *visual_acumulada);
 
-      ROS_INFO("Tudo correto, conferir pelos arquivos na area de trabalho !!");
+      cout << "\nTudo correto, conferir pelos arquivos na area de trabalho !!\n\n";
 
-      // Kill the node after saving the ptcloud
       visual_gravada = true;
     } else {
       ROS_INFO("Nao ha dados visuais, nada foi salvo...");
@@ -131,16 +135,16 @@ void salvando_nuvens(const std_msgs::BoolConstPtr& salvar){
 
   }
 
-  mutexv = 0;
-  mutext = 0;
-
-  ros::Rate aguardar(3);
+  ros::Rate aguardar(15);
   if(visual_gravada && termica_gravada){
     ROS_INFO("AGUARDE PARA GRAVAR OS DADOS EM SEGURANCA...");
     ROS_INFO("ESSA JANELA SE FECHARA EM 10 SEGUNDOS...");
     aguardar.sleep();
-    ros::shutdown();
+//    ros::shutdown();
   }
+
+  mutexv = 0;
+  mutext = 0;
 
 }
 
@@ -156,18 +160,25 @@ int main(int argc, char **argv)
 
   ros::Subscriber sub     = nh.subscribe("/accumulated_point_cloud", 20, savevisual_ply);
   ros::Subscriber subt    = nh.subscribe("/accumulated_termica", 20, savetermica_ply);
-  ros::Subscriber subbool = nh.subscribe("/podemos_salvar_nuvens", 20, salvando_nuvens);
+  ros::Subscriber subbool = nh.subscribe("/podemos_salvar_nuvens", 1, salvando_nuvens);
 
   mutexv = 0; mutext = 0;
 
+  rosbag::Bag bag;
+  bag.open("/home/mrs/Desktop/ponto_lat_21,7550864_lon_43,329889700000003.bag");
+  rosbag::View view(bag, rosbag::TopicQuery("/stereo/left/image_raw"));
+
+
+
   while(ros::ok()){
     ros::spinOnce();
-    if(visual_gravada && termica_gravada){
+    if(visual_gravada && termica_gravada && mutext == 0 && mutexv == 0){
+      ROS_INFO("Habilitou salvar");
       ros::shutdown();
       break;
     }
   }
-  ros::shutdown();
+//  ros::shutdown();
 
   return 0;
 }
