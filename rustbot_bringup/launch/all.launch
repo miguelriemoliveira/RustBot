@@ -102,7 +102,9 @@
         <param name="camera_type"     value="left_camera"                                                                      />
         <param name="overlap_rate"    value="90"                                                                               /> <!--Importante overlap mais baixo-->
     </node>
-
+  <!--  No que constroi o portal em volta da carroceria -->
+  <node name="portal" pkg="regiao_trem" type="regiao_trem_node" output="screen">
+  </node>
   </group>
 
   <!-- UFJF SECTION -->
