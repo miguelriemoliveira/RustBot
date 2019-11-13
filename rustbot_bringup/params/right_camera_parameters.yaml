@@ -5,8 +5,8 @@ balance_ratio_abs: 1.0
 balance_ratio_selector: 'Red'
 binning_x: 2
 binning_y: 2
-decimation_x: 2
-decimation_y: 2
+decimation_x: 1
+decimation_y: 1
 #decimation_x: 1
 #decimation_y: 1
 exposure: 19523.0
