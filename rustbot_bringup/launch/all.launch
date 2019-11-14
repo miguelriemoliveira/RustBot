@@ -45,11 +45,11 @@
         <param name="prefilter_cap" value="34"/>
         <param name="disparity_range" value="50"/>
         <param name="min_disparity" value="0"/>
-        <param name="correlation_window_size" value="35"/>
+        <param name="correlation_window_size" value="150"/>
         <param name="speckle_size" value="1000"/>
         <param name="speckle_range" value="3"/>
         <param name="fullDP" value="true"/>
-        <param name="uniqueness_ratio" value="5.0"/>
+        <param name="uniqueness_ratio" value="3.0"/>
         <param name="texture_threshold" value="1000"/>
       </node>
       <!--Leitura da termica sincronizada com outros para atribuir temperatura-->
@@ -85,11 +85,11 @@
     <node name="overlap_acumula_visual" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
         <param name="camera_calibration_yaml"  value="file://$(find rustbot_calibration)/calibration/calibration_50-0536881130"/>
         <param name="termica_calibration_yaml" value="file://$(find rustbot_calibration)/calibration/termica"                  />
-        <param name="cloud_topic_in"  value="/dados_sync/point_cloud"                                                                  />
-        <param name="image_topic_in"  value="/dados_sync/image_8bits"                                                    />
-        <param name="odom_topic_in"   value="/dados_sync/odometry"                                                        />
-        <param name="cloud_topic_out" value="/accumulated_termica"                                                         />
-        <param name="camera_type"     value="termica"                                                                      />
+        <param name="cloud_topic_in"  value="/dados_sync/point_cloud"                                                          />
+        <param name="image_topic_in"  value="/dados_sync/image_8bits"                                                          />
+        <param name="odom_topic_in"   value="/dados_sync/odometry"                                                             />
+        <param name="cloud_topic_out" value="/accumulated_termica"                                                             />
+        <param name="camera_type"     value="termica"                                                                          />
         <param name="overlap_rate"    value="90"                                                                               /> <!--Importante overlap mais baixo-->
     </node>
     <node name="overlap_acumula_termica" pkg="projecao_overlap" type="projecao_overlap_node" output="screen">
